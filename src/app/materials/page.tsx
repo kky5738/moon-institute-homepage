@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { PostType } from "@/generated/prisma/enums";
 import { getPublishedPosts } from "@/lib/posts";
@@ -40,9 +41,12 @@ export default async function MaterialsPage() {
                   고정
                 </span>
               ) : null}
+              <span>{post.phase}</span>
             </div>
             <h2 className="mt-4 text-xl font-semibold text-neutral-950">
-              {post.title}
+              <Link href={`/materials/${post.slug}`} className="hover:underline">
+                {post.title}
+              </Link>
             </h2>
             <p className="mt-3 text-sm leading-6 text-neutral-600">
               {post.summary}

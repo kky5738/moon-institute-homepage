@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { PostType } from "@/generated/prisma/enums";
 import { getPublishedPosts } from "@/lib/posts";
@@ -38,6 +39,7 @@ export default async function NoticesPage() {
               <p className="mt-2 inline-flex border border-neutral-200 px-2 py-1 text-xs font-semibold text-stone-700">
                 {notice.category}
               </p>
+              <p className="mt-2 text-xs text-neutral-400">{notice.phase}</p>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -47,7 +49,9 @@ export default async function NoticesPage() {
                   </span>
                 ) : null}
                 <h2 className="text-xl font-semibold text-neutral-950">
-                  {notice.title}
+                  <Link href={`/notices/${notice.slug}`} className="hover:underline">
+                    {notice.title}
+                  </Link>
                 </h2>
               </div>
               <p className="mt-3 text-sm leading-6 text-neutral-600">

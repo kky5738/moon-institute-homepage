@@ -4,6 +4,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import {
   InquiryStatus,
   InquiryType,
+  PostPhase,
   PostStatus,
   PostType,
 } from "../src/generated/prisma/enums";
@@ -61,7 +62,11 @@ async function main() {
 
   await prisma.post.upsert({
     where: { slug: "launch-preparation-notice" },
-    update: {},
+    update: {
+      phase: PostPhase.PRE_LAUNCH,
+      status: PostStatus.PUBLISHED,
+      categoryId: noticeCategory.id,
+    },
     create: {
       title: "문선명 연구소 출범 준비 안내",
       slug: "launch-preparation-notice",
@@ -71,6 +76,7 @@ async function main() {
         "문선명 연구소 출범 준비를 위한 공지사항입니다. 자세한 공식 소개 원문은 확정 후 반영합니다.",
       type: PostType.NOTICE,
       status: PostStatus.PUBLISHED,
+      phase: PostPhase.PRE_LAUNCH,
       isPinned: true,
       publishedAt: new Date("2026-05-01T00:00:00.000Z"),
       categoryId: noticeCategory.id,
@@ -79,7 +85,11 @@ async function main() {
 
   await prisma.post.upsert({
     where: { slug: "promotion-board-plan" },
-    update: {},
+    update: {
+      phase: PostPhase.PRE_LAUNCH,
+      status: PostStatus.PUBLISHED,
+      categoryId: newsCategory.id,
+    },
     create: {
       title: "홍보자료 게시판 운영 계획",
       slug: "promotion-board-plan",
@@ -89,6 +99,7 @@ async function main() {
         "홍보자료 게시판은 관리자가 등록한 자료를 방문자가 확인하는 방식으로 시작합니다.",
       type: PostType.NOTICE,
       status: PostStatus.PUBLISHED,
+      phase: PostPhase.PRE_LAUNCH,
       publishedAt: new Date("2026-05-08T00:00:00.000Z"),
       categoryId: newsCategory.id,
     },
@@ -96,7 +107,11 @@ async function main() {
 
   await prisma.post.upsert({
     where: { slug: "institute-introduction-material" },
-    update: {},
+    update: {
+      phase: PostPhase.PRE_LAUNCH,
+      status: PostStatus.PUBLISHED,
+      categoryId: introMaterialsCategory.id,
+    },
     create: {
       title: "연구소 소개 자료 준비본",
       slug: "institute-introduction-material",
@@ -106,6 +121,7 @@ async function main() {
         "이 자료는 공식 원문이 확정되기 전까지 임시 홍보자료로 관리됩니다.",
       type: PostType.PROMOTION,
       status: PostStatus.PUBLISHED,
+      phase: PostPhase.PRE_LAUNCH,
       isPinned: true,
       publishedAt: new Date("2026-05-12T00:00:00.000Z"),
       categoryId: introMaterialsCategory.id,
