@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PostType {
+  NOTICE
+  PROMOTION
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum InquiryType {
+  GENERAL
+  PARTICIPATION
+  DONATION_INTEREST
+}
+
+enum InquiryStatus {
+  NEW
+  REVIEWED
+  ARCHIVED
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String?
+  postType    PostType
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts Post[]
+
+  @@index([postType, isActive, sortOrder])
+  @@map("categories")
+}
+
+model Post {
+  id          Int        @id @default(autoincrement())
+  title       String
+  slug        String     @unique
+  summary     String?
+  content     String
+  type        PostType
+  status      PostStatus @default(DRAFT)
+  isPinned    Boolean    @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([type, status, deletedAt, isPinned, publishedAt])
+  @@index([categoryId])
+  @@map("posts")
+}
+
+model Inquiry {
+  id         Int           @id @default(autoincrement())
+  name       String
+  email      String?
+  phone      String?
+  type       InquiryType   @default(GENERAL)
+  status     InquiryStatus @default(NEW)
+  subject    String?
+  message    String
+  memo       String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  archivedAt DateTime?
+
+  @@index([type, status, createdAt])
+  @@map("inquiries")
+}
