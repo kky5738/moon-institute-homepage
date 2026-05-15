@@ -173,10 +173,13 @@ After deployment, check:
 - `/` loads.
 - `/notices` lists published notices.
 - `/materials` lists promotion materials.
+- `/contact` loads and can submit a minimal inquiry.
 - `/login` loads.
 - Unauthenticated `/admin` redirects to `/login`.
 - Admin login succeeds with Vercel environment credentials.
 - `/admin/posts/new` can create a draft post.
+- `/admin/inquiries` lists submitted inquiries without exposing more contact data than needed on the list screen.
+- Inquiry status can be changed to `REVIEWED` or `ARCHIVED` without deleting the record.
 - Published notice/material posts appear on the public board.
 - A wrong admin password does not create a session.
 - Logging out returns to `/login`.

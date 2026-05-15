@@ -42,6 +42,12 @@ export default async function Home() {
               >
                 홍보자료 보기
               </Link>
+              <Link
+                href="/contact"
+                className="inline-flex h-11 items-center border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-900 hover:border-neutral-500"
+              >
+                문의/참여 신청
+              </Link>
             </div>
           </div>
           <aside className="self-end border border-neutral-200 bg-stone-50 p-6">

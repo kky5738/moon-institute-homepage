@@ -15,7 +15,7 @@ export default function AdminPage() {
           관리자 홈
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
-          단일 관리자 계정으로 공지사항과 홍보자료 게시글을 관리합니다.
+          단일 관리자 계정으로 공지사항, 홍보자료, 문의 접수 내역을 관리합니다.
         </p>
       </div>
 
@@ -27,6 +27,15 @@ export default function AdminPage() {
           <h2 className="text-xl font-semibold text-neutral-950">게시글 관리</h2>
           <p className="mt-3 text-sm leading-6 text-neutral-600">
             공지사항과 홍보자료 게시글을 확인하고 새 글을 작성합니다.
+          </p>
+        </Link>
+        <Link
+          href="/admin/inquiries"
+          className="border border-neutral-200 bg-white p-6 hover:border-neutral-400"
+        >
+          <h2 className="text-xl font-semibold text-neutral-950">문의 관리</h2>
+          <p className="mt-3 text-sm leading-6 text-neutral-600">
+            일반 문의, 참여 신청, 후원 관심 접수 내역을 확인하고 상태를 관리합니다.
           </p>
         </Link>
       </section>

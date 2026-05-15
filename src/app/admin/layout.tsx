@@ -20,6 +20,9 @@ export default async function AdminLayout({
             <Link href="/admin/posts" className="hover:underline">
               게시글 관리
             </Link>
+            <Link href="/admin/inquiries" className="hover:underline">
+              문의 관리
+            </Link>
             <Link href="/" className="hover:underline">
               사이트 보기
             </Link>

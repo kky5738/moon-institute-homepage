@@ -42,6 +42,9 @@ export default function RootLayout({
                 <Link className="hover:text-neutral-950" href="/materials">
                   홍보자료
                 </Link>
+                <Link className="hover:text-neutral-950" href="/contact">
+                  문의/참여
+                </Link>
               </nav>
             </div>
           </header>
@@ -49,7 +52,9 @@ export default function RootLayout({
           <footer className="border-t border-neutral-200 bg-white">
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-8 text-sm text-neutral-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
               <p>문선명 연구소 출범 준비 홈페이지</p>
-              <p>문의 및 참여 신청 기능은 MVP 단계에서 순차 구현 예정</p>
+              <Link href="/contact" className="hover:text-neutral-950">
+                문의 및 참여 신청
+              </Link>
             </div>
           </footer>
         </div>
