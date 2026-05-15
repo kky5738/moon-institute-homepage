@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logServerError } from "@/lib/server-log";
 
 export const metadata: Metadata = {
   title: "게시글 관리",
@@ -11,15 +12,22 @@ export const metadata: Metadata = {
 export default async function AdminPostsPage() {
   await connection();
 
-  const posts = await prisma.post.findMany({
-    include: {
-      category: true,
-    },
-    orderBy: [
-      { createdAt: "desc" },
-      { id: "desc" },
-    ],
-  });
+  let posts;
+
+  try {
+    posts = await prisma.post.findMany({
+      include: {
+        category: true,
+      },
+      orderBy: [
+        { createdAt: "desc" },
+        { id: "desc" },
+      ],
+    });
+  } catch (error) {
+    logServerError("admin.posts.list", error);
+    throw error;
+  }
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">

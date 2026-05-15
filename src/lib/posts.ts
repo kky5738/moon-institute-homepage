@@ -1,5 +1,6 @@
 import { PostPhase, PostStatus, PostType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
+import { isPrismaMissingTableError, logServerError } from "@/lib/server-log";
 
 export type BoardPost = {
   id: number;
@@ -17,65 +18,91 @@ export type BoardPostDetail = BoardPost & {
 };
 
 export async function getPublishedPosts(type: PostType): Promise<BoardPost[]> {
-  const posts = await prisma.post.findMany({
-    where: {
-      type,
-      status: PostStatus.PUBLISHED,
-      deletedAt: null,
-    },
-    include: {
-      category: true,
-    },
-    orderBy: [
-      { isPinned: "desc" },
-      { publishedAt: "desc" },
-      { createdAt: "desc" },
-    ],
-  });
+  try {
+    const posts = await prisma.post.findMany({
+      where: {
+        type,
+        status: PostStatus.PUBLISHED,
+        deletedAt: null,
+      },
+      include: {
+        category: true,
+      },
+      orderBy: [
+        { isPinned: "desc" },
+        { publishedAt: "desc" },
+        { createdAt: "desc" },
+      ],
+    });
 
-  return posts.map((post) => ({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    category: post.category?.name ?? getDefaultCategoryName(post.type),
-    summary: post.summary ?? post.content.slice(0, 120),
-    publishedAt: formatDate(post.publishedAt ?? post.createdAt),
-    isPinned: post.isPinned,
-    phase: getPhaseLabel(post.phase),
-  }));
+    return posts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      category: post.category?.name ?? getDefaultCategoryName(post.type),
+      summary: post.summary ?? post.content.slice(0, 120),
+      publishedAt: formatDate(post.publishedAt ?? post.createdAt),
+      isPinned: post.isPinned,
+      phase: getPhaseLabel(post.phase),
+    }));
+  } catch (error) {
+    logServerError("posts.getPublishedPosts", error, { type });
+
+    if (isPrismaMissingTableError(error)) {
+      console.error(
+        "[server-error] posts table is missing. Run `npm run db:deploy` against the production database.",
+      );
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export async function getPublishedPostBySlug(
   type: PostType,
   slug: string,
 ): Promise<BoardPostDetail | null> {
-  const post = await prisma.post.findFirst({
-    where: {
-      slug,
-      type,
-      status: PostStatus.PUBLISHED,
-      deletedAt: null,
-    },
-    include: {
-      category: true,
-    },
-  });
+  try {
+    const post = await prisma.post.findFirst({
+      where: {
+        slug,
+        type,
+        status: PostStatus.PUBLISHED,
+        deletedAt: null,
+      },
+      include: {
+        category: true,
+      },
+    });
 
-  if (!post) {
-    return null;
+    if (!post) {
+      return null;
+    }
+
+    return {
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      category: post.category?.name ?? getDefaultCategoryName(post.type),
+      summary: post.summary ?? post.content.slice(0, 120),
+      content: post.content,
+      publishedAt: formatDate(post.publishedAt ?? post.createdAt),
+      isPinned: post.isPinned,
+      phase: getPhaseLabel(post.phase),
+    };
+  } catch (error) {
+    logServerError("posts.getPublishedPostBySlug", error, { type, slug });
+
+    if (isPrismaMissingTableError(error)) {
+      console.error(
+        "[server-error] posts table is missing. Run `npm run db:deploy` against the production database.",
+      );
+      return null;
+    }
+
+    throw error;
   }
-
-  return {
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    category: post.category?.name ?? getDefaultCategoryName(post.type),
-    summary: post.summary ?? post.content.slice(0, 120),
-    content: post.content,
-    publishedAt: formatDate(post.publishedAt ?? post.createdAt),
-    isPinned: post.isPinned,
-    phase: getPhaseLabel(post.phase),
-  };
 }
 
 export async function getPinnedNotice(): Promise<BoardPost | null> {

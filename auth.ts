@@ -1,5 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { validateAuthEnvironment } from "@/lib/env";
+
+validateAuthEnvironment();
 
 export const {
   handlers: { GET, POST },
@@ -27,9 +30,19 @@ export const {
           return null;
         }
 
+        const adminUsername = process.env.ADMIN_USERNAME;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (!adminUsername || !adminPassword) {
+          console.error(
+            "[auth-error] ADMIN_USERNAME or ADMIN_PASSWORD is missing during credentials authorize.",
+          );
+          return null;
+        }
+
         if (
-          username === process.env.ADMIN_USERNAME &&
-          password === process.env.ADMIN_PASSWORD
+          username === adminUsername &&
+          password === adminPassword
         ) {
           return {
             id: "admin",

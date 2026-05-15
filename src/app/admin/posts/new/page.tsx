@@ -6,6 +6,7 @@ import {
   PostStatus,
 } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
+import { logServerError } from "@/lib/server-log";
 import { createPost } from "../actions";
 
 export const metadata: Metadata = {
@@ -16,16 +17,25 @@ export const metadata: Metadata = {
 export default async function NewPostPage() {
   await connection();
 
-  const categories = await prisma.category.findMany({
-    where: {
-      isActive: true,
-    },
-    orderBy: [
-      { postType: "asc" },
-      { sortOrder: "asc" },
-      { name: "asc" },
-    ],
-  });
+  let categories;
+
+  try {
+    categories = await prisma.category.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: [
+        { postType: "asc" },
+        { sortOrder: "asc" },
+        { name: "asc" },
+      ],
+    });
+  } catch (error) {
+    logServerError("admin.posts.new.categories", error);
+    throw error;
+  }
+
+  const hasCategories = categories.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-5 py-14 lg:px-8">
@@ -103,6 +113,7 @@ export default async function NewPostPage() {
               id="categoryId"
               name="categoryId"
               required
+              disabled={!hasCategories}
               className="mt-2 w-full border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-900"
             >
               <option value="">선택</option>
@@ -112,6 +123,11 @@ export default async function NewPostPage() {
                 </option>
               ))}
             </select>
+            {!hasCategories ? (
+              <p className="mt-2 text-sm text-red-700">
+                활성 카테고리가 없습니다. 먼저 seed 또는 관리자 카테고리 데이터를 확인해주세요.
+              </p>
+            ) : null}
           </div>
 
           <div>
@@ -155,6 +171,7 @@ export default async function NewPostPage() {
           </Link>
           <button
             type="submit"
+            disabled={!hasCategories}
             className="inline-flex h-11 items-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white hover:bg-neutral-800"
           >
             저장

@@ -8,46 +8,52 @@ import {
 } from "@/generated/prisma/enums";
 import { assertAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { logServerError } from "@/lib/server-log";
 
 export async function createPost(formData: FormData) {
   await assertAdmin();
 
-  const title = getRequiredString(formData, "title");
-  const slug = normalizeSlug(getRequiredString(formData, "slug"));
-  const content = getRequiredString(formData, "content");
-  const summary = getOptionalString(formData, "summary");
-  const categoryId = Number(getRequiredString(formData, "categoryId"));
-  const status = parsePostStatus(getRequiredString(formData, "status"));
-  const phase = parsePostPhase(getRequiredString(formData, "phase"));
+  try {
+    const title = getRequiredString(formData, "title");
+    const slug = normalizeSlug(getRequiredString(formData, "slug"));
+    const content = getRequiredString(formData, "content");
+    const summary = getOptionalString(formData, "summary");
+    const categoryId = Number(getRequiredString(formData, "categoryId"));
+    const status = parsePostStatus(getRequiredString(formData, "status"));
+    const phase = parsePostPhase(getRequiredString(formData, "phase"));
 
-  if (!Number.isInteger(categoryId) || categoryId < 1) {
-    throw new Error("유효한 카테고리를 선택해주세요.");
+    if (!Number.isInteger(categoryId) || categoryId < 1) {
+      throw new Error("유효한 카테고리를 선택해주세요.");
+    }
+
+    const category = await prisma.category.findFirst({
+      where: {
+        id: categoryId,
+        isActive: true,
+      },
+    });
+
+    if (!category) {
+      throw new Error("카테고리를 찾을 수 없습니다.");
+    }
+
+    await prisma.post.create({
+      data: {
+        title,
+        slug,
+        summary,
+        content,
+        categoryId: category.id,
+        type: category.postType,
+        status,
+        phase,
+        publishedAt: status === PostStatus.PUBLISHED ? new Date() : null,
+      },
+    });
+  } catch (error) {
+    logServerError("admin.posts.create", error);
+    throw error;
   }
-
-  const category = await prisma.category.findFirst({
-    where: {
-      id: categoryId,
-      isActive: true,
-    },
-  });
-
-  if (!category) {
-    throw new Error("카테고리를 찾을 수 없습니다.");
-  }
-
-  await prisma.post.create({
-    data: {
-      title,
-      slug,
-      summary,
-      content,
-      categoryId: category.id,
-      type: category.postType,
-      status,
-      phase,
-      publishedAt: status === PostStatus.PUBLISHED ? new Date() : null,
-    },
-  });
 
   revalidatePath("/");
   revalidatePath("/notices");

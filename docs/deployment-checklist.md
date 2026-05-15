@@ -54,6 +54,8 @@ npm exec auth secret
 - Use different admin passwords for Preview and Production if Preview is publicly accessible.
 - Do not prefix any secret with `NEXT_PUBLIC_`; that would expose it to the browser bundle.
 - After changing any Vercel environment variable, redeploy. Existing deployments do not automatically receive updated values.
+- If a required variable is missing, Vercel Runtime Logs should contain `[server-error] env.missing-required` with the missing variable name.
+- For Auth.js compatibility, this project uses the current `AUTH_*` naming. If older docs or tools mention `NEXTAUTH_URL`, treat it as an alias for `AUTH_URL`; do not set conflicting values.
 
 ## 4. PostgreSQL Provider
 
@@ -102,12 +104,18 @@ Current production rendering notes:
 - Public DB-backed pages call `connection()` before database reads so `next build` does not need the production database contents to prerender them.
 - Detail pages are dynamic route segments and read the database at request time.
 - Admin pages are dynamic because they read the Auth.js session and/or database.
+- Empty `posts` results render empty-state UI instead of throwing.
+- Missing active `categories` on `/admin/posts/new` disables post creation and shows an admin-facing message.
+- Unexpected Prisma errors are logged with `[server-error] posts.*` or `[server-error] admin.posts.*` before being re-thrown to the error boundary.
+- If public pages log `P2021` or `The table public.posts does not exist`, production migrations have not been applied. Run `npm run db:deploy` against the deployment database.
 
 ## 6. Auth
 
 - Admin login uses Auth.js credentials with a single account.
 - `/admin` routes require an authenticated session.
 - Server Actions that mutate posts also check the session server-side.
+- Auth environment variables are validated at runtime startup. Missing `AUTH_SECRET`, `ADMIN_USERNAME`, or `ADMIN_PASSWORD` should appear in Vercel Runtime Logs as `[server-error] env.missing-required`.
+- If neither `AUTH_URL` nor `NEXTAUTH_URL` is set outside Vercel, the app logs `[env-warning]` so host inference can be checked.
 - Rotate `AUTH_SECRET` only with care because it invalidates existing sessions.
 - Change `ADMIN_PASSWORD` before exposing the deployment.
 - Credentials are read from environment variables. No administrator secret should be committed.
@@ -137,7 +145,28 @@ Expected build shape:
 - `/`, `/notices`, `/materials`, `/login`, `/admin`, and detail/admin routes should be dynamic or server-rendered on demand.
 - There should be no TypeScript, hydration, or Server/Client Component boundary errors.
 
-## 9. Pre-Launch Smoke Test
+## 9. Runtime Error Diagnostics
+
+If Vercel shows a generic production error digest such as `ERROR 4167813784`, check Vercel Runtime Logs for these prefixes:
+
+- `[server-error] env.missing-required`: missing `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_USERNAME`, or `ADMIN_PASSWORD`.
+- `[env-warning]`: host/auth URL inference needs review.
+- `[server-error] posts.getPublishedPosts`: public board list query failed.
+- `[server-error] posts.getPublishedPostBySlug`: public post detail query failed.
+- `P2021` or `The table public.posts does not exist`: database connection works, but migrations were not applied to that database.
+- `[server-error] admin-auth.*`: Auth.js session lookup failed.
+- `[server-error] admin.posts.*`: admin post/category query or mutation failed.
+- `[server-error] auth.login.*`: credentials sign-in failed unexpectedly.
+
+The app includes:
+
+- `src/app/error.tsx` for route segment runtime failures.
+- `src/app/global-error.tsx` for root layout/global failures.
+- `src/app/admin/error.tsx` for admin segment failures.
+
+These files show a minimal user-facing fallback while keeping sensitive stack traces in server/runtime logs.
+
+## 10. Pre-Launch Smoke Test
 
 After deployment, check:
 
@@ -152,7 +181,7 @@ After deployment, check:
 - A wrong admin password does not create a session.
 - Logging out returns to `/login`.
 
-## 10. AWS Migration Notes
+## 11. AWS Migration Notes
 
 - Keep all deployment-specific values in environment variables.
 - Keep PostgreSQL-compatible migrations in `prisma/migrations`.
