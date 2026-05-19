@@ -6,7 +6,7 @@ import { getPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "공지사항",
-  description: "문선명 연구소 출범 준비 관련 공지사항 목록입니다.",
+  description: "문선명 연구소 공지사항 목록입니다.",
 };
 
 export default async function NoticesPage() {

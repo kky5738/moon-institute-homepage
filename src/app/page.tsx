@@ -13,15 +13,14 @@ export default async function Home() {
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-24">
           <div className="max-w-3xl">
             <p className="mb-4 text-sm font-semibold text-stone-700">
-              출범 준비 공식 홈페이지
+              문선명 연구소에 오신 것을 환영합니다
             </p>
             <h1 className="text-4xl font-semibold leading-tight tracking-tight text-neutral-950 sm:text-5xl">
-              문선명 연구소의 출범과 자료 공유를 준비합니다
+              문선명 연구소의 공지와 자료를 공유합니다
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
-              이 홈페이지는 연구소 출범 전 홍보 자료와 공지사항을 공유하고,
-              출범 이후 공식 연구소 홈페이지로 자연스럽게 확장하기 위한
-              MVP입니다.
+              이 홈페이지는 연구소 소개, 공지사항, 홍보자료, 문의와 참여
+              신청을 한곳에서 안내하는 공식 채널입니다.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -57,10 +56,10 @@ export default async function Home() {
             </h2>
             <p className="mt-3 text-sm leading-6 text-neutral-600">
               {pinnedNotice?.summary ??
-                "Docker PostgreSQL을 실행하고 Prisma seed를 적용하면 공지사항이 표시됩니다."}
+                "새 공지사항이 등록되면 이곳에 표시됩니다."}
             </p>
             <p className="mt-5 text-sm text-neutral-500">
-              {pinnedNotice?.publishedAt ?? "DB 연결 대기"}
+              {pinnedNotice?.publishedAt ?? "공지 대기"}
             </p>
           </aside>
         </div>

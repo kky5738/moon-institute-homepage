@@ -6,7 +6,7 @@ import { getPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "홍보자료",
-  description: "문선명 연구소 출범 준비 관련 홍보자료 목록입니다.",
+  description: "문선명 연구소 관련 홍보자료 목록입니다.",
 };
 
 export default async function MaterialsPage() {
@@ -19,12 +19,11 @@ export default async function MaterialsPage() {
         <div>
           <p className="text-sm font-semibold text-stone-700">홍보자료</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-neutral-950">
-            출범 준비 자료
+            홍보 자료
           </h1>
         </div>
         <p className="max-w-md text-sm leading-6 text-neutral-600">
-          연구소 출범 전 공유할 소개 자료와 안내 자료를 관리형 게시판으로
-          제공합니다.
+          소개 자료와 안내 자료를 관리형 게시판으로 제공합니다.
         </p>
       </div>
 

@@ -3,7 +3,7 @@ import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = {
   title: "문의 및 참여 신청",
-  description: "문선명 연구소 출범 준비와 관련한 문의와 참여 신청을 접수합니다.",
+  description: "문선명 연구소와 관련한 문의와 참여 신청을 접수합니다.",
 };
 
 export default function ContactPage() {
@@ -15,11 +15,11 @@ export default function ContactPage() {
             문의 및 참여 신청
           </p>
           <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-neutral-950 sm:text-5xl">
-            연구소 출범 준비와 관련한 연락을 남겨주세요
+            연구소와 관련한 연락을 남겨주세요
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-600">
             일반 문의, 참여 신청, 후원 관심을 접수합니다. 남겨주신 내용은
-            관리자만 확인하며 출범 이후에도 장기 보존을 전제로 관리합니다.
+            관리자만 확인하며 장기 보존을 전제로 관리합니다.
           </p>
         </div>
       </section>
@@ -30,11 +30,11 @@ export default function ContactPage() {
           <dl className="mt-6 space-y-5 text-sm leading-6 text-neutral-600">
             <div>
               <dt className="font-semibold text-neutral-950">일반 문의</dt>
-              <dd className="mt-1">홈페이지와 연구소 출범 준비 관련 문의</dd>
+              <dd className="mt-1">홈페이지와 연구소 관련 문의</dd>
             </div>
             <div>
               <dt className="font-semibold text-neutral-950">참여 신청</dt>
-              <dd className="mt-1">출범 준비와 향후 활동 참여 의사 전달</dd>
+              <dd className="mt-1">활동 참여 의사 전달</dd>
             </div>
             <div>
               <dt className="font-semibold text-neutral-950">후원 관심</dt>

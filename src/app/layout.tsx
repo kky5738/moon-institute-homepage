@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     default: "문선명 연구소",
     template: "%s | 문선명 연구소",
   },
-  description: "문선명 연구소 출범 준비를 위한 공식 홈페이지입니다.",
+  description: "문선명 연구소 공식 홈페이지입니다.",
 };
 
 export default function RootLayout({
@@ -51,7 +51,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <footer className="border-t border-neutral-200 bg-white">
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-8 text-sm text-neutral-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-              <p>문선명 연구소 출범 준비 홈페이지</p>
+              <p>문선명 연구소</p>
               <Link href="/contact" className="hover:text-neutral-950">
                 문의 및 참여 신청
               </Link>
