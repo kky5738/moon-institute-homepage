@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
+import { archivePost } from "./actions";
 
 export const metadata: Metadata = {
   title: "게시글 관리",
@@ -51,7 +52,7 @@ export default async function AdminPostsPage() {
           posts.map((post) => (
             <article
               key={post.id}
-              className="grid gap-4 px-5 py-5 md:grid-cols-[160px_1fr_180px] md:px-6"
+              className="grid gap-4 px-5 py-5 md:grid-cols-[160px_1fr_240px] md:px-6"
             >
               <div className="text-sm text-neutral-500">
                 <p>{post.type === "NOTICE" ? "공지사항" : "홍보자료"}</p>
@@ -68,13 +69,34 @@ export default async function AdminPostsPage() {
                   </p>
                 ) : null}
               </div>
-              <div className="flex flex-wrap items-start gap-2 text-xs font-semibold">
-                <span className="border border-neutral-200 px-2 py-1 text-neutral-600">
-                  {post.status}
-                </span>
-                <span className="border border-neutral-200 px-2 py-1 text-neutral-600">
-                  {post.phase}
-                </span>
+              <div className="flex flex-col gap-3 md:items-end">
+                <div className="flex flex-wrap items-start gap-2 text-xs font-semibold md:justify-end">
+                  <span className="border border-neutral-200 px-2 py-1 text-neutral-600">
+                    {post.status}
+                  </span>
+                  <span className="border border-neutral-200 px-2 py-1 text-neutral-600">
+                    {post.phase}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Link
+                    href={`/admin/posts/${post.id}/edit`}
+                    className="inline-flex h-9 items-center border border-neutral-300 bg-white px-3 text-xs font-semibold text-neutral-700 hover:border-neutral-950 hover:text-neutral-950"
+                  >
+                    수정
+                  </Link>
+                  {post.status !== "ARCHIVED" ? (
+                    <form action={archivePost}>
+                      <input type="hidden" name="id" value={post.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex h-9 items-center border border-neutral-300 bg-white px-3 text-xs font-semibold text-neutral-700 hover:border-neutral-950 hover:text-neutral-950"
+                      >
+                        보관
+                      </button>
+                    </form>
+                  ) : null}
+                </div>
               </div>
             </article>
           ))
