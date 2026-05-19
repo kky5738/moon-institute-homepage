@@ -90,7 +90,7 @@ export default async function AdminPostsPage() {
                       <input type="hidden" name="id" value={post.id} />
                       <button
                         type="submit"
-                        className="inline-flex h-9 items-center border border-neutral-300 bg-white px-3 text-xs font-semibold text-neutral-700 hover:border-neutral-950 hover:text-neutral-950"
+                        className="inline-flex h-9 cursor-pointer items-center border border-neutral-300 bg-white px-3 text-xs font-semibold text-neutral-700 hover:border-neutral-950 hover:text-neutral-950"
                       >
                         보관
                       </button>

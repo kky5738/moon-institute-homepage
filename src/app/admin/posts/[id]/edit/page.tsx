@@ -204,7 +204,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           <button
             type="submit"
             disabled={!hasCategories}
-            className="inline-flex h-11 items-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white hover:bg-neutral-800"
+            className="inline-flex h-11 cursor-pointer items-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:cursor-not-allowed"
           >
             수정 저장
           </button>
@@ -216,7 +216,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           <input type="hidden" name="id" value={post.id} />
           <button
             type="submit"
-            className="inline-flex h-10 items-center border border-neutral-300 bg-white px-4 text-sm font-semibold text-neutral-700 hover:border-neutral-950 hover:text-neutral-950"
+            className="inline-flex h-10 cursor-pointer items-center border border-neutral-300 bg-white px-4 text-sm font-semibold text-neutral-700 hover:border-neutral-950 hover:text-neutral-950"
           >
             게시글 보관
           </button>
