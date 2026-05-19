@@ -6,6 +6,7 @@ import { createInquiry, type ContactFormState } from "./actions";
 const initialState: ContactFormState = {
   status: "idle",
   message: "",
+  submissionId: 0,
 };
 
 export function ContactForm() {
@@ -13,10 +14,10 @@ export function ContactForm() {
   const [state, formAction, pending] = useActionState(createInquiry, initialState);
 
   useEffect(() => {
-    if (state.status === "success") {
+    if (state.submissionId > 0) {
       formRef.current?.reset();
     }
-  }, [state.status]);
+  }, [state.submissionId]);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6">

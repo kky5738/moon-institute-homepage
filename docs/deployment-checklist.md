@@ -178,7 +178,7 @@ After deployment, check:
 - Unauthenticated `/admin` redirects to `/login`.
 - Admin login succeeds with Vercel environment credentials.
 - `/admin/posts/new` can create a draft post.
-- `/admin/inquiries` lists submitted inquiries without exposing more contact data than needed on the list screen.
+- `/admin/inquiries` lists submitted inquiries and shows only the contact data needed for an operator to respond.
 - Inquiry status can be changed to `REVIEWED` or `ARCHIVED` without deleting the record.
 - Published notice/material posts appear on the public board.
 - A wrong admin password does not create a session.

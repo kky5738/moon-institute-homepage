@@ -8,23 +8,20 @@ import { logServerError } from "@/lib/server-log";
 export type ContactFormState = {
   status: "idle" | "success" | "error";
   message: string;
-};
-
-const initialErrorState: ContactFormState = {
-  status: "error",
-  message: "입력값을 다시 확인해주세요.",
+  submissionId: number;
 };
 
 export async function createInquiry(
-  _prevState: ContactFormState,
+  prevState: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
   const parsed = parseInquiryForm(formData);
 
   if (!parsed.ok) {
     return {
-      ...initialErrorState,
+      status: "error",
       message: parsed.message,
+      submissionId: prevState.submissionId,
     };
   }
 
@@ -38,6 +35,7 @@ export async function createInquiry(
     return {
       status: "success",
       message: "문의가 접수되었습니다. 검토 후 필요한 경우 연락드리겠습니다.",
+      submissionId: prevState.submissionId + 1,
     };
   } catch (error) {
     logServerError("inquiries.create", error, {
@@ -47,6 +45,7 @@ export async function createInquiry(
     return {
       status: "error",
       message: "문의 접수 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      submissionId: prevState.submissionId,
     };
   }
 }
@@ -85,6 +84,10 @@ function parseInquiryForm(formData: FormData):
 
   if (email && !isValidEmail(email)) {
     return { ok: false, message: "이메일 형식을 확인해주세요." };
+  }
+
+  if (email && email.length > 120) {
+    return { ok: false, message: "이메일은 120자 이하로 입력해주세요." };
   }
 
   if (phone && phone.length > 40) {

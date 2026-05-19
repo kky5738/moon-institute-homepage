@@ -64,7 +64,7 @@ export default async function AdminInquiriesPage() {
                   {getInquiryTypeLabel(inquiry.type)}
                 </p>
                 <p>{formatDate(inquiry.createdAt)}</p>
-                <p>{getContactLabel(inquiry.email, inquiry.phone)}</p>
+                <ContactDetails email={inquiry.email} phone={inquiry.phone} />
               </div>
 
               <div>
@@ -160,20 +160,41 @@ function getStatusLabel(status: InquiryStatus) {
   return "보관";
 }
 
-function getContactLabel(email: string | null, phone: string | null) {
-  if (email && phone) {
-    return "이메일/연락처 제공";
+function ContactDetails({
+  email,
+  phone,
+}: {
+  email: string | null;
+  phone: string | null;
+}) {
+  if (!email && !phone) {
+    return <p>연락처 없음</p>;
   }
 
-  if (email) {
-    return "이메일 제공";
-  }
-
-  if (phone) {
-    return "연락처 제공";
-  }
-
-  return "연락처 없음";
+  return (
+    <dl className="space-y-1">
+      {email ? (
+        <div>
+          <dt className="sr-only">이메일</dt>
+          <dd>
+            <a className="break-all hover:text-neutral-950" href={`mailto:${email}`}>
+              {email}
+            </a>
+          </dd>
+        </div>
+      ) : null}
+      {phone ? (
+        <div>
+          <dt className="sr-only">연락처</dt>
+          <dd>
+            <a className="break-all hover:text-neutral-950" href={`tel:${phone}`}>
+              {phone}
+            </a>
+          </dd>
+        </div>
+      ) : null}
+    </dl>
+  );
 }
 
 function formatDate(date: Date) {
