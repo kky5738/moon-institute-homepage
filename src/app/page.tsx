@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import Link from "next/link";
+import { HeroImageSlider } from "@/components/home/HeroImageSlider";
 import { getPinnedNotice } from "@/lib/posts";
 import { homeHighlights } from "@/lib/site-content";
 
@@ -63,6 +64,10 @@ export default async function Home() {
             </p>
           </aside>
         </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-5 py-12 lg:px-8">
+        <HeroImageSlider />
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
