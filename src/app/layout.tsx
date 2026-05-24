@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full bg-stone-50 text-neutral-950">
         <div className="flex min-h-screen flex-col">
-          <header className="border-b border-neutral-200 bg-white/95">
+          <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur">
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-8">
               <Link href="/" className="flex flex-col">
                 <span className="text-lg font-semibold tracking-tight">

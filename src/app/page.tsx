@@ -1,12 +1,17 @@
 import { connection } from "next/server";
 import Link from "next/link";
+import { PostType } from "@/generated/prisma/enums";
 import { HeroImageSlider } from "@/components/home/HeroImageSlider";
-import { getPinnedNotice } from "@/lib/posts";
-import { homeHighlights } from "@/lib/site-content";
+import { HomeLandingSections } from "@/components/home/HomeLandingSections";
+import { getPublishedPosts } from "@/lib/posts";
 
 export default async function Home() {
   await connection();
-  const pinnedNotice = await getPinnedNotice();
+  const [notices, materials] = await Promise.all([
+    getPublishedPosts(PostType.NOTICE),
+    getPublishedPosts(PostType.PROMOTION),
+  ]);
+  const pinnedNotice = notices.find((post) => post.isPinned) ?? notices[0] ?? null;
 
   return (
     <div>
@@ -70,23 +75,7 @@ export default async function Home() {
         <HeroImageSlider />
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
-        <div className="grid gap-5 md:grid-cols-3">
-          {homeHighlights.map((item) => (
-            <article
-              key={item.title}
-              className="border border-neutral-200 bg-white p-6"
-            >
-              <h2 className="text-lg font-semibold text-neutral-950">
-                {item.title}
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-neutral-600">
-                {item.description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+      <HomeLandingSections notices={notices} materials={materials} />
     </div>
   );
 }
