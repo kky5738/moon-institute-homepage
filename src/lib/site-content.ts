@@ -25,6 +25,42 @@ export const featuredNewsItems = [
   },
 ];
 
+export const heroSlides = [
+  {
+    label: "주요 안내",
+    title: "출범 준비 홈페이지 운영 안내",
+    summary:
+      "출범 전까지 공지, 홍보자료, 문의 접수를 중심으로 운영하며 공개 자료를 순차적으로 정리합니다.",
+    date: "2026.05",
+    href: "/notices",
+    ctaLabel: "공지 확인",
+    background:
+      "linear-gradient(135deg, #171717 0%, #292524 42%, #57534e 68%, #d6d3d1 100%)",
+  },
+  {
+    label: "월간 소식",
+    title: "월간 운영 기록 준비",
+    summary:
+      "매월 주요 공지와 자료 공개 흐름을 정리해 연구소의 준비 과정을 한눈에 볼 수 있도록 준비합니다.",
+    date: "준비 중",
+    href: "/notices",
+    ctaLabel: "소식 보기",
+    background:
+      "linear-gradient(135deg, #0f172a 0%, #1e293b 38%, #44403c 70%, #a8a29e 100%)",
+  },
+  {
+    label: "자료 공유",
+    title: "초기 홍보자료 정리",
+    summary:
+      "소개 자료와 안내 문서를 게시판 기준에 맞춰 보존하고 이후 공식 자료실로 이어지게 구성합니다.",
+    date: "상시",
+    href: "/materials",
+    ctaLabel: "자료 보기",
+    background:
+      "linear-gradient(135deg, #1c1917 0%, #3f3f46 45%, #78716c 72%, #e7e5e4 100%)",
+  },
+];
+
 export const monthlyNewsItems = [
   {
     value: "7개월",

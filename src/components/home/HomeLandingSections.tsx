@@ -1,8 +1,7 @@
 import Link from "next/link";
+import { HomeHeroSection } from "@/components/home/HomeHeroSection";
 import {
   activityItems,
-  featuredNewsItems,
-  monthlyNewsItems,
   participationItems,
   resourceNoticeItems,
   videoContentItems,
@@ -11,103 +10,11 @@ import {
 export function HomeLandingSections() {
   return (
     <div className="bg-stone-50">
-      <NewsSection />
+      <HomeHeroSection />
       <VideoSection />
       <ActivityResourceNoticeSection />
       <ParticipationCtaSection />
     </div>
-  );
-}
-
-function NewsSection() {
-  const primaryNews = featuredNewsItems[0];
-  const supportingNews = featuredNewsItems.slice(1);
-
-  return (
-    <section className="border-b border-neutral-200 bg-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-14 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:py-20">
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold text-stone-700">
-            문선명 연구소 홈페이지
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-neutral-950 sm:text-5xl">
-            주요 소식과 월간 흐름을 차분하게 전합니다
-          </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-neutral-600 sm:text-lg">
-            출범 전 홍보 운영부터 공식 홈페이지 전환까지, 공지와 자료를
-            보존하는 연구소의 공개 창구로 준비합니다.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/notices"
-              className="inline-flex h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white hover:bg-neutral-800"
-            >
-              주요 공지 보기
-            </Link>
-            <Link
-              href="/materials"
-              className="inline-flex h-11 items-center justify-center border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-900 hover:border-neutral-500"
-            >
-              자료 살펴보기
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid gap-4">
-          <article className="border border-neutral-200 bg-stone-50 p-6 sm:p-7">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-stone-700">
-                {primaryNews.label}
-              </p>
-              <span className="text-sm font-medium text-neutral-500">
-                {primaryNews.date}
-              </span>
-            </div>
-            <h2 className="mt-5 text-2xl font-semibold tracking-tight text-neutral-950">
-              {primaryNews.title}
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-neutral-600">
-              {primaryNews.description}
-            </p>
-            <Link
-              href={primaryNews.href}
-              className="mt-6 inline-flex text-sm font-semibold text-neutral-950 hover:underline"
-            >
-              자세히 보기
-            </Link>
-          </article>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {supportingNews.map((item) => (
-              <article key={item.title} className="border border-neutral-200 bg-white p-5">
-                <p className="text-xs font-semibold text-stone-700">
-                  {item.label}
-                </p>
-                <h3 className="mt-3 text-lg font-semibold text-neutral-950">
-                  {item.title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-neutral-600">
-                  {item.description}
-                </p>
-              </article>
-            ))}
-          </div>
-
-          <dl className="grid gap-3 border border-neutral-200 bg-white p-5 sm:grid-cols-3">
-            {monthlyNewsItems.map((item) => (
-              <div key={item.label}>
-                <dt className="text-xs font-medium text-neutral-500">
-                  {item.label}
-                </dt>
-                <dd className="mt-2 text-2xl font-semibold text-neutral-950">
-                  {item.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </div>
-    </section>
   );
 }
 
