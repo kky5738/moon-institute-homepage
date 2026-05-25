@@ -34,8 +34,7 @@ export const heroSlides = [
     date: "2026.05",
     href: "/notices",
     ctaLabel: "공지 확인",
-    background:
-      "linear-gradient(135deg, #171717 0%, #292524 42%, #57534e 68%, #d6d3d1 100%)",
+    background: "center / cover no-repeat url('/slide1.jpeg')",
   },
   {
     label: "월간 소식",
@@ -45,8 +44,7 @@ export const heroSlides = [
     date: "준비 중",
     href: "/notices",
     ctaLabel: "소식 보기",
-    background:
-      "linear-gradient(135deg, #0f172a 0%, #1e293b 38%, #44403c 70%, #a8a29e 100%)",
+    background: "center / cover no-repeat url('/slide2.jpeg')",
   },
   {
     label: "자료 공유",
@@ -56,8 +54,7 @@ export const heroSlides = [
     date: "상시",
     href: "/materials",
     ctaLabel: "자료 보기",
-    background:
-      "linear-gradient(135deg, #1c1917 0%, #3f3f46 45%, #78716c 72%, #e7e5e4 100%)",
+    background: "center / cover no-repeat url('/slide3.jpeg')",
   },
 ];
 
