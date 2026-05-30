@@ -41,26 +41,26 @@ export default async function AdminInquiriesPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
-      <div className="border-b border-neutral-200 pb-8">
-        <p className="text-sm font-semibold text-stone-700">관리자</p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-neutral-950">
+      <div className="border-b border-border pb-8">
+        <p className="text-sm font-semibold text-primary">관리자</p>
+        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
           문의 관리
         </h1>
-        <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
           공개 문의 폼으로 접수된 일반 문의, 참여 신청, 후원 관심 목록입니다.
           삭제하지 않고 상태 변경으로 보존합니다.
         </p>
       </div>
 
-      <section className="mt-8 divide-y divide-neutral-200 border-y border-neutral-200 bg-white">
+      <section className="mt-8 divide-y divide-border border-y border-border bg-surface">
         {inquiries.length > 0 ? (
           inquiries.map((inquiry) => (
             <article
               key={inquiry.id}
               className="grid gap-5 px-5 py-5 md:grid-cols-[150px_1fr_210px] md:px-6"
             >
-              <div className="space-y-2 text-sm text-neutral-500">
-                <p className="font-semibold text-neutral-900">
+              <div className="space-y-2 text-sm text-muted">
+                <p className="font-semibold text-foreground">
                   {getInquiryTypeLabel(inquiry.type)}
                 </p>
                 <p>{formatDate(inquiry.createdAt)}</p>
@@ -69,17 +69,17 @@ export default async function AdminInquiriesPage() {
 
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-semibold text-neutral-950">
+                  <h2 className="text-lg font-semibold text-foreground">
                     {inquiry.subject ?? "제목 없음"}
                   </h2>
-                  <span className="border border-neutral-200 px-2 py-1 text-xs font-semibold text-neutral-600">
+                  <span className="border border-border px-2 py-1 text-xs font-semibold text-muted">
                     {getStatusLabel(inquiry.status)}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-neutral-500">
+                <p className="mt-2 text-sm text-muted">
                   접수자: {inquiry.name}
                 </p>
-                <p className="mt-3 line-clamp-2 text-sm leading-6 text-neutral-600">
+                <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted">
                   {inquiry.message}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export default async function AdminInquiriesPage() {
             </article>
           ))
         ) : (
-          <div className="px-5 py-10 text-sm text-neutral-500 md:px-6">
+          <div className="px-5 py-10 text-sm text-muted md:px-6">
             접수된 문의가 없습니다.
           </div>
         )}
@@ -128,7 +128,7 @@ function StatusButton({
       <input type="hidden" name="status" value={status} />
       <button
         type="submit"
-        className="border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:border-neutral-950 hover:text-neutral-950"
+        className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
       >
         {children}
       </button>
@@ -177,7 +177,7 @@ function ContactDetails({
         <div>
           <dt className="sr-only">이메일</dt>
           <dd>
-            <a className="break-all hover:text-neutral-950" href={`mailto:${email}`}>
+            <a className="break-all hover:text-foreground" href={`mailto:${email}`}>
               {email}
             </a>
           </dd>
@@ -187,7 +187,7 @@ function ContactDetails({
         <div>
           <dt className="sr-only">연락처</dt>
           <dd>
-            <a className="break-all hover:text-neutral-950" href={`tel:${phone}`}>
+            <a className="break-all hover:text-foreground" href={`tel:${phone}`}>
               {phone}
             </a>
           </dd>

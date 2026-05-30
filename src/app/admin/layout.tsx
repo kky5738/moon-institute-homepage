@@ -11,7 +11,7 @@ export default async function AdminLayout({
 
   return (
     <div>
-      <div className="border-b border-neutral-200 bg-neutral-950 text-white">
+      <div className="border-b border-border bg-primary-dark text-white">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
             <Link href="/admin" className="hover:underline">

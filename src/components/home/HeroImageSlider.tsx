@@ -35,8 +35,8 @@ export function HeroImageSlider() {
   const currentNumber = activeIndex + 1;
 
   return (
-    <div className="border border-neutral-200 bg-stone-100">
-      <div className="relative aspect-[16/9] min-h-[220px] overflow-hidden bg-neutral-200 sm:min-h-[320px] lg:min-h-[420px]">
+    <div className="border border-border bg-[#f1eef8]">
+      <div className="relative aspect-[16/9] min-h-[220px] overflow-hidden bg-[#ede9f7] sm:min-h-[320px] lg:min-h-[420px]">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,#e7e5e4,#f5f5f4)]" />
         {slides.map((slide, index) => {
           const isActive = index === activeIndex;
@@ -71,7 +71,7 @@ export function HeroImageSlider() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-neutral-950/20 via-transparent to-transparent" />
 
         <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-4 p-4 sm:p-5">
-          <p className="bg-white/85 px-3 py-1.5 text-xs font-semibold text-neutral-700">
+          <p className="bg-white/85 px-3 py-1.5 text-xs font-semibold text-primary-dark">
             대표 이미지 {currentNumber} / {slides.length}
           </p>
           <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function HeroImageSlider() {
               type="button"
               aria-label="이전 이미지 보기"
               onClick={() => setActiveIndex((current) => getPreviousIndex(current))}
-              className="flex h-9 w-9 cursor-pointer items-center justify-center border border-white/70 bg-white/85 text-lg font-semibold text-neutral-800 hover:bg-white"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center border border-white/70 bg-white/85 text-lg font-semibold text-foreground hover:bg-white"
             >
               ‹
             </button>
@@ -87,7 +87,7 @@ export function HeroImageSlider() {
               type="button"
               aria-label="다음 이미지 보기"
               onClick={() => setActiveIndex((current) => getNextIndex(current))}
-              className="flex h-9 w-9 cursor-pointer items-center justify-center border border-white/70 bg-white/85 text-lg font-semibold text-neutral-800 hover:bg-white"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center border border-white/70 bg-white/85 text-lg font-semibold text-foreground hover:bg-white"
             >
               ›
             </button>
@@ -107,8 +107,8 @@ export function HeroImageSlider() {
               aria-current={isActive ? "true" : undefined}
               onClick={() => setActiveIndex(index)}
               className={[
-                "h-2.5 w-2.5 cursor-pointer border border-neutral-500 transition-colors",
-                isActive ? "bg-neutral-800" : "bg-white hover:bg-neutral-200",
+                "h-2.5 w-2.5 cursor-pointer border border-accent transition-colors",
+                isActive ? "bg-primary-dark" : "bg-white hover:bg-[#ede9f7]",
               ].join(" ")}
             />
           );
