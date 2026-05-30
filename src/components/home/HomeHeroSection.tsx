@@ -19,7 +19,7 @@ export function HomeHeroSection() {
   }, []);
 
   return (
-    <section className="relative isolate min-h-[calc(100svh-124px)] overflow-hidden bg-neutral-950 text-white sm:min-h-[calc(100svh-73px)]">
+    <section className="relative isolate min-h-[calc(100svh-124px)] overflow-hidden bg-primary-dark text-white sm:min-h-[calc(100svh-73px)]">
       <div className="absolute inset-0">
         {heroSlides.map((slide, index) => (
           <div
@@ -32,42 +32,42 @@ export function HomeHeroSection() {
             aria-hidden={index !== activeIndex}
           />
         ))}
-        <div className="absolute inset-0 bg-neutral-950/60" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(90deg,rgba(0,0,0,0.5),rgba(0,0,0,0.08))]" />
+        <div className="absolute inset-0 bg-primary-dark/75" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(109,92,165,0.32),transparent_30%),linear-gradient(90deg,rgba(53,37,86,0.72),rgba(53,37,86,0.18))]" />
       </div>
 
       <div className="relative mx-auto flex min-h-[calc(100svh-124px)] w-full max-w-6xl flex-col justify-center px-5 py-12 sm:min-h-[calc(100svh-73px)] sm:py-16 lg:px-8">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold text-stone-200">
+          <p className="text-sm font-semibold text-[#e6e0f3]">
             문선명 연구소 홈페이지
           </p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
             주요 소식과 월간 흐름을 차분하게 전합니다
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-stone-200 sm:text-lg">
+          <p className="mt-6 max-w-2xl text-base leading-8 text-[#e6e0f3] sm:text-lg">
             출범 전 홍보 운영부터 공식 홈페이지 전환까지, 공지와 자료를
             보존하는 연구소의 공개 창구로 준비합니다.
           </p>
         </div>
 
-        <article className="mt-8 max-w-2xl border border-white/20 bg-neutral-950/55 p-5 shadow-2xl shadow-neutral-950/25 backdrop-blur sm:p-6">
+        <article className="mt-8 max-w-2xl border border-white/20 bg-primary-dark/70 p-5 shadow-2xl shadow-primary-dark/30 backdrop-blur sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-stone-200">
+            <p className="text-sm font-semibold text-[#e6e0f3]">
               {activeSlide.label}
             </p>
-            <span className="text-sm font-medium text-stone-300">
+            <span className="text-sm font-medium text-[#d8d0ee]">
               {activeSlide.date}
             </span>
           </div>
           <h2 className="mt-4 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
             {activeSlide.title}
           </h2>
-          <p className="mt-4 text-sm leading-6 text-stone-200">
+          <p className="mt-4 text-sm leading-6 text-[#e6e0f3]">
             {activeSlide.summary}
           </p>
           <Link
             href={activeSlide.href}
-            className="mt-6 inline-flex h-11 items-center justify-center border border-white bg-white px-5 text-sm font-semibold text-neutral-950 hover:bg-stone-200"
+            className="mt-6 inline-flex h-11 items-center justify-center border border-white bg-white px-5 text-sm font-semibold text-primary-dark hover:bg-[#ede9f7]"
           >
             {activeSlide.ctaLabel}
           </Link>

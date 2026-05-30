@@ -34,23 +34,23 @@ export default async function MaterialDetailPage({
 
   return (
     <article className="mx-auto w-full max-w-3xl px-5 py-14 lg:px-8">
-      <Link href="/materials" className="text-sm font-semibold text-stone-700 hover:underline">
+      <Link href="/materials" className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
         홍보자료 목록
       </Link>
-      <div className="mt-6 border-b border-neutral-200 pb-8">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
+      <div className="mt-6 border-b border-border pb-8">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <span>{post.publishedAt}</span>
-          <span className="border border-neutral-200 px-2 py-1 text-xs font-semibold text-stone-700">
+          <span className="border border-border px-2 py-1 text-xs font-semibold text-primary">
             {post.category}
           </span>
           <span>{post.phase}</span>
         </div>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-neutral-950">
+        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
           {post.title}
         </h1>
-        <p className="mt-5 text-base leading-7 text-neutral-600">{post.summary}</p>
+        <p className="mt-5 text-base leading-7 text-muted">{post.summary}</p>
       </div>
-      <div className="whitespace-pre-line py-8 text-base leading-8 text-neutral-700">
+      <div className="whitespace-pre-line py-8 text-base leading-8 text-foreground">
         {post.content}
       </div>
     </article>

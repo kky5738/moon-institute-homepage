@@ -22,7 +22,7 @@ export function ContactForm() {
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
       <div>
-        <label htmlFor="type" className="text-sm font-semibold text-neutral-900">
+        <label htmlFor="type" className="text-sm font-semibold text-foreground">
           문의 유형
         </label>
         <select
@@ -30,7 +30,7 @@ export function ContactForm() {
           name="type"
           required
           defaultValue="GENERAL"
-          className="mt-2 h-11 w-full border border-neutral-300 bg-white px-3 text-sm text-neutral-950 outline-none focus:border-neutral-950"
+          className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
         >
           <option value="GENERAL">일반 문의</option>
           <option value="PARTICIPATION">참여 신청</option>
@@ -40,7 +40,7 @@ export function ContactForm() {
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="name" className="text-sm font-semibold text-neutral-900">
+          <label htmlFor="name" className="text-sm font-semibold text-foreground">
             이름
           </label>
           <input
@@ -51,12 +51,12 @@ export function ContactForm() {
             minLength={2}
             maxLength={80}
             autoComplete="name"
-            className="mt-2 h-11 w-full border border-neutral-300 bg-white px-3 text-sm text-neutral-950 outline-none focus:border-neutral-950"
+            className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="text-sm font-semibold text-neutral-900">
+          <label htmlFor="email" className="text-sm font-semibold text-foreground">
             이메일
           </label>
           <input
@@ -65,13 +65,13 @@ export function ContactForm() {
             type="email"
             maxLength={120}
             autoComplete="email"
-            className="mt-2 h-11 w-full border border-neutral-300 bg-white px-3 text-sm text-neutral-950 outline-none focus:border-neutral-950"
+            className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="phone" className="text-sm font-semibold text-neutral-900">
+        <label htmlFor="phone" className="text-sm font-semibold text-foreground">
           연락처
         </label>
         <input
@@ -80,15 +80,15 @@ export function ContactForm() {
           type="tel"
           maxLength={40}
           autoComplete="tel"
-          className="mt-2 h-11 w-full border border-neutral-300 bg-white px-3 text-sm text-neutral-950 outline-none focus:border-neutral-950"
+          className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
         />
-        <p className="mt-2 text-xs leading-5 text-neutral-500">
+        <p className="mt-2 text-xs leading-5 text-muted">
           이메일 또는 연락처 중 하나는 입력해주세요.
         </p>
       </div>
 
       <div>
-        <label htmlFor="subject" className="text-sm font-semibold text-neutral-900">
+        <label htmlFor="subject" className="text-sm font-semibold text-foreground">
           제목
         </label>
         <input
@@ -96,12 +96,12 @@ export function ContactForm() {
           name="subject"
           type="text"
           maxLength={120}
-          className="mt-2 h-11 w-full border border-neutral-300 bg-white px-3 text-sm text-neutral-950 outline-none focus:border-neutral-950"
+          className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
         />
       </div>
 
       <div>
-        <label htmlFor="message" className="text-sm font-semibold text-neutral-900">
+        <label htmlFor="message" className="text-sm font-semibold text-foreground">
           내용
         </label>
         <textarea
@@ -111,7 +111,7 @@ export function ContactForm() {
           minLength={10}
           maxLength={2000}
           rows={8}
-          className="mt-2 w-full resize-y border border-neutral-300 bg-white px-3 py-3 text-sm leading-6 text-neutral-950 outline-none focus:border-neutral-950"
+          className="mt-2 w-full resize-y border border-border bg-surface px-3 py-3 text-sm leading-6 text-foreground outline-none focus:border-primary"
         />
       </div>
 
@@ -131,7 +131,7 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-400"
+        className="inline-flex h-11 items-center justify-center border border-primary bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:border-muted disabled:bg-muted"
       >
         {pending ? "접수 중" : "문의 접수"}
       </button>

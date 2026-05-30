@@ -15,52 +15,52 @@ export default async function NoticesPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
-      <div className="flex flex-col gap-4 border-b border-neutral-200 pb-8 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-4 border-b border-border pb-8 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-semibold text-stone-700">공지사항</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-neutral-950">
+          <p className="text-sm font-semibold text-primary">공지사항</p>
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
             연구소 소식과 안내
           </h1>
         </div>
-        <p className="max-w-md text-sm leading-6 text-neutral-600">
+        <p className="max-w-md text-sm leading-6 text-muted">
           관리자 작성 기능이 붙기 전까지는 Prisma seed 데이터로 목록 구조를
           확인합니다.
         </p>
       </div>
 
-      <section className="mt-8 divide-y divide-neutral-200 border-y border-neutral-200 bg-white">
+      <section className="mt-8 divide-y divide-border border-y border-border bg-surface">
         {notices.length > 0 ? notices.map((notice) => (
           <article
             key={notice.id}
             className="grid gap-4 px-5 py-6 md:grid-cols-[140px_1fr] md:px-6"
           >
-            <div className="text-sm text-neutral-500">
+            <div className="text-sm text-muted">
               <p>{notice.publishedAt}</p>
-              <p className="mt-2 inline-flex border border-neutral-200 px-2 py-1 text-xs font-semibold text-stone-700">
+              <p className="mt-2 inline-flex border border-border px-2 py-1 text-xs font-semibold text-primary">
                 {notice.category}
               </p>
-              <p className="mt-2 text-xs text-neutral-400">{notice.phase}</p>
+              <p className="mt-2 text-xs text-muted">{notice.phase}</p>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 {notice.isPinned ? (
-                  <span className="border border-neutral-300 bg-stone-100 px-2 py-1 text-xs font-semibold text-neutral-700">
+                  <span className="border border-border bg-[#f1eef8] px-2 py-1 text-xs font-semibold text-primary-dark">
                     고정
                   </span>
                 ) : null}
-                <h2 className="text-xl font-semibold text-neutral-950">
-                  <Link href={`/notices/${notice.slug}`} className="hover:underline">
+                <h2 className="text-xl font-semibold text-foreground">
+                  <Link href={`/notices/${notice.slug}`} className="hover:text-primary hover:underline">
                     {notice.title}
                   </Link>
                 </h2>
               </div>
-              <p className="mt-3 text-sm leading-6 text-neutral-600">
+              <p className="mt-3 text-sm leading-6 text-muted">
                 {notice.summary}
               </p>
             </div>
           </article>
         )) : (
-          <div className="px-5 py-10 text-sm text-neutral-500 md:px-6">
+          <div className="px-5 py-10 text-sm text-muted md:px-6">
             등록된 공지사항이 없습니다.
           </div>
         )}
