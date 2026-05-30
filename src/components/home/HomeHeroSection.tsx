@@ -19,7 +19,7 @@ export function HomeHeroSection() {
   }, []);
 
   return (
-    <section className="relative isolate min-h-[calc(100svh-124px)] overflow-hidden bg-primary-dark text-white sm:min-h-[calc(100svh-73px)]">
+    <section className="relative isolate min-h-[calc(100svh-124px)] overflow-hidden bg-neutral-950 text-white sm:min-h-[calc(100svh-73px)]">
       <div className="absolute inset-0">
         {heroSlides.map((slide, index) => (
           <div
@@ -32,8 +32,8 @@ export function HomeHeroSection() {
             aria-hidden={index !== activeIndex}
           />
         ))}
-        <div className="absolute inset-0 bg-primary-dark/75" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(109,92,165,0.32),transparent_30%),linear-gradient(90deg,rgba(53,37,86,0.72),rgba(53,37,86,0.18))]" />
+        <div className="absolute inset-0 bg-neutral-950/60" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(90deg,rgba(0,0,0,0.5),rgba(0,0,0,0.08))]" />
       </div>
 
       <div className="relative mx-auto flex min-h-[calc(100svh-124px)] w-full max-w-6xl flex-col justify-center px-5 py-12 sm:min-h-[calc(100svh-73px)] sm:py-16 lg:px-8">
@@ -50,7 +50,7 @@ export function HomeHeroSection() {
           </p>
         </div>
 
-        <article className="mt-8 max-w-2xl border border-white/20 bg-primary-dark/70 p-5 shadow-2xl shadow-primary-dark/30 backdrop-blur sm:p-6">
+        <article className="mt-8 max-w-2xl border border-white/20 bg-neutral-950/55 p-5 shadow-2xl shadow-neutral-950/25 backdrop-blur sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold text-[#e6e0f3]">
               {activeSlide.label}
