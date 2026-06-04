@@ -51,3 +51,6 @@ docker-data
 
 # macOS
 .ds_Store
+
+# Documents
+docs/proposal.md
