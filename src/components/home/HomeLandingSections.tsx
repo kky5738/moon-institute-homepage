@@ -22,51 +22,79 @@ export function HomeLandingSections() {
 
 function ResearchTopicHubSection() {
   return (
-    <section className="border-b border-border bg-background">
+    <section
+      aria-labelledby="research-topic-hub-heading"
+      className="border-b border-border bg-background"
+    >
       <div className="mx-auto w-full max-w-6xl px-5 py-14 sm:py-16 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.6fr] lg:items-start">
-          <SectionHeading
-            eyebrow="연구 주제 허브"
-            title="관심 주제에서 자료와 공지로 이어집니다"
-            description="초기에는 임시 주제 카드로 탐색 흐름을 검증하고, 이후 주제 상세 페이지와 자료 아카이브로 자연스럽게 확장합니다."
-          />
+        <SectionHeading
+          titleId="research-topic-hub-heading"
+          eyebrow="연구 주제 허브"
+          title="관심 주제에서 자료와 공지로 이어집니다"
+          description="초기에는 임시 주제 카드로 탐색 흐름을 검증하고, 이후 주제 상세 페이지와 자료 아카이브로 자연스럽게 확장합니다."
+        />
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {researchTopicHubItems.map((topic, index) => (
-              <article
-                key={topic.title}
-                className="flex min-h-[18rem] flex-col border border-border bg-surface p-5 shadow-sm shadow-primary-dark/5"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-xl font-semibold text-foreground">
-                    {topic.title}
-                  </h3>
-                  <span className="shrink-0 text-xs font-semibold text-accent">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-muted">
-                  {topic.description}
-                </p>
-                <div className="mt-auto pt-6">
-                  <div className="grid grid-cols-2 gap-2">
-                    {topic.links.map((link) => (
-                      <Link
-                        key={`${topic.title}-${link.label}`}
-                        href={link.href}
-                        className="inline-flex min-h-10 items-center justify-center border border-border px-3 py-2 text-center text-sm font-semibold text-primary hover:border-primary hover:bg-[#f1eef8] hover:text-primary-dark"
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+        <div className="grid gap-5 lg:grid-cols-3">
+          {researchTopicHubItems.map((topic, index) => (
+            <ResearchTopicCard
+              key={topic.title}
+              index={index}
+              topic={topic}
+            />
+          ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function ResearchTopicCard({
+  index,
+  topic,
+}: {
+  index: number;
+  topic: (typeof researchTopicHubItems)[number];
+}) {
+  return (
+    <article className="flex min-h-[20rem] flex-col border border-border bg-surface p-6 shadow-sm shadow-primary-dark/5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold text-accent">
+            {topic.focusLabel}
+          </p>
+          <h3 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+            {topic.title}
+          </h3>
+        </div>
+        <span className="shrink-0 border border-border bg-background px-2.5 py-1 text-xs font-semibold text-primary">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+      </div>
+
+      <p className="mt-5 text-sm leading-6 text-muted">
+        {topic.description}
+      </p>
+
+      <div className="mt-auto pt-7">
+        <Link
+          href={topic.primaryLink.href}
+          className="inline-flex min-h-11 w-full items-center justify-center bg-primary-dark px-4 py-2 text-center text-sm font-semibold text-white hover:bg-primary"
+        >
+          {topic.primaryLink.label}
+        </Link>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {topic.secondaryLinks.map((link) => (
+            <Link
+              key={`${topic.title}-${link.label}`}
+              href={link.href}
+              className="inline-flex min-h-10 items-center justify-center border border-border px-2 py-2 text-center text-sm font-semibold text-primary hover:border-primary hover:bg-[#f1eef8] hover:text-primary-dark"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -103,7 +131,7 @@ function VideoSection() {
                 <h3 className="text-lg font-semibold text-foreground">
                   {item.title}
                 </h3>
-                  <p className="mt-3 text-sm leading-6 text-muted">
+                <p className="mt-3 text-sm leading-6 text-muted">
                   {item.description}
                 </p>
               </div>
@@ -203,16 +231,21 @@ function ParticipationCtaSection() {
 function SectionHeading({
   eyebrow,
   title,
+  titleId,
   description,
 }: {
   eyebrow: string;
   title: string;
+  titleId?: string;
   description: string;
 }) {
   return (
     <div className="mb-8 max-w-3xl">
       <p className="text-sm font-semibold text-primary">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
+      <h2
+        id={titleId}
+        className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl"
+      >
         {title}
       </h2>
       <p className="mt-4 text-sm leading-6 text-muted">{description}</p>
