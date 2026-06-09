@@ -7,6 +7,7 @@ export type BoardPost = {
   title: string;
   slug: string;
   category: string;
+  categorySlug: string;
   summary: string;
   publishedAt: string;
   isPinned: boolean;
@@ -40,6 +41,7 @@ export async function getPublishedPosts(type: PostType): Promise<BoardPost[]> {
       title: post.title,
       slug: post.slug,
       category: post.category?.name ?? getDefaultCategoryName(post.type),
+      categorySlug: post.category?.slug ?? getDefaultCategorySlug(post.type),
       summary: post.summary ?? post.content.slice(0, 120),
       publishedAt: formatDate(post.publishedAt ?? post.createdAt),
       isPinned: post.isPinned,
@@ -85,6 +87,7 @@ export async function getPublishedPostBySlug(
       title: post.title,
       slug: post.slug,
       category: post.category?.name ?? getDefaultCategoryName(post.type),
+      categorySlug: post.category?.slug ?? getDefaultCategorySlug(post.type),
       summary: post.summary ?? post.content.slice(0, 120),
       content: post.content,
       publishedAt: formatDate(post.publishedAt ?? post.createdAt),
@@ -116,6 +119,14 @@ function getDefaultCategoryName(type: PostType) {
   }
 
   return "홍보자료";
+}
+
+function getDefaultCategorySlug(type: PostType) {
+  if (type === PostType.NOTICE) {
+    return "notice";
+  }
+
+  return "promotion";
 }
 
 function formatDate(date: Date) {

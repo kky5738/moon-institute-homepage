@@ -4,10 +4,10 @@ import { HomeHeroSection } from "@/components/home/HomeHeroSection";
 import {
   activityItems,
   participationItems,
-  researchTopicHubItems,
   resourceNoticeItems,
   videoContentItems,
 } from "@/lib/site-content";
+import { researchTopics } from "@/lib/topics";
 
 const sectionShellClassName =
   "mx-auto w-full max-w-screen-2xl px-5 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20 xl:px-10 xl:py-24 2xl:px-12";
@@ -35,13 +35,13 @@ function ResearchTopicHubSection() {
           titleId="research-topic-hub-heading"
           eyebrow="연구 주제 허브"
           title="관심 주제에서 자료와 공지로 이어집니다"
-          description="초기에는 임시 주제 카드로 탐색 흐름을 검증하고, 이후 주제 상세 페이지와 자료 아카이브로 자연스럽게 확장합니다."
+          description="주제 상세 페이지에서 관련 공지, 자료, 영상 안내, 문의 경로를 한 화면으로 연결합니다."
         />
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 xl:gap-6">
-          {researchTopicHubItems.map((topic, index) => (
+          {researchTopics.map((topic, index) => (
             <ResearchTopicCard
-              key={topic.title}
+              key={topic.slug}
               index={index}
               topic={topic}
             />
@@ -57,7 +57,7 @@ function ResearchTopicCard({
   topic,
 }: {
   index: number;
-  topic: (typeof researchTopicHubItems)[number];
+  topic: (typeof researchTopics)[number];
 }) {
   return (
     <article className="flex min-h-[18rem] flex-col border border-border bg-surface p-5 shadow-sm shadow-primary-dark/5 sm:p-6 xl:min-h-[21rem] xl:p-7">
@@ -76,7 +76,7 @@ function ResearchTopicCard({
       </div>
 
       <p className="mt-5 text-sm leading-6 text-muted">
-        {topic.description}
+        {topic.summary}
       </p>
 
       <div className="mt-auto pt-7">

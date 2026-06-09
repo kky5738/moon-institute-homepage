@@ -36,6 +36,9 @@ export default function RootLayout({
                 <Link className="hover:text-primary-dark" href="/about">
                   연구소 소개
                 </Link>
+                <Link className="hover:text-primary-dark" href="/topics">
+                  연구 주제
+                </Link>
                 <Link className="hover:text-primary-dark" href="/notices">
                   공지사항
                 </Link>

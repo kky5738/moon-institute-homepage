@@ -97,58 +97,6 @@ export const videoContentItems = [
   },
 ];
 
-export type ResearchTopicLink = {
-  label: string;
-  href: string;
-};
-
-export type ResearchTopicHubItem = {
-  title: string;
-  focusLabel: string;
-  description: string;
-  primaryLink: ResearchTopicLink;
-  secondaryLinks: ResearchTopicLink[];
-};
-
-export const researchTopicHubItems: ResearchTopicHubItem[] = [
-  {
-    title: "주제1",
-    focusLabel: "자료 탐색",
-    description:
-      "출범 전 공개 자료와 공지를 한 주제 흐름 안에서 탐색할 수 있도록 구성하는 임시 주제입니다.",
-    primaryLink: { label: "관련 자료 보기", href: "/materials" },
-    secondaryLinks: [
-      { label: "관련 공지", href: "/notices" },
-      { label: "영상 안내", href: "/#video-content" },
-      { label: "문의하기", href: "/contact" },
-    ],
-  },
-  {
-    title: "주제2",
-    focusLabel: "공지 흐름",
-    description:
-      "방문자가 게시판 메뉴보다 관심 주제를 먼저 선택하도록 돕는 연구 주제 허브의 임시 카드입니다.",
-    primaryLink: { label: "관련 공지 확인", href: "/notices" },
-    secondaryLinks: [
-      { label: "관련 자료", href: "/materials" },
-      { label: "영상 안내", href: "/#video-content" },
-      { label: "문의하기", href: "/contact" },
-    ],
-  },
-  {
-    title: "주제3",
-    focusLabel: "문의 연결",
-    description:
-      "향후 주제 상세 페이지와 자료 아카이브로 확장하기 전, 홈에서 탐색 구조를 검증하기 위한 주제입니다.",
-    primaryLink: { label: "문의하기", href: "/contact" },
-    secondaryLinks: [
-      { label: "관련 자료", href: "/materials" },
-      { label: "관련 공지", href: "/notices" },
-      { label: "영상 안내", href: "/#video-content" },
-    ],
-  },
-];
-
 export const activityItems = [
   {
     title: "연구소 활동",
