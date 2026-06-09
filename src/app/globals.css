@@ -5,10 +5,18 @@
   --foreground: #1e1b24;
   --primary: #4c3a7a;
   --primary-dark: #352556;
+  --primary-foreground: #ffffff;
   --accent: #6d5ca5;
+  --accent-purple: #6d5ca5;
+  --gold: #c8a96b;
   --surface: #ffffff;
+  --card: #ffffff;
+  --secondary: #f1eef8;
   --border: #ddd7ea;
   --muted: #625b6d;
+  --muted-foreground: #625b6d;
+  --shadow-soft: 0 4px 20px -6px color-mix(in oklab, var(--primary-dark) 12%, transparent);
+  --shadow-elegant: 0 10px 40px -12px color-mix(in oklab, var(--primary-dark) 25%, transparent);
 }
 
 @theme inline {
@@ -16,11 +24,18 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
+  --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
+  --color-accent-purple: var(--accent-purple);
+  --color-gold: var(--gold);
   --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-secondary: var(--secondary);
   --color-border: var(--border);
   --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --font-sans: Arial, Helvetica, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { heroSlides } from "@/lib/site-content";
+import { HeroImageSlider } from "@/components/home/HeroImageSlider";
+import { heroSlides, monthlyNewsItems } from "@/lib/site-content";
 
 const slideIntervalMs = 6000;
 
@@ -19,112 +20,109 @@ export function HomeHeroSection() {
   }, []);
 
   return (
-    <section className="relative isolate min-h-[calc(100dvh-124px)] overflow-hidden bg-neutral-950 text-white sm:min-h-[calc(100dvh-73px)]">
-      <div className="absolute inset-0">
-        {heroSlides.map((slide, index) => (
-          <div
-            key={slide.title}
-            className={[
-              "absolute inset-0 transition-opacity duration-1000 ease-in-out",
-              index === activeIndex ? "opacity-100" : "opacity-0",
-            ].join(" ")}
-            style={{ background: slide.background }}
-            aria-hidden={index !== activeIndex}
-          />
-        ))}
-        <div className="absolute inset-0 bg-neutral-950/60" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.68),rgba(0,0,0,0.28)_58%,rgba(0,0,0,0.12))]" />
-      </div>
+    <section id="top" className="relative min-h-[100svh] overflow-hidden bg-primary-dark text-white">
+      <HeroImageSlider />
 
-      <div className="relative mx-auto flex min-h-[calc(100dvh-124px)] w-full max-w-screen-2xl flex-col justify-center px-5 py-10 sm:min-h-[calc(100dvh-73px)] sm:px-6 sm:py-14 lg:px-8 xl:px-10 2xl:px-12">
-        <div className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] xl:gap-14">
-          <div className="max-w-4xl">
-            <p className="text-sm font-semibold text-[#e6e0f3]">
-              문선명 연구소 홈페이지
-            </p>
-            <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">
-              주요 소식과 월간 흐름을 차분하게 전합니다
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-[#e6e0f3] sm:mt-6 sm:text-lg sm:leading-8 lg:max-w-3xl">
-              출범 전 홍보 운영부터 공식 홈페이지 전환까지, 공지와 자료를
-              보존하는 연구소의 공개 창구로 준비합니다.
-            </p>
+      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-between px-5 pb-16 pt-28 sm:px-6 sm:pt-32 lg:px-10 lg:pb-20 lg:pt-40">
+        <div className="max-w-3xl">
+          <span className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
+            <span className="h-px w-8 bg-gold" aria-hidden="true" />
+            Moon Institute
+          </span>
+          <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-normal text-white [word-break:keep-all] sm:text-5xl lg:text-7xl">
+            주요 소식과 월간 흐름을 차분하게 전합니다
+          </h1>
+          <p className="mt-6 max-w-2xl text-base leading-7 text-white/78 sm:text-lg sm:leading-8">
+            출범 전 홍보 운영부터 공식 홈페이지 전환까지, 공지와 자료를
+            보존하는 연구소의 공개 창구로 준비합니다.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/notices"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-primary-dark transition-colors hover:bg-gold"
+            >
+              공지 확인 <span className="ml-2" aria-hidden="true">→</span>
+            </Link>
+            <Link
+              href="/materials"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-white/45 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              자료 보기
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,41rem)] lg:items-end">
+          <div className="grid gap-3 sm:grid-cols-3 lg:max-w-xl">
+            {monthlyNewsItems.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur"
+              >
+                <p className="text-2xl font-semibold text-gold">{item.value}</p>
+                <p className="mt-1 text-xs leading-5 text-white/68">{item.label}</p>
+              </div>
+            ))}
           </div>
 
-          <div className="w-full max-w-2xl lg:max-w-none">
-            <article className="border border-white/20 bg-neutral-950/55 p-5 shadow-2xl shadow-neutral-950/25 backdrop-blur sm:p-6 xl:p-7">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-[#e6e0f3]">
+          <div>
+            <article
+              key={activeSlide.title}
+              className="max-w-2xl rounded-lg bg-white/95 p-6 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur sm:p-7 lg:p-8"
+            >
+              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                <span className="rounded-full bg-secondary px-3 py-1 font-semibold text-primary-dark">
                   {activeSlide.label}
-                </p>
-                <span className="text-sm font-medium text-[#d8d0ee]">
-                  {activeSlide.date}
                 </span>
+                <span>{activeSlide.date}</span>
               </div>
-              <h2 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-3xl">
+              <h2 className="mt-4 text-2xl font-semibold leading-snug text-foreground [word-break:keep-all] sm:text-3xl">
                 {activeSlide.title}
               </h2>
-              <p className="mt-4 text-sm leading-6 text-[#e6e0f3]">
+              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
                 {activeSlide.summary}
               </p>
-              <Link
-                href={activeSlide.href}
-                className="mt-6 inline-flex min-h-11 items-center justify-center border border-white bg-white px-5 py-2 text-sm font-semibold text-primary-dark hover:bg-[#ede9f7]"
-              >
-                {activeSlide.ctaLabel}
-              </Link>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  href={activeSlide.href}
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
+                >
+                  {activeSlide.ctaLabel} <span className="ml-2" aria-hidden="true">→</span>
+                </Link>
+                <Link
+                  href="/notices"
+                  className="inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary"
+                >
+                  전체 소식
+                </Link>
+              </div>
             </article>
 
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:mt-8">
-              <div
-                className="flex items-center gap-3"
-                aria-label="주요 소식 슬라이드 위치"
-              >
-                {heroSlides.map((slide, index) => (
-                  <button
-                    key={slide.title}
-                    type="button"
-                    aria-label={`${index + 1}번째 주요 소식 보기`}
-                    aria-current={index === activeIndex ? "true" : undefined}
-                    onClick={() => setActiveIndex(index)}
-                    className={[
-                      "h-1.5 cursor-pointer border border-white/40 transition-all",
-                      index === activeIndex
-                        ? "w-10 bg-white"
-                        : "w-5 bg-white/20 hover:bg-white/50",
-                    ].join(" ")}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2">
+            <div
+              className="mt-5 flex items-center gap-2"
+              aria-label="주요 소식 슬라이드 위치"
+            >
+              {heroSlides.map((slide, index) => (
                 <button
+                  key={slide.title}
                   type="button"
-                  aria-label="이전 주요 소식 보기"
-                  onClick={() => setActiveIndex((current) => getPreviousIndex(current))}
-                  className="flex h-10 w-10 cursor-pointer items-center justify-center border border-white/35 bg-white/10 text-lg font-semibold text-white hover:bg-white/20"
-                >
-                  <span aria-hidden="true">‹</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label="다음 주요 소식 보기"
-                  onClick={() => setActiveIndex((current) => getNextIndex(current))}
-                  className="flex h-10 w-10 cursor-pointer items-center justify-center border border-white/35 bg-white/10 text-lg font-semibold text-white hover:bg-white/20"
-                >
-                  <span aria-hidden="true">›</span>
-                </button>
-              </div>
+                  aria-label={`${index + 1}번째 주요 소식 보기`}
+                  aria-current={index === activeIndex ? "true" : undefined}
+                  onClick={() => setActiveIndex(index)}
+                  className={[
+                    "h-1.5 cursor-pointer rounded-full transition-all",
+                    index === activeIndex
+                      ? "w-10 bg-gold"
+                      : "w-6 bg-white/35 hover:bg-white/55",
+                  ].join(" ")}
+                />
+              ))}
             </div>
           </div>
         </div>
       </div>
     </section>
   );
-}
-
-function getPreviousIndex(current: number) {
-  return current === 0 ? heroSlides.length - 1 : current - 1;
 }
 
 function getNextIndex(current: number) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SiteFooter } from "@/components/site/SiteFooter";
+import { SiteNavbar } from "@/components/site/SiteNavbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,47 +20,9 @@ export default function RootLayout({
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full bg-background text-foreground">
         <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur">
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-              <Link href="/" className="flex flex-col text-primary-dark">
-                <span className="text-lg font-semibold tracking-tight">
-                  문선명 연구소
-                </span>
-                <span className="text-sm text-muted">
-                  M Institute
-                </span>
-              </Link>
-              <nav
-                aria-label="주요 메뉴"
-                className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium text-muted"
-              >
-                <Link className="hover:text-primary-dark" href="/about">
-                  연구소 소개
-                </Link>
-                <Link className="hover:text-primary-dark" href="/topics">
-                  연구 주제
-                </Link>
-                <Link className="hover:text-primary-dark" href="/notices">
-                  공지사항
-                </Link>
-                <Link className="hover:text-primary-dark" href="/materials">
-                  홍보자료
-                </Link>
-                <Link className="hover:text-primary-dark" href="/contact">
-                  문의/참여
-                </Link>
-              </nav>
-            </div>
-          </header>
+          <SiteNavbar />
           <main className="flex-1">{children}</main>
-          <footer className="border-t border-border bg-surface">
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-5 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between lg:px-8">
-              <p>문선명 연구소</p>
-              <Link href="/contact" className="hover:text-primary-dark">
-                문의 및 참여 신청
-              </Link>
-            </div>
-          </footer>
+          <SiteFooter />
         </div>
       </body>
     </html>
