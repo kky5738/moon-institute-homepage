@@ -47,7 +47,7 @@ export const researchTopics: ResearchTopic[] = [
       title: "소개 영상 안내",
       description:
         "연구소 소개 영상이 공개되면 이 주제에서 소개 자료와 함께 볼 수 있도록 연결합니다.",
-      href: "/#video-content",
+      href: "/#media",
     },
     contactPrompt:
       "출범 준비 자료와 소개 문서에 관해 확인하고 싶은 내용을 남길 수 있습니다.",
@@ -64,7 +64,7 @@ export const researchTopics: ResearchTopic[] = [
     secondaryLinks: [
       { label: "관련 공지", href: "/notices" },
       { label: "관련 자료", href: "/materials" },
-      { label: "영상 안내", href: "/#video-content" },
+      { label: "영상 안내", href: "/#media" },
     ],
     categoryConnections: {
       [PostType.NOTICE]: ["notice", "news"],
@@ -74,7 +74,7 @@ export const researchTopics: ResearchTopic[] = [
       title: "활동 기록 영상",
       description:
         "활동 기록형 영상이 공개되면 공지와 운영 기록을 보완하는 콘텐츠로 연결합니다.",
-      href: "/#video-content",
+      href: "/#media",
     },
     contactPrompt:
       "운영 일정, 공지 확인, 향후 안내 수신과 관련한 문의를 남길 수 있습니다.",
@@ -101,7 +101,7 @@ export const researchTopics: ResearchTopic[] = [
       title: "참여 안내 영상",
       description:
         "참여 안내 영상이 준비되면 문의 전 확인할 수 있는 짧은 안내 콘텐츠로 연결합니다.",
-      href: "/#video-content",
+      href: "/#media",
     },
     contactPrompt:
       "참여 신청, 일반 문의, 후원 관심을 남기면 관리자 확인 후 안내합니다.",

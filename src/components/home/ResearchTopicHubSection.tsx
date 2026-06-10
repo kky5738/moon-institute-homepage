@@ -1,0 +1,79 @@
+import Link from "next/link";
+import { researchTopics } from "@/lib/topics";
+
+export function ResearchTopicHubSection() {
+  return (
+    <section id="topics" className="scroll-mt-16 border-b border-border bg-secondary/55 py-12 sm:py-16 lg:py-16">
+      <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-10">
+        <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-purple">
+              Topic Hub
+            </span>
+            <h2 className="mt-3 text-2xl font-semibold leading-tight text-foreground [word-break:keep-all] sm:text-4xl lg:text-4xl">
+              관심 주제에서 자료와 공지로 이어집니다
+            </h2>
+            <p className="mt-4 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+              주제 상세 페이지에서 관련 공지, 자료, 영상 안내, 문의 경로를
+              한 화면으로 연결합니다.
+            </p>
+          </div>
+          <Link
+            href="/topics"
+            className="inline-flex h-11 w-fit items-center justify-center rounded-full border border-border bg-card px-5 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
+          >
+            전체 주제 보기
+          </Link>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3 lg:gap-5">
+          {researchTopics.map((topic, index) => (
+            <article
+              key={topic.slug}
+              className="group flex min-h-[18rem] flex-col rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-elegant)] sm:p-6"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark">
+                    {topic.focusLabel}
+                  </span>
+                  <h3 className="mt-4 text-xl font-semibold leading-snug text-foreground [word-break:keep-all] transition-colors group-hover:text-primary sm:text-2xl">
+                    {topic.title}
+                  </h3>
+                </div>
+                <span className="shrink-0 text-sm font-semibold text-gold">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                {topic.summary}
+              </p>
+
+              <div className="mt-auto pt-6">
+                <Link
+                  href={topic.primaryLink.href}
+                  className="inline-flex h-11 w-full items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
+                >
+                  {topic.primaryLink.label}
+                  <span className="ml-2" aria-hidden="true">→</span>
+                </Link>
+                <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-3 md:grid-cols-1 xl:grid-cols-3">
+                  {topic.secondaryLinks.map((link) => (
+                    <Link
+                      key={`${topic.slug}-${link.label}`}
+                      href={link.href}
+                      className="inline-flex min-h-10 items-center justify-center rounded-full border border-border px-3 py-2 text-center text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-secondary"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
