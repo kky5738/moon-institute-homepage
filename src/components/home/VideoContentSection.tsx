@@ -6,14 +6,14 @@ const subVideos = videoContentItems.slice(1);
 
 export function VideoContentSection() {
   return (
-    <section id="media" className="bg-background py-20 sm:py-24 lg:py-32">
+    <section id="media" className="scroll-mt-16 bg-background py-9 sm:py-12 lg:py-12">
       <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-10">
-        <div className="mb-12 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-5 flex flex-col gap-4 lg:mb-6 lg:flex-row lg:items-end lg:justify-between lg:gap-5">
           <div>
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-purple">
               Video Archive
             </span>
-            <h2 className="mt-3 max-w-3xl text-3xl font-semibold leading-tight text-foreground [word-break:keep-all] sm:text-4xl lg:text-5xl">
+            <h2 className="mt-3 max-w-3xl text-2xl font-semibold leading-tight text-foreground [word-break:keep-all] sm:text-4xl lg:text-4xl">
               소개와 해설을 영상 콘텐츠로 확장합니다
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
@@ -29,12 +29,12 @@ export function VideoContentSection() {
           </Link>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
           <article className="group overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-elegant)] lg:col-span-2">
-            <div className="relative aspect-video bg-gradient-to-br from-primary-dark via-primary to-accent-purple">
+            <div className="relative aspect-video bg-gradient-to-br from-primary-dark via-primary to-accent-purple lg:aspect-[3/1]">
               <div className="absolute inset-0 bg-black/10" />
               <div className="absolute inset-0 grid place-items-center">
-                <span className="grid h-20 w-20 place-items-center rounded-full bg-white/90 shadow-xl transition-transform group-hover:scale-105">
+                <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 shadow-xl transition-transform group-hover:scale-105 sm:h-20 sm:w-20">
                   <span
                     className="ml-1 h-0 w-0 border-y-[12px] border-l-[18px] border-y-transparent border-l-primary-dark"
                     aria-hidden="true"
@@ -48,14 +48,14 @@ export function VideoContentSection() {
                 {featuredVideo.length}
               </span>
             </div>
-            <div className="p-6 sm:p-7 lg:p-8">
-              <h3 className="text-2xl font-semibold text-foreground">
+            <div className="p-5 sm:p-6 lg:p-5">
+              <h3 className="text-xl font-semibold text-foreground sm:text-2xl">
                 {featuredVideo.title}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+              <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
                 {featuredVideo.description}
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <Link
                   href="/materials"
                   className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
@@ -72,14 +72,14 @@ export function VideoContentSection() {
             </div>
           </article>
 
-          <div className="grid gap-5">
+          <div className="grid auto-cols-[minmax(15rem,78vw)] grid-flow-col gap-4 overflow-x-auto pb-1 lg:grid-flow-row lg:auto-cols-auto lg:overflow-visible lg:pb-0">
             {subVideos.map((video) => (
               <Link
                 key={video.title}
                 href="/materials"
                 className="group flex gap-4 rounded-lg border border-border bg-card p-4 transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-soft)]"
               >
-                <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary to-accent-purple">
+                <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary to-accent-purple sm:w-32">
                   <div className="absolute inset-0 grid place-items-center">
                     <span
                       className="ml-1 h-0 w-0 border-y-[8px] border-l-[12px] border-y-transparent border-l-white"

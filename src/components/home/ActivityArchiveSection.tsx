@@ -28,14 +28,14 @@ const categoryClassName: Record<ArchiveCategory, string> = {
 
 export function ActivityArchiveSection() {
   return (
-    <section id="notice" className="border-y border-border bg-secondary/45 py-20 sm:py-24 lg:py-32">
+    <section id="notice" className="scroll-mt-16 border-y border-border bg-secondary/45 py-12 lg:py-12">
       <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-10">
-        <div className="mb-12 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-purple">
               Archive Hub
             </span>
-            <h2 className="mt-3 text-3xl font-semibold leading-tight text-foreground [word-break:keep-all] sm:text-4xl lg:text-5xl">
+            <h2 className="mt-3 text-2xl font-semibold leading-tight text-foreground [word-break:keep-all] sm:text-4xl lg:text-4xl">
               활동, 자료, 공지를 한 곳에서
             </h2>
             <p className="mt-4 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
@@ -66,12 +66,12 @@ export function ActivityArchiveSection() {
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+        <div className="grid auto-cols-[minmax(15.5rem,78vw)] grid-flow-col gap-4 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-2 md:overflow-visible md:pb-0 lg:grid-cols-3 lg:gap-4">
           {archiveItems.map((item) => (
             <Link
               key={`${item.category}-${item.title}`}
               href={item.href}
-              className="group rounded-lg border border-border bg-card p-6 transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-soft)] sm:p-7"
+              className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-soft)] sm:p-5"
             >
               <div className="flex items-center justify-between gap-4">
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${categoryClassName[item.category]}`}>
@@ -81,13 +81,13 @@ export function ActivityArchiveSection() {
                   ↗
                 </span>
               </div>
-              <p className="mt-5 text-xs font-semibold tracking-wider text-muted-foreground">
+              <p className="mt-4 text-xs font-semibold tracking-wider text-muted-foreground">
                 {item.meta}
               </p>
-              <h3 className="mt-2 text-xl font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+              <h3 className="mt-2 text-lg font-semibold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-xl">
                 {item.title}
               </h3>
-              <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
+              <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground md:line-clamp-3">
                 {item.summary}
               </p>
             </Link>

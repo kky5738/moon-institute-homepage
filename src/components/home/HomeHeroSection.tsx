@@ -20,23 +20,23 @@ export function HomeHeroSection() {
   }, []);
 
   return (
-    <section id="top" className="relative min-h-[100svh] overflow-hidden bg-primary-dark text-white">
+    <section id="top" className="relative min-h-[100svh] scroll-mt-16 overflow-hidden bg-primary-dark text-white">
       <HeroImageSlider />
 
-      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-between px-5 pb-16 pt-28 sm:px-6 sm:pt-32 lg:px-10 lg:pb-20 lg:pt-40">
+      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-between px-5 pb-8 pt-24 sm:px-6 sm:pb-10 sm:pt-28 lg:px-10 lg:pb-8 lg:pt-20">
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
             <span className="h-px w-8 bg-gold" aria-hidden="true" />
             Moon Institute
           </span>
-          <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-normal text-white [word-break:keep-all] sm:text-5xl lg:text-7xl">
+          <h1 className="mt-5 text-3xl font-semibold leading-tight tracking-normal text-white [word-break:keep-all] sm:text-5xl lg:text-5xl">
             주요 소식과 월간 흐름을 차분하게 전합니다
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-white/78 sm:text-lg sm:leading-8">
+          <p className="mt-4 max-w-2xl text-base leading-7 text-white/78 sm:text-lg sm:leading-8">
             출범 전 홍보 운영부터 공식 홈페이지 전환까지, 공지와 자료를
             보존하는 연구소의 공개 창구로 준비합니다.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/notices"
               className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-primary-dark transition-colors hover:bg-gold"
@@ -52,14 +52,14 @@ export function HomeHeroSection() {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,41rem)] lg:items-end">
-          <div className="grid gap-3 sm:grid-cols-3 lg:max-w-xl">
+        <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,41rem)] lg:items-end">
+          <div className="grid auto-cols-[8.75rem] grid-flow-col gap-3 overflow-x-auto pb-1 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:max-w-xl">
             {monthlyNewsItems.map((item) => (
               <div
                 key={item.label}
-                className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur"
+                className="min-h-20 rounded-lg border border-white/16 bg-white/10 p-3 backdrop-blur sm:p-4"
               >
-                <p className="text-2xl font-semibold text-gold">{item.value}</p>
+                <p className="text-xl font-semibold text-gold sm:text-2xl">{item.value}</p>
                 <p className="mt-1 text-xs leading-5 text-white/68">{item.label}</p>
               </div>
             ))}
@@ -68,7 +68,7 @@ export function HomeHeroSection() {
           <div>
             <article
               key={activeSlide.title}
-              className="max-w-2xl rounded-lg bg-white/95 p-6 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur sm:p-7 lg:p-8"
+              className="max-w-2xl rounded-lg bg-white/95 p-4 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur sm:p-6 lg:p-6 xl:p-7"
             >
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 <span className="rounded-full bg-secondary px-3 py-1 font-semibold text-primary-dark">
@@ -76,13 +76,13 @@ export function HomeHeroSection() {
                 </span>
                 <span>{activeSlide.date}</span>
               </div>
-              <h2 className="mt-4 text-2xl font-semibold leading-snug text-foreground [word-break:keep-all] sm:text-3xl">
+              <h2 className="mt-3 text-xl font-semibold leading-snug text-foreground [word-break:keep-all] sm:text-2xl">
                 {activeSlide.title}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+              <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
                 {activeSlide.summary}
               </p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Link
                   href={activeSlide.href}
                   className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
@@ -99,7 +99,7 @@ export function HomeHeroSection() {
             </article>
 
             <div
-              className="mt-5 flex items-center gap-2"
+              className="mt-4 flex items-center gap-2"
               aria-label="주요 소식 슬라이드 위치"
             >
               {heroSlides.map((slide, index) => (
