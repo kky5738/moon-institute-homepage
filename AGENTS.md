@@ -9,9 +9,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 이 프로젝트는 문선명 연구소 홈페이지 개발 프로젝트다.
 
 ## 목표
-- 출범 전 7개월 동안 홍보용 게시판과 자료 공유 사이트로 운영
-- 출범 후 공식 연구소 홈페이지로 전환
-- 기존 문의글, 게시글, 자료는 삭제하지 않고 유지
+- 점진적으로 홈페이지를 발전시켜 나간다.
+- 연구소 소개, 공지사항, 홍보자료, 문의 등의 기본적 구조를 확립한다.
+- 기본적 구조를 확립한 다음에는 기존의 틀을 깨는 사용자 친화적인 UI/UX로 확장시킨다.
+- 기존의 틀을 깨는 UI/UX로는 landing page에 Hero Section 등이 있다.
+- 연구 주제 허브, 자료 해설 아카이브 등을 landing page에 추가하여 사용자 친화적 UI를 만든다. 자세한 내용은 docs/proposal.md에 연구 주제 허브 및 자료 해설 아카이브를 참조한다.
+
 
 ## 기술 스택
 - Next.js App Router
@@ -22,7 +25,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - AWS 배포 예정
 
 ## 개발 원칙
-- 1인 개발자가 운영 가능한 단순한 구조를 우선한다.
+- 코드는 재사용 및 유지보수가 용이하게 단순한 구조를 우선한다.
 - 처음부터 과도한 커뮤니티 기능을 만들지 않는다.
 - 게시글, 문의글, 참여 신청 데이터는 장기 보존을 전제로 설계한다.
 - 관리자 기능은 최소 기능부터 구현한다.
