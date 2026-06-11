@@ -59,7 +59,7 @@ export const researchTopics: ResearchTopic[] = [
     summary:
       "운영 일정, 월간 소식, 준비 기록을 공지와 자료 목록으로 연결합니다.",
     description:
-      "방문자가 게시판 이름보다 관심 흐름을 먼저 선택할 수 있도록, 운영 관련 공지와 준비 과정의 주요 소식을 느슨하게 묶습니다.",
+      "방문자가 게시판 이름보다 관심 흐름을 먼저 선택할 수 있도록, 운영 관련 공지와 준비 과정의 주요 소식을 함께 묶습니다.",
     primaryLink: { label: "주제 상세 보기", href: "/topics/operations-notices" },
     secondaryLinks: [
       { label: "관련 공지", href: "/notices" },

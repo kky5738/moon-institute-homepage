@@ -41,16 +41,16 @@ export default async function MaterialsPage() {
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
+                href="/topics"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
+              >
+                주제 허브
+              </Link>
+              <Link
                 href="/topics/pre-launch-archive"
                 className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
               >
-                관련 주제
-              </Link>
-              <Link
-                href="/#media"
-                className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
-              >
-                영상 안내
+                출범 준비 자료
               </Link>
             </div>
           </aside>
@@ -65,9 +65,25 @@ export default async function MaterialsPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-border bg-card px-5 py-10 text-sm leading-6 text-muted-foreground shadow-[var(--shadow-soft)]">
-            등록된 홍보자료가 없습니다. 자료가 공개되면 읽기 순서와 해설
-            요약이 함께 표시됩니다.
+          <div className="rounded-lg border border-border bg-card px-5 py-10 shadow-[var(--shadow-soft)]">
+            <p className="text-sm leading-6 text-muted-foreground">
+              등록된 홍보자료가 없습니다. 자료가 공개되면 읽기 순서와 해설
+              요약이 함께 표시됩니다.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                href="/topics"
+                className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
+              >
+                연구 주제 보기
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-border px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-secondary"
+              >
+                문의하기
+              </Link>
+            </div>
           </div>
         )}
       </section>

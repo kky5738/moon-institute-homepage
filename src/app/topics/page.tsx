@@ -20,8 +20,8 @@ export default function TopicsPage() {
                 주제에서 자료, 공지, 문의로 이어집니다
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-muted">
-                초기에는 별도 주제 모델을 만들지 않고, 운영 방향에 맞춘 mock
-                주제와 기존 게시글 카테고리를 느슨하게 연결합니다.
+                운영 방향에 맞춘 주제와 기존 게시글 카테고리를 연결해
+                방문자가 관심 흐름에서 자료를 찾을 수 있도록 안내합니다.
               </p>
             </div>
             <div className="border-t border-primary pt-5 text-sm leading-6 text-muted lg:mb-1">

@@ -38,29 +38,33 @@ export function HomeHeroSection() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/notices"
+              href="/topics"
               className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-primary-dark transition-colors hover:bg-gold"
             >
-              공지 확인 <span className="ml-2" aria-hidden="true">→</span>
+              연구 주제 보기 <span className="ml-2" aria-hidden="true">→</span>
             </Link>
             <Link
               href="/materials"
               className="inline-flex h-11 items-center justify-center rounded-full border border-white/45 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
             >
-              자료 보기
+              자료 아카이브
             </Link>
           </div>
         </div>
 
         <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,41rem)] lg:items-end">
-          <div className="grid auto-cols-[8.75rem] grid-flow-col gap-3 overflow-x-auto pb-1 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:max-w-xl">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:max-w-xl">
             {monthlyNewsItems.map((item) => (
               <div
                 key={item.label}
                 className="min-h-20 rounded-lg border border-white/16 bg-white/10 p-3 backdrop-blur sm:p-4"
               >
-                <p className="text-xl font-semibold text-gold sm:text-2xl">{item.value}</p>
-                <p className="mt-1 text-xs leading-5 text-white/68">{item.label}</p>
+                <p className="text-lg font-semibold text-gold sm:text-2xl">
+                  {item.value}
+                </p>
+                <p className="mt-1 text-[11px] leading-5 text-white/68 sm:text-xs">
+                  {item.label}
+                </p>
               </div>
             ))}
           </div>
@@ -90,10 +94,10 @@ export function HomeHeroSection() {
                   {activeSlide.ctaLabel} <span className="ml-2" aria-hidden="true">→</span>
                 </Link>
                 <Link
-                  href="/notices"
+                  href="/materials"
                   className="inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary"
                 >
-                  전체 소식
+                  자료 아카이브
                 </Link>
               </div>
             </article>

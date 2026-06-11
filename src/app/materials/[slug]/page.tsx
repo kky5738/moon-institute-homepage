@@ -82,8 +82,9 @@ export default async function MaterialDetailPage({
                 {guide.topicLabel}
               </h2>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                이 자료는 주제 허브와 연결해 읽을 수 있습니다. 자료의 배경은
-                주제 상세 페이지와 영상 안내에서 함께 확인합니다.
+                이 자료는 주제 허브와 연결해 읽을 수 있습니다. 자료의 배경과
+                이어서 볼 공개 자료는 주제 상세 페이지와 자료 목록에서 함께
+                확인합니다.
               </p>
               <div className="mt-5 grid gap-2">
                 <Link

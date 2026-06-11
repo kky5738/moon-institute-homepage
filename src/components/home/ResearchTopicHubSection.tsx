@@ -58,17 +58,6 @@ export function ResearchTopicHubSection() {
                   {topic.primaryLink.label}
                   <span className="ml-2" aria-hidden="true">→</span>
                 </Link>
-                <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-3 md:grid-cols-1 xl:grid-cols-3">
-                  {topic.secondaryLinks.map((link) => (
-                    <Link
-                      key={`${topic.slug}-${link.label}`}
-                      href={link.href}
-                      className="inline-flex min-h-10 items-center justify-center rounded-full border border-border px-3 py-2 text-center text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-secondary"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
               </div>
             </article>
           ))}

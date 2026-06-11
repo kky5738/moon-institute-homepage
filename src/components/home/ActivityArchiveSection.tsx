@@ -45,10 +45,8 @@ export function ActivityArchiveSection() {
           </div>
           <div className="flex flex-wrap gap-2">
             {[
-              { label: "전체", href: "/" },
-              { label: "활동", href: "/about" },
-              { label: "자료", href: "/materials" },
-              { label: "공지", href: "/notices" },
+              { label: "주제 허브", href: "/topics" },
+              { label: "자료 아카이브", href: "/materials" },
             ].map((item, index) => (
               <Link
                 key={item.label}

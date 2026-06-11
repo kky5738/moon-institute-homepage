@@ -49,10 +49,18 @@ export function RecommendedMaterialList({
           ))}
         </div>
       ) : (
-        <p className="mt-5 rounded-lg border border-dashed border-border bg-secondary/45 px-4 py-6 text-sm leading-6 text-muted-foreground">
-          아직 이 자료와 함께 볼 추천 자료가 없습니다. 추천 slug가 실제 공개
-          자료와 연결되면 이 영역에 자동으로 표시됩니다.
-        </p>
+        <div className="mt-5 rounded-lg border border-dashed border-border bg-secondary/45 px-4 py-6">
+          <p className="text-sm leading-6 text-muted-foreground">
+            아직 이어서 볼 공개 자료가 없습니다. 새 자료가 공개되면 이
+            영역에서 다음 읽기 경로를 안내합니다.
+          </p>
+          <Link
+            href="/materials"
+            className="mt-4 inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
+          >
+            자료 목록 보기
+          </Link>
+        </div>
       )}
     </section>
   );

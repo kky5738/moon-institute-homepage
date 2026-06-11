@@ -96,9 +96,9 @@ function createFallbackMaterialGuide(slug: string): MaterialGuide {
     readingOrder: fallbackReadingOrder,
     stepLabel: "보관 자료",
     archiveSummary:
-      "아직 별도 해설 mock이 없는 자료입니다. 기본 게시글 정보와 함께 보관 자료로 표시합니다.",
+      "아직 별도 해설 요약이 준비되지 않은 자료입니다. 기본 게시글 정보와 함께 보관 자료로 표시합니다.",
     explanationSummary:
-      "이 자료에는 아직 별도 해설 요약이 연결되지 않았습니다. 운영자가 해설 mock을 추가하기 전까지는 자료 본문과 목록 정보를 중심으로 확인합니다.",
+      "이 자료에는 아직 별도 해설 요약이 연결되지 않았습니다. 자료 본문과 목록 정보를 중심으로 확인합니다.",
     readingPoints: [
       "자료 제목과 요약을 먼저 확인합니다.",
       "관련 공지나 주제 페이지에서 공개 흐름을 함께 확인합니다.",

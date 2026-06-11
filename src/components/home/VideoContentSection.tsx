@@ -25,7 +25,7 @@ export function VideoContentSection() {
             href="/materials"
             className="inline-flex h-11 w-fit items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-secondary"
           >
-            전체 영상 보기
+            자료 아카이브
           </Link>
         </div>
 
@@ -60,13 +60,13 @@ export function VideoContentSection() {
                   href="/materials"
                   className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
                 >
-                  영상 보기
+                  자료 해설 보기
                 </Link>
                 <Link
-                  href="/materials"
+                  href="/topics"
                   className="inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary"
                 >
-                  자료와 함께 보기
+                  주제와 함께 보기
                 </Link>
               </div>
             </div>
