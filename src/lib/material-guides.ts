@@ -26,7 +26,77 @@ export type MaterialArchiveItem = {
 
 const fallbackReadingOrder = 99;
 
-const materialGuides: MaterialGuide[] = [];
+const materialGuides: MaterialGuide[] = [
+  {
+    slug: "life-research-material-guide",
+    readingOrder: 1,
+    stepLabel: "생애 입문",
+    archiveSummary:
+      "생애 연구 자료를 처음 확인하는 방문자가 공개 범위와 이용 순서를 먼저 파악할 수 있도록 배치한 안내 자료입니다.",
+    explanationSummary:
+      "공식 원문이 확정되기 전까지는 생애 연구 자료를 어떤 순서로 확인할지 안내하는 자료로 다룹니다. 인물과 역사에 관한 구체 설명은 추후 제공되는 원문을 우선해 보완합니다.",
+    readingPoints: [
+      "생애 연구 자료가 어떤 기준으로 공개될 예정인지 확인합니다.",
+      "관련 공지와 함께 보면 자료 공개 일정과 운영 흐름을 이어서 볼 수 있습니다.",
+      "확정 원문 전에는 연구 안내 자료의 성격으로 읽습니다.",
+    ],
+    recommendationSlugs: ["words-research-material-guide"],
+    topicHref: "/topics/life",
+    topicLabel: "생애",
+    videoGuide: {
+      title: "생애 연구 영상 안내",
+      description:
+        "생애 연구와 관련된 영상이 준비되면 자료 해설과 함께 볼 수 있도록 연결합니다.",
+      href: "/#media",
+    },
+  },
+  {
+    slug: "words-research-material-guide",
+    readingOrder: 2,
+    stepLabel: "말씀 입문",
+    archiveSummary:
+      "말씀 자료를 확인하기 전 분류 기준, 공개 일정, 해설 콘텐츠 연결 방식을 살펴볼 수 있는 안내 자료입니다.",
+    explanationSummary:
+      "말씀 원문과 해설 범위가 확정되기 전까지는 자료 이용 순서와 확인 경로를 안내하는 자료로 제공합니다.",
+    readingPoints: [
+      "말씀 자료의 공개 범위와 향후 보완 방향을 확인합니다.",
+      "자료 본문보다 안내 구조와 연결 경로를 먼저 확인합니다.",
+      "관련 영상이 준비되면 자료 해설과 함께 살펴봅니다.",
+    ],
+    recommendationSlugs: ["achievements-research-material-guide"],
+    topicHref: "/topics/words",
+    topicLabel: "말씀",
+    videoGuide: {
+      title: "말씀 해설 영상 안내",
+      description:
+        "말씀 관련 영상이나 해설 콘텐츠가 공개되면 자료와 함께 연결합니다.",
+      href: "/#media",
+    },
+  },
+  {
+    slug: "achievements-research-material-guide",
+    readingOrder: 3,
+    stepLabel: "업적 입문",
+    archiveSummary:
+      "업적 연구와 활동 기록 자료를 공지, 영상 안내, 문의 경로와 함께 확인할 수 있도록 정리한 안내 자료입니다.",
+    explanationSummary:
+      "업적 연구의 세부 범위와 공식 설명이 확정되기 전까지는 공개 가능한 자료 이용 순서를 안내하는 자료로 다룹니다.",
+    readingPoints: [
+      "업적 연구 자료가 어떤 흐름으로 정리될 예정인지 확인합니다.",
+      "운영 기록과 공지사항을 함께 보면 공개 맥락을 이어서 볼 수 있습니다.",
+      "추가 확인이 필요한 내용은 문의 경로로 연결합니다.",
+    ],
+    recommendationSlugs: ["life-research-material-guide"],
+    topicHref: "/topics/achievements",
+    topicLabel: "업적",
+    videoGuide: {
+      title: "업적 기록 영상 안내",
+      description:
+        "업적과 활동 기록을 다루는 영상이 공개되면 자료 해설과 함께 연결합니다.",
+      href: "/#media",
+    },
+  },
+];
 
 export function getMaterialGuide(slug: string): MaterialGuide {
   return (

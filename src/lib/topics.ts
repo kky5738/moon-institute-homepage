@@ -41,7 +41,7 @@ export const researchTopics: ResearchTopic[] = [
     ],
     categoryConnections: {
       [PostType.NOTICE]: ["notice"],
-      [PostType.PROMOTION]: [],
+      [PostType.PROMOTION]: ["life-materials"],
     },
     videoGuide: {
       title: "생애 연구 영상 안내",
@@ -68,7 +68,7 @@ export const researchTopics: ResearchTopic[] = [
     ],
     categoryConnections: {
       [PostType.NOTICE]: ["notice"],
-      [PostType.PROMOTION]: [],
+      [PostType.PROMOTION]: ["words-materials"],
     },
     videoGuide: {
       title: "말씀 해설 영상 안내",
@@ -95,7 +95,7 @@ export const researchTopics: ResearchTopic[] = [
     ],
     categoryConnections: {
       [PostType.NOTICE]: ["news"],
-      [PostType.PROMOTION]: [],
+      [PostType.PROMOTION]: ["achievement-materials"],
     },
     videoGuide: {
       title: "업적 기록 영상 안내",
