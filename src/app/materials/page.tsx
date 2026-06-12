@@ -52,13 +52,13 @@ export default async function MaterialsPage() {
                 주제 허브
               </Link>
               <Link
-                href="/topics/pre-launch-archive"
+                href="/topics/life"
                 className={buttonVariants({
                   variant: "outline",
                   className: "hover:bg-background",
                 })}
               >
-                출범 준비 자료
+                생애
               </Link>
             </div>
           </Card>

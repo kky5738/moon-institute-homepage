@@ -41,8 +41,8 @@ const materialGuides: MaterialGuide[] = [
       "공식 소개 원문이 확정되기 전까지는 안내 문서의 성격으로 읽습니다.",
     ],
     recommendationSlugs: ["missing-follow-up-material"],
-    topicHref: "/topics/pre-launch-archive",
-    topicLabel: "출범 준비 자료",
+    topicHref: "/topics/life",
+    topicLabel: "생애",
     videoGuide: {
       title: "자료 해설 영상 안내",
       description:
@@ -105,8 +105,8 @@ function createFallbackMaterialGuide(slug: string): MaterialGuide {
       "필요한 맥락이 부족하면 문의 경로를 이용합니다.",
     ],
     recommendationSlugs: [],
-    topicHref: "/topics/pre-launch-archive",
-    topicLabel: "출범 준비 자료",
+    topicHref: "/topics/life",
+    topicLabel: "생애",
     videoGuide: {
       title: "영상 콘텐츠 안내",
       description:

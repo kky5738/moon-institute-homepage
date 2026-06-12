@@ -32,7 +32,7 @@ export const heroSlides = [
     summary:
       "출범 전까지 공지, 홍보자료, 문의 접수를 중심으로 운영하며 공개 자료를 순차적으로 정리합니다.",
     date: "2026.05",
-    href: "/topics/operations-notices",
+    href: "/topics/life",
     ctaLabel: "주제로 보기",
     background: "center / cover no-repeat url('/slide1.jpeg')",
   },
@@ -42,7 +42,7 @@ export const heroSlides = [
     summary:
       "매월 주요 공지와 자료 공개 흐름을 정리해 연구소의 준비 과정을 한눈에 볼 수 있도록 준비합니다.",
     date: "준비 중",
-    href: "/topics/operations-notices",
+    href: "/topics/achievements",
     ctaLabel: "운영 흐름 보기",
     background: "center / cover no-repeat url('/slide2.jpeg')",
   },
