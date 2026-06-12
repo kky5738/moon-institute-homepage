@@ -27,33 +27,33 @@ export const featuredNewsItems = [
 
 export const heroSlides = [
   {
-    label: "주요 안내",
-    title: "출범 준비 홈페이지 운영 안내",
+    label: "생애 연구",
+    title: "생애",
     summary:
-      "출범 전까지 공지, 홍보자료, 문의 접수를 중심으로 운영하며 공개 자료를 순차적으로 정리합니다.",
-    date: "2026.05",
+      "생애와 관련된 자료, 공지, 해설 콘텐츠를 한 흐름 안에서 확인할 수 있도록 정리합니다.",
+    date: "연구 주제 01",
     href: "/topics/life",
-    ctaLabel: "주제로 보기",
+    ctaLabel: "생애 보기",
     background: "center / cover no-repeat url('/slide1.jpeg')",
   },
   {
-    label: "월간 소식",
-    title: "월간 운영 기록 준비",
+    label: "말씀 연구",
+    title: "말씀",
     summary:
-      "매월 주요 공지와 자료 공개 흐름을 정리해 연구소의 준비 과정을 한눈에 볼 수 있도록 준비합니다.",
-    date: "준비 중",
-    href: "/topics/achievements",
-    ctaLabel: "운영 흐름 보기",
+      "말씀 자료와 해설, 공개 일정, 관련 공지를 함께 탐색할 수 있도록 연결합니다.",
+    date: "연구 주제 02",
+    href: "/topics/words",
+    ctaLabel: "말씀 보기",
     background: "center / cover no-repeat url('/slide2.jpeg')",
   },
   {
-    label: "자료 공유",
-    title: "초기 홍보자료 정리",
+    label: "업적 연구",
+    title: "업적",
     summary:
-      "공개 가능한 자료를 게시판 기준에 맞춰 보존하고 이후 공식 자료실로 이어지게 구성합니다.",
-    date: "상시",
-    href: "/materials",
-    ctaLabel: "자료 보기",
+      "업적과 활동 기록을 자료, 공지, 영상 안내와 함께 살펴볼 수 있도록 정리합니다.",
+    date: "연구 주제 03",
+    href: "/topics/achievements",
+    ctaLabel: "업적 보기",
     background: "center / cover no-repeat url('/slide3.jpeg')",
   },
 ];

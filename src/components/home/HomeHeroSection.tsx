@@ -33,11 +33,11 @@ export function HomeHeroSection() {
             Moon Institute
           </span>
           <h1 className="mt-5 text-3xl font-semibold leading-tight tracking-normal text-white [word-break:keep-all] sm:text-5xl lg:text-5xl">
-            주요 소식과 월간 흐름을 차분하게 전합니다
+            생애, 말씀, 업적을 중심으로 연구합니다
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-white/78 sm:text-lg sm:leading-8">
-            출범 전 홍보 운영부터 공식 홈페이지 전환까지, 공지와 자료를
-            보존하는 연구소의 공개 창구로 준비합니다.
+            문선명 연구소의 연구 주제를 세 가지 흐름으로 정리하고,
+            공개 자료와 해설을 차례로 연결합니다.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -89,13 +89,13 @@ export function HomeHeroSection() {
 
             <div
               className="mt-4 flex items-center gap-2"
-              aria-label="주요 소식 슬라이드 위치"
+              aria-label="연구 주제 슬라이드 위치"
             >
               {heroSlides.map((slide, index) => (
                 <button
                   key={slide.title}
                   type="button"
-                  aria-label={`${index + 1}번째 주요 소식 보기`}
+                  aria-label={`${slide.title} 연구 주제 보기`}
                   aria-current={index === activeIndex ? "true" : undefined}
                   onClick={() => setActiveIndex(index)}
                   className={[
