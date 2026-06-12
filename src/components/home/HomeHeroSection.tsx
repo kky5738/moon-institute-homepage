@@ -24,7 +24,7 @@ export function HomeHeroSection() {
 
   return (
     <section id="top" className="relative min-h-[100svh] scroll-mt-16 overflow-hidden bg-primary-dark text-white">
-      <HeroImageSlider />
+      <HeroImageSlider activeIndex={activeIndex} />
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-between px-5 pb-8 pt-24 sm:px-6 sm:pb-10 sm:pt-28 lg:px-10 lg:pb-8 lg:pt-20">
         <div className="max-w-3xl">
