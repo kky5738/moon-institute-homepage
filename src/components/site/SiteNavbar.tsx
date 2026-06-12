@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 const navItems = [
-  { label: "연구소 소개", href: "/about" },
   { label: "연구 주제", href: "/topics" },
   { label: "공지사항", href: "/notices" },
   { label: "홍보자료", href: "/materials" },

@@ -37,14 +37,14 @@ export function ParticipationCtaSection() {
                   문의/참여 신청하기 <span className="ml-2" aria-hidden="true">→</span>
                 </Link>
                 <Link
-                  href="/about"
+                  href="/topics"
                   className={buttonVariants({
                     variant: "inverseOutline",
                     size: "xl",
                     className: "h-11 sm:h-12",
                   })}
                 >
-                  연구소 소개 보기
+                  연구 주제 보기
                 </Link>
               </div>
             </div>

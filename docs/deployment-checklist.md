@@ -141,7 +141,6 @@ npm run build
 
 Expected build shape:
 
-- `/about` can remain static.
 - `/`, `/notices`, `/materials`, `/login`, `/admin`, and detail/admin routes should be dynamic or server-rendered on demand.
 - There should be no TypeScript, hydration, or Server/Client Component boundary errors.
 

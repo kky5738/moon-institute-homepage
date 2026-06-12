@@ -4,7 +4,6 @@ const footerColumns = [
   {
     title: "연구소",
     links: [
-      { label: "소개", href: "/about" },
       { label: "연구 주제", href: "/topics" },
       { label: "공지사항", href: "/notices" },
     ],

@@ -87,8 +87,8 @@ export const activityItems = [
     title: "연구소 활동",
     description:
       "활동 소식과 운영 기록을 차례로 정리해 공식 홈페이지의 중심 자료로 축적합니다.",
-    href: "/about",
-    linkLabel: "소개 보기",
+    href: "/topics",
+    linkLabel: "주제 보기",
   },
   {
     title: "자료",
@@ -123,7 +123,7 @@ export const resourceNoticeItems = [
     type: "활동",
     title: "준비 활동 기록",
     description: "연구소 활동과 공개 가능한 준비 과정을 차례로 정리합니다.",
-    href: "/about",
+    href: "/notices",
   },
 ];
 
