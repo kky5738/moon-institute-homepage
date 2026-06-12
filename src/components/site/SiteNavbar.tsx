@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 const navItems = [
   { label: "연구 주제", href: "/topics" },
   { label: "공지사항", href: "/notices" },
-  { label: "홍보자료", href: "/materials" },
+  { label: "자료 아카이브", href: "/materials" },
   { label: "문의/참여", href: "/contact" },
 ];
 
