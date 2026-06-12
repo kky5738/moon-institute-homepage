@@ -58,21 +58,6 @@ export const heroSlides = [
   },
 ];
 
-export const monthlyNewsItems = [
-  {
-    value: "7개월",
-    label: "출범 전 홍보 운영",
-  },
-  {
-    value: "3개",
-    label: "공지, 자료, 문의 핵심 경로",
-  },
-  {
-    value: "장기",
-    label: "게시글과 신청 기록 보존",
-  },
-];
-
 export const videoContentItems = [
   {
     title: "연구소 소개",

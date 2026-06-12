@@ -6,7 +6,7 @@ import { HeroImageSlider } from "@/components/home/HeroImageSlider";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { heroSlides, monthlyNewsItems } from "@/lib/site-content";
+import { heroSlides } from "@/lib/site-content";
 
 const slideIntervalMs = 6000;
 
@@ -55,27 +55,11 @@ export function HomeHeroSection() {
           </div>
         </div>
 
-        <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,41rem)] lg:items-end">
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:max-w-xl">
-            {monthlyNewsItems.map((item) => (
-              <Card
-                key={item.label}
-                className="min-h-20 border-white/16 bg-white/10 p-3 text-white backdrop-blur sm:p-4"
-              >
-                <p className="text-lg font-semibold text-gold sm:text-2xl">
-                  {item.value}
-                </p>
-                <p className="mt-1 text-[11px] leading-5 text-white/68 sm:text-xs">
-                  {item.label}
-                </p>
-              </Card>
-            ))}
-          </div>
-
-          <div>
+        <div className="mt-7 flex justify-end">
+          <div className="w-full max-w-2xl">
             <Card
               key={activeSlide.title}
-              className="max-w-2xl bg-white/95 p-4 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur sm:p-6 lg:p-6 xl:p-7"
+              className="bg-white/95 p-4 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur sm:p-6 lg:p-6 xl:p-7"
             >
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 <Badge variant="secondary">{activeSlide.label}</Badge>
