@@ -39,20 +39,6 @@ export function HomeHeroSection() {
             문선명 연구소의 연구 주제를 세 가지 흐름으로 정리하고,
             공개 자료와 해설을 차례로 연결합니다.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/topics"
-              className={buttonVariants({ variant: "inverse", size: "lg" })}
-            >
-              연구 주제 보기 <span className="ml-2" aria-hidden="true">→</span>
-            </Link>
-            <Link
-              href="/materials"
-              className={buttonVariants({ variant: "inverseOutline", size: "lg" })}
-            >
-              자료 아카이브
-            </Link>
-          </div>
         </div>
 
         <div className="mt-7 flex justify-end">
