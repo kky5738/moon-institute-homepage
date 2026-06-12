@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { videoContentItems } from "@/lib/site-content";
 
 const featuredVideo = videoContentItems[0];
@@ -23,14 +26,18 @@ export function VideoContentSection() {
           </div>
           <Link
             href="/materials"
-            className="inline-flex h-11 w-fit items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-secondary"
+            className={buttonVariants({
+              variant: "outline",
+              size: "lg",
+              className: "w-fit",
+            })}
           >
             자료 아카이브
           </Link>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-          <article className="group overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-elegant)] lg:col-span-2">
+          <Card className="group overflow-hidden transition-shadow hover:shadow-[var(--shadow-elegant)] lg:col-span-2">
             <div className="relative aspect-video bg-gradient-to-br from-primary-dark via-primary to-accent-purple lg:aspect-[3/1]">
               <div className="absolute inset-0 bg-black/10" />
               <div className="absolute inset-0 grid place-items-center">
@@ -41,9 +48,9 @@ export function VideoContentSection() {
                   />
                 </span>
               </div>
-              <span className="absolute left-4 top-4 rounded-full bg-gold/90 px-3 py-1 text-xs font-semibold text-primary-dark">
+              <Badge variant="gold" className="absolute left-4 top-4 bg-gold/90 text-primary-dark">
                 {featuredVideo.meta}
-              </span>
+              </Badge>
               <span className="absolute bottom-4 right-4 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur">
                 {featuredVideo.length}
               </span>
@@ -58,19 +65,19 @@ export function VideoContentSection() {
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link
                   href="/materials"
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
+                  className={buttonVariants()}
                 >
                   자료 해설 보기
                 </Link>
                 <Link
                   href="/topics"
-                  className="inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary"
+                  className={buttonVariants({ variant: "ghost" })}
                 >
                   주제와 함께 보기
                 </Link>
               </div>
             </div>
-          </article>
+          </Card>
 
           <div className="grid auto-cols-[minmax(15rem,78vw)] grid-flow-col gap-4 overflow-x-auto pb-1 lg:grid-flow-row lg:auto-cols-auto lg:overflow-visible lg:pb-0">
             {subVideos.map((video) => (

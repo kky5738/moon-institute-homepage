@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { ResearchTopic } from "@/lib/topics";
 
 export function TopicIndexCard({
@@ -9,12 +12,10 @@ export function TopicIndexCard({
   index: number;
 }) {
   return (
-    <article className="flex min-h-[20rem] flex-col border border-border bg-surface p-5 shadow-sm shadow-primary-dark/5 sm:p-6">
+    <Card className="flex min-h-[20rem] flex-col rounded-none bg-surface p-5 shadow-sm shadow-primary-dark/5 sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-accent">
-            {topic.focusLabel}
-          </p>
+          <Badge variant="accent">{topic.focusLabel}</Badge>
           <h2 className="mt-3 text-2xl font-semibold text-foreground">
             <Link
               href={`/topics/${topic.slug}`}
@@ -24,9 +25,9 @@ export function TopicIndexCard({
             </Link>
           </h2>
         </div>
-        <span className="shrink-0 border border-border bg-background px-2.5 py-1 text-xs font-semibold text-primary">
+        <Badge variant="outline" className="shrink-0 rounded-none bg-background">
           {String(index + 1).padStart(2, "0")}
-        </span>
+        </Badge>
       </div>
 
       <p className="mt-5 text-sm leading-6 text-muted">
@@ -36,7 +37,10 @@ export function TopicIndexCard({
       <div className="mt-auto pt-7">
         <Link
           href={`/topics/${topic.slug}`}
-          className="inline-flex min-h-11 w-full items-center justify-center bg-primary-dark px-4 py-2 text-center text-sm font-semibold text-white hover:bg-primary"
+          className={buttonVariants({
+            size: "lg",
+            className: "w-full rounded-none bg-primary-dark hover:bg-primary",
+          })}
         >
           상세 페이지 보기
         </Link>
@@ -45,13 +49,16 @@ export function TopicIndexCard({
             <Link
               key={`${topic.slug}-${link.label}`}
               href={link.href}
-              className="inline-flex min-h-10 items-center justify-center border border-border px-2 py-2 text-center text-sm font-semibold text-primary hover:border-primary hover:bg-[#f1eef8] hover:text-primary-dark"
+              className={buttonVariants({
+                variant: "outline",
+                className: "min-h-10 rounded-none px-2 py-2 text-center",
+              })}
             >
               {link.label}
             </Link>
           ))}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }

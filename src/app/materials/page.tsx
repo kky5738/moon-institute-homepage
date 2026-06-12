@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { MaterialArchiveCard } from "@/components/materials/MaterialArchiveCard";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { PostType } from "@/generated/prisma/enums";
 import { getMaterialArchiveItems } from "@/lib/material-guides";
 import { getPublishedPosts } from "@/lib/posts";
@@ -31,7 +33,7 @@ export default async function MaterialsPage() {
             </p>
           </div>
 
-          <aside className="rounded-lg border border-border bg-secondary/55 p-5 shadow-[var(--shadow-soft)] sm:p-6">
+          <Card className="bg-secondary/55 p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-purple">
               Archive Note
             </p>
@@ -42,18 +44,24 @@ export default async function MaterialsPage() {
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
                 href="/topics"
-                className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "hover:bg-background",
+                })}
               >
                 주제 허브
               </Link>
               <Link
                 href="/topics/pre-launch-archive"
-                className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "hover:bg-background",
+                })}
               >
                 출범 준비 자료
               </Link>
             </div>
-          </aside>
+          </Card>
         </div>
       </section>
 
@@ -65,7 +73,7 @@ export default async function MaterialsPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-border bg-card px-5 py-10 shadow-[var(--shadow-soft)]">
+          <Card className="px-5 py-10">
             <p className="text-sm leading-6 text-muted-foreground">
               등록된 홍보자료가 없습니다. 자료가 공개되면 읽기 순서와 해설
               요약이 함께 표시됩니다.
@@ -73,18 +81,18 @@ export default async function MaterialsPage() {
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
                 href="/topics"
-                className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
+                className={buttonVariants()}
               >
                 연구 주제 보기
               </Link>
               <Link
                 href="/contact"
-                className="inline-flex h-10 items-center justify-center rounded-full border border-border px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-secondary"
+                className={buttonVariants({ variant: "outline" })}
               >
                 문의하기
               </Link>
             </div>
-          </div>
+          </Card>
         )}
       </section>
     </div>

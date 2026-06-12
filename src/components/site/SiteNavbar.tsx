@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 const navItems = [
   { label: "연구소 소개", href: "/about" },
@@ -68,28 +69,29 @@ export function SiteNavbar() {
           ))}
         </div>
 
-        <Link
-          href="/contact"
-          className="hidden h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark lg:inline-flex"
-        >
-          참여 신청
-        </Link>
+        <div className="hidden lg:block">
+          <Link href="/contact" className={buttonVariants()}>
+            참여 신청
+          </Link>
+        </div>
 
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
           aria-expanded={open}
           onClick={() => setOpen((current) => !current)}
-          className={`grid h-10 w-10 place-items-center rounded-lg border ${
+          className={`grid lg:hidden ${
             elevated
-              ? "border-border text-foreground"
-              : "border-white/35 text-white"
-          } lg:hidden`}
+              ? "border-border bg-transparent text-foreground hover:bg-secondary"
+              : "border-white/35 bg-transparent text-white hover:bg-white/10"
+          }`}
         >
           <span aria-hidden="true" className="text-xl leading-none">
             {open ? "×" : "≡"}
           </span>
-        </button>
+        </Button>
       </nav>
 
       {open ? (
@@ -110,7 +112,10 @@ export function SiteNavbar() {
             <Link
               href="/contact"
               onClick={() => setOpen(false)}
-              className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+              className={buttonVariants({
+                size: "lg",
+                className: "mt-4 w-full",
+              })}
             >
               참여 신청
             </Link>

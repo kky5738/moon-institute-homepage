@@ -1,6 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createInquiry, type ContactFormState } from "./actions";
 
 const initialState: ContactFormState = {
@@ -22,15 +26,15 @@ export function ContactForm() {
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
       <div>
-        <label htmlFor="type" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="type">
           문의 유형
-        </label>
+        </Label>
         <select
           id="type"
           name="type"
           required
           defaultValue="GENERAL"
-          className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
+          className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20"
         >
           <option value="GENERAL">일반 문의</option>
           <option value="PARTICIPATION">참여 신청</option>
@@ -40,10 +44,10 @@ export function ContactForm() {
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="name" className="text-sm font-semibold text-foreground">
+          <Label htmlFor="name">
             이름
-          </label>
-          <input
+          </Label>
+          <Input
             id="name"
             name="name"
             type="text"
@@ -51,36 +55,36 @@ export function ContactForm() {
             minLength={2}
             maxLength={80}
             autoComplete="name"
-            className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
+            className="mt-2"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="text-sm font-semibold text-foreground">
+          <Label htmlFor="email">
             이메일
-          </label>
-          <input
+          </Label>
+          <Input
             id="email"
             name="email"
             type="email"
             maxLength={120}
             autoComplete="email"
-            className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
+            className="mt-2"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="phone" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="phone">
           연락처
-        </label>
-        <input
+        </Label>
+        <Input
           id="phone"
           name="phone"
           type="tel"
           maxLength={40}
           autoComplete="tel"
-          className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
+          className="mt-2"
         />
         <p className="mt-2 text-xs leading-5 text-muted">
           이메일 또는 연락처 중 하나는 입력해주세요.
@@ -88,30 +92,30 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="subject" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="subject">
           제목
-        </label>
-        <input
+        </Label>
+        <Input
           id="subject"
           name="subject"
           type="text"
           maxLength={120}
-          className="mt-2 h-11 w-full border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-primary"
+          className="mt-2"
         />
       </div>
 
       <div>
-        <label htmlFor="message" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="message">
           내용
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           id="message"
           name="message"
           required
           minLength={10}
           maxLength={2000}
           rows={8}
-          className="mt-2 w-full resize-y border border-border bg-surface px-3 py-3 text-sm leading-6 text-foreground outline-none focus:border-primary"
+          className="mt-2 resize-y"
         />
       </div>
 
@@ -128,13 +132,13 @@ export function ContactForm() {
         </p>
       ) : null}
 
-      <button
+      <Button
         type="submit"
         disabled={pending}
-        className="inline-flex h-11 items-center justify-center border border-primary bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:border-muted disabled:bg-muted"
+        size="lg"
       >
         {pending ? "접수 중" : "문의 접수"}
-      </button>
+      </Button>
     </form>
   );
 }

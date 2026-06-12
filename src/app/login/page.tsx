@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { login } from "./actions";
 
 export const metadata: Metadata = {
@@ -15,7 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-5 py-14">
-      <div className="border border-border bg-surface p-6">
+      <Card className="rounded-none bg-surface p-6">
         <p className="text-sm font-semibold text-primary">관리자</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
           로그인
@@ -33,46 +37,41 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <form action={login} className="mt-6 space-y-5">
           <input type="hidden" name="redirectTo" value="/admin" />
           <div>
-            <label
-              className="block text-sm font-semibold text-foreground"
-              htmlFor="username"
-            >
+            <Label htmlFor="username">
               아이디
-            </label>
-            <input
+            </Label>
+            <Input
               id="username"
               name="username"
               required
               autoComplete="username"
-              className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+              className="mt-2"
             />
           </div>
 
           <div>
-            <label
-              className="block text-sm font-semibold text-foreground"
-              htmlFor="password"
-            >
+            <Label htmlFor="password">
               비밀번호
-            </label>
-            <input
+            </Label>
+            <Input
               id="password"
               name="password"
               required
               type="password"
               autoComplete="current-password"
-              className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+              className="mt-2"
             />
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="inline-flex h-11 w-full items-center justify-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary"
+            className="w-full bg-primary-dark hover:bg-primary"
+            size="lg"
           >
             로그인
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

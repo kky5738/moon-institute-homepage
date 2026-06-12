@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { BoardPost } from "@/lib/posts";
 
 export function RecommendedMaterialList({
@@ -7,7 +10,7 @@ export function RecommendedMaterialList({
   posts: BoardPost[];
 }) {
   return (
-    <section className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+    <Card className="p-5 sm:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-purple">
@@ -35,9 +38,7 @@ export function RecommendedMaterialList({
             >
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span>{post.publishedAt}</span>
-                <span className="rounded-full bg-card px-2.5 py-1 font-semibold text-primary-dark">
-                  {post.category}
-                </span>
+                <Badge variant="outline" className="px-2.5">{post.category}</Badge>
               </div>
               <h3 className="mt-3 text-lg font-semibold leading-snug text-foreground [word-break:keep-all]">
                 {post.title}
@@ -56,12 +57,15 @@ export function RecommendedMaterialList({
           </p>
           <Link
             href="/materials"
-            className="mt-4 inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
+            className={buttonVariants({
+              variant: "outline",
+              className: "mt-4 hover:bg-background",
+            })}
           >
             자료 목록 보기
           </Link>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

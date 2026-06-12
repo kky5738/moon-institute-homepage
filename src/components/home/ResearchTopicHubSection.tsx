@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { researchTopics } from "@/lib/topics";
 
 export function ResearchTopicHubSection() {
@@ -20,7 +23,11 @@ export function ResearchTopicHubSection() {
           </div>
           <Link
             href="/topics"
-            className="inline-flex h-11 w-fit items-center justify-center rounded-full border border-border bg-card px-5 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
+            className={buttonVariants({
+              variant: "outline",
+              size: "lg",
+              className: "w-fit hover:bg-background",
+            })}
           >
             전체 주제 보기
           </Link>
@@ -28,15 +35,13 @@ export function ResearchTopicHubSection() {
 
         <div className="grid gap-4 md:grid-cols-3 lg:gap-5">
           {researchTopics.map((topic, index) => (
-            <article
+            <Card
               key={topic.slug}
               className="group flex min-h-[18rem] flex-col rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-elegant)] sm:p-6"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark">
-                    {topic.focusLabel}
-                  </span>
+                  <Badge>{topic.focusLabel}</Badge>
                   <h3 className="mt-4 text-xl font-semibold leading-snug text-foreground [word-break:keep-all] transition-colors group-hover:text-primary sm:text-2xl">
                     {topic.title}
                   </h3>
@@ -53,13 +58,16 @@ export function ResearchTopicHubSection() {
               <div className="mt-auto pt-6">
                 <Link
                   href={topic.primaryLink.href}
-                  className="inline-flex h-11 w-full items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
+                  className={buttonVariants({
+                    size: "lg",
+                    className: "w-full",
+                  })}
                 >
                   {topic.primaryLink.label}
                   <span className="ml-2" aria-hidden="true">→</span>
                 </Link>
               </div>
-            </article>
+            </Card>
           ))}
         </div>
       </div>

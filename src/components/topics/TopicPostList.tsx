@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import type { BoardPost } from "@/lib/posts";
 
 export function TopicPostList({
@@ -19,7 +21,7 @@ export function TopicPostList({
   postBasePath: "/notices" | "/materials";
 }) {
   return (
-    <section className="border border-border bg-surface shadow-sm shadow-primary-dark/5">
+    <Card className="rounded-none bg-surface shadow-sm shadow-primary-dark/5">
       <div className="border-b border-border p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -45,13 +47,11 @@ export function TopicPostList({
             <article key={post.id} className="p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span>{post.publishedAt}</span>
-                <span className="border border-border px-2 py-1 font-semibold text-primary">
+                <Badge variant="outline" className="rounded-none text-primary">
                   {post.category}
-                </span>
+                </Badge>
                 {post.isPinned ? (
-                  <span className="border border-border bg-[#f1eef8] px-2 py-1 font-semibold text-primary-dark">
-                    고정
-                  </span>
+                  <Badge variant="secondary" className="rounded-none">고정</Badge>
                 ) : null}
                 <span>{post.phase}</span>
               </div>
@@ -76,6 +76,6 @@ export function TopicPostList({
           </p>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

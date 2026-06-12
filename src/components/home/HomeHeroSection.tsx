@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeroImageSlider } from "@/components/home/HeroImageSlider";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { heroSlides, monthlyNewsItems } from "@/lib/site-content";
 
 const slideIntervalMs = 6000;
@@ -39,13 +42,13 @@ export function HomeHeroSection() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/topics"
-              className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-primary-dark transition-colors hover:bg-gold"
+              className={buttonVariants({ variant: "inverse", size: "lg" })}
             >
               연구 주제 보기 <span className="ml-2" aria-hidden="true">→</span>
             </Link>
             <Link
               href="/materials"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-white/45 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              className={buttonVariants({ variant: "inverseOutline", size: "lg" })}
             >
               자료 아카이브
             </Link>
@@ -55,9 +58,9 @@ export function HomeHeroSection() {
         <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,41rem)] lg:items-end">
           <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:max-w-xl">
             {monthlyNewsItems.map((item) => (
-              <div
+              <Card
                 key={item.label}
-                className="min-h-20 rounded-lg border border-white/16 bg-white/10 p-3 backdrop-blur sm:p-4"
+                className="min-h-20 border-white/16 bg-white/10 p-3 text-white backdrop-blur sm:p-4"
               >
                 <p className="text-lg font-semibold text-gold sm:text-2xl">
                   {item.value}
@@ -65,19 +68,17 @@ export function HomeHeroSection() {
                 <p className="mt-1 text-[11px] leading-5 text-white/68 sm:text-xs">
                   {item.label}
                 </p>
-              </div>
+              </Card>
             ))}
           </div>
 
           <div>
-            <article
+            <Card
               key={activeSlide.title}
-              className="max-w-2xl rounded-lg bg-white/95 p-4 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur sm:p-6 lg:p-6 xl:p-7"
+              className="max-w-2xl bg-white/95 p-4 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur sm:p-6 lg:p-6 xl:p-7"
             >
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                <span className="rounded-full bg-secondary px-3 py-1 font-semibold text-primary-dark">
-                  {activeSlide.label}
-                </span>
+                <Badge variant="secondary">{activeSlide.label}</Badge>
                 <span>{activeSlide.date}</span>
               </div>
               <h2 className="mt-3 text-xl font-semibold leading-snug text-foreground [word-break:keep-all] sm:text-2xl">
@@ -89,18 +90,18 @@ export function HomeHeroSection() {
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Link
                   href={activeSlide.href}
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-dark"
+                  className={buttonVariants()}
                 >
                   {activeSlide.ctaLabel} <span className="ml-2" aria-hidden="true">→</span>
                 </Link>
                 <Link
                   href="/materials"
-                  className="inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary"
+                  className={buttonVariants({ variant: "ghost" })}
                 >
                   자료 아카이브
                 </Link>
               </div>
-            </article>
+            </Card>
 
             <div
               className="mt-4 flex items-center gap-2"

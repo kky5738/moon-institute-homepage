@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { participationCards } from "@/lib/site-content";
 
 const cardMarkers = ["?", "+", "♡"];
@@ -26,13 +28,21 @@ export function ParticipationCtaSection() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/contact"
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-primary-dark transition-colors hover:bg-gold sm:h-12 sm:px-6"
+                  className={buttonVariants({
+                    variant: "inverse",
+                    size: "xl",
+                    className: "h-11 sm:h-12",
+                  })}
                 >
                   문의/참여 신청하기 <span className="ml-2" aria-hidden="true">→</span>
                 </Link>
                 <Link
                   href="/about"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-white/40 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:h-12 sm:px-6"
+                  className={buttonVariants({
+                    variant: "inverseOutline",
+                    size: "xl",
+                    className: "h-11 sm:h-12",
+                  })}
                 >
                   연구소 소개 보기
                 </Link>
@@ -41,24 +51,25 @@ export function ParticipationCtaSection() {
 
             <div className="grid gap-4">
               {participationCards.map((card, index) => (
-                <Link
+                <Card
                   key={card.title}
-                  href="/contact"
-                  className="group flex items-start gap-4 rounded-lg border border-white/15 bg-white/10 p-4 text-white backdrop-blur transition-colors hover:bg-white/15 sm:p-5"
+                  className="group border-white/15 bg-white/10 p-0 text-white backdrop-blur transition-colors hover:bg-white/15"
                 >
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/15 text-lg font-semibold sm:h-11 sm:w-11">
-                    {cardMarkers[index]}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="font-semibold">{card.title}</span>
-                    <span className="mt-1 block text-sm leading-6 text-white/70">
-                      {card.description}
+                  <Link href="/contact" className="flex items-start gap-4 p-4 sm:p-5">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/15 text-lg font-semibold sm:h-11 sm:w-11">
+                      {cardMarkers[index]}
                     </span>
-                  </span>
-                  <span className="mt-2 text-white/50 transition-all group-hover:translate-x-0.5 group-hover:text-white">
-                    →
-                  </span>
-                </Link>
+                    <span className="min-w-0 flex-1">
+                      <span className="font-semibold">{card.title}</span>
+                      <span className="mt-1 block text-sm leading-6 text-white/70">
+                        {card.description}
+                      </span>
+                    </span>
+                    <span className="mt-2 text-white/50 transition-all group-hover:translate-x-0.5 group-hover:text-white">
+                      →
+                    </span>
+                  </Link>
+                </Card>
               ))}
             </div>
           </div>

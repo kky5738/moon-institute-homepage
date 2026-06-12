@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Card } from "@/components/ui/card";
 import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = {
@@ -43,9 +44,9 @@ export default function ContactPage() {
           </dl>
         </aside>
 
-        <div className="border border-border bg-surface p-6 shadow-sm shadow-primary-dark/5 sm:p-8">
+        <Card className="bg-surface p-6 shadow-sm shadow-primary-dark/5 sm:p-8">
           <ContactForm />
-        </div>
+        </Card>
       </section>
     </div>
   );

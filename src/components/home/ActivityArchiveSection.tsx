@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { activityItems, resourceNoticeItems } from "@/lib/site-content";
 
 type ArchiveCategory = "활동" | "자료" | "공지";
@@ -21,9 +24,9 @@ const archiveItems = [
 ];
 
 const categoryClassName: Record<ArchiveCategory, string> = {
-  활동: "bg-primary/10 text-primary-dark",
-  자료: "bg-gold/15 text-[color:var(--gold)]",
-  공지: "bg-accent-purple/10 text-accent-purple",
+  활동: "",
+  자료: "",
+  공지: "",
 };
 
 export function ActivityArchiveSection() {
@@ -51,12 +54,9 @@ export function ActivityArchiveSection() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={[
-                  "inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold transition-colors",
-                  index === 0
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border bg-card text-foreground/70 hover:border-accent-purple/50",
-                ].join(" ")}
+                className={buttonVariants({
+                  variant: index === 0 ? "default" : "outline",
+                })}
               >
                 {item.label}
               </Link>
@@ -66,29 +66,39 @@ export function ActivityArchiveSection() {
 
         <div className="grid auto-cols-[minmax(15.5rem,78vw)] grid-flow-col gap-4 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-2 md:overflow-visible md:pb-0 lg:grid-cols-3 lg:gap-4">
           {archiveItems.map((item) => (
-            <Link
+            <Card
               key={`${item.category}-${item.title}`}
-              href={item.href}
-              className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-soft)] sm:p-5"
+              className="group p-4 transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-soft)] sm:p-5"
             >
-              <div className="flex items-center justify-between gap-4">
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${categoryClassName[item.category]}`}>
+              <Link href={item.href} className="block">
+                <div className="flex items-center justify-between gap-4">
+                <Badge
+                  variant={
+                    item.category === "자료"
+                      ? "gold"
+                      : item.category === "공지"
+                        ? "accent"
+                        : "default"
+                  }
+                  className={categoryClassName[item.category]}
+                >
                   {item.category}
-                </span>
-                <span className="text-xl leading-none text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary">
-                  ↗
-                </span>
-              </div>
-              <p className="mt-4 text-xs font-semibold tracking-wider text-muted-foreground">
-                {item.meta}
-              </p>
-              <h3 className="mt-2 text-lg font-semibold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-xl">
-                {item.title}
-              </h3>
-              <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground md:line-clamp-3">
-                {item.summary}
-              </p>
-            </Link>
+                </Badge>
+                  <span className="text-xl leading-none text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary">
+                    ↗
+                  </span>
+                </div>
+                <p className="mt-4 text-xs font-semibold tracking-wider text-muted-foreground">
+                  {item.meta}
+                </p>
+                <h3 className="mt-2 text-lg font-semibold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-xl">
+                  {item.title}
+                </h3>
+                <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground md:line-clamp-3">
+                  {item.summary}
+                </p>
+              </Link>
+            </Card>
           ))}
         </div>
       </div>
