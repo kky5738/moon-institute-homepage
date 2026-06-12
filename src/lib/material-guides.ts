@@ -26,31 +26,7 @@ export type MaterialArchiveItem = {
 
 const fallbackReadingOrder = 99;
 
-const materialGuides: MaterialGuide[] = [
-  {
-    slug: "institute-introduction-material",
-    readingOrder: 1,
-    stepLabel: "첫 안내",
-    archiveSummary:
-      "연구소 소개 자료를 처음 확인하는 방문자가 운영 목적과 향후 공개 흐름을 빠르게 잡을 수 있도록 배치한 자료입니다.",
-    explanationSummary:
-      "공식 원문이 확정되기 전까지는 소개 자료의 구조와 이용 순서를 안내하는 자료로 다룹니다. 인물, 역사, 사상 관련 설명은 추후 제공되는 원문을 우선해 보완합니다.",
-    readingPoints: [
-      "출범 준비 단계에서 어떤 자료가 먼저 공개되는지 확인합니다.",
-      "공지사항과 함께 보면 운영 일정과 자료 공개 흐름을 이어서 볼 수 있습니다.",
-      "공식 소개 원문이 확정되기 전까지는 안내 문서의 성격으로 읽습니다.",
-    ],
-    recommendationSlugs: ["missing-follow-up-material"],
-    topicHref: "/topics/life",
-    topicLabel: "생애",
-    videoGuide: {
-      title: "자료 해설 영상 안내",
-      description:
-        "자료 해설 영상이 공개되면 이 자료의 읽는 순서와 배경 안내를 함께 연결합니다.",
-      href: "/#media",
-    },
-  },
-];
+const materialGuides: MaterialGuide[] = [];
 
 export function getMaterialGuide(slug: string): MaterialGuide {
   return (

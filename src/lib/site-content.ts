@@ -19,7 +19,7 @@ export const featuredNewsItems = [
     label: "자료 공유",
     title: "초기 홍보자료 정리",
     description:
-      "소개 자료와 안내 문서를 게시판 기준에 맞춰 보존하고 이후 공식 자료실로 이어지게 구성합니다.",
+      "공개 가능한 자료를 게시판 기준에 맞춰 보존하고 이후 공식 자료실로 이어지게 구성합니다.",
     date: "상시",
     href: "/materials",
   },
@@ -50,7 +50,7 @@ export const heroSlides = [
     label: "자료 공유",
     title: "초기 홍보자료 정리",
     summary:
-      "소개 자료와 안내 문서를 게시판 기준에 맞춰 보존하고 이후 공식 자료실로 이어지게 구성합니다.",
+      "공개 가능한 자료를 게시판 기준에 맞춰 보존하고 이후 공식 자료실로 이어지게 구성합니다.",
     date: "상시",
     href: "/materials",
     ctaLabel: "자료 보기",
@@ -93,7 +93,7 @@ export const activityItems = [
   {
     title: "자료",
     description:
-      "홍보자료와 안내 자료를 관리형 게시판으로 제공하고 필요에 따라 확장합니다.",
+      "공개 가능한 자료를 관리형 게시판으로 제공하고 필요에 따라 확장합니다.",
     href: "/materials",
     linkLabel: "자료 보기",
   },
@@ -109,8 +109,8 @@ export const activityItems = [
 export const resourceNoticeItems = [
   {
     type: "자료",
-    title: "연구소 소개 자료",
-    description: "공식 소개문, 운영 목적, 향후 일정 안내 자료를 게시판에 누적합니다.",
+    title: "자료 아카이브",
+    description: "공개 가능한 자료를 게시판에 누적하고 자료 아카이브로 정리합니다.",
     href: "/materials",
   },
   {

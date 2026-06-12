@@ -31,9 +31,9 @@ const categories = [
     sortOrder: 2,
   },
   {
-    name: "소개자료",
+    name: "자료",
     slug: "intro-materials",
-    description: "연구소 소개와 공유용 홍보자료",
+    description: "공개 가능한 홍보자료",
     postType: PostType.PROMOTION,
     sortOrder: 1,
   },
@@ -54,9 +54,8 @@ async function main() {
 
   const noticeCategory = savedCategories.get("notice");
   const newsCategory = savedCategories.get("news");
-  const introMaterialsCategory = savedCategories.get("intro-materials");
 
-  if (!noticeCategory || !newsCategory || !introMaterialsCategory) {
+  if (!noticeCategory || !newsCategory) {
     throw new Error("Seed categories were not created.");
   }
 
@@ -94,7 +93,7 @@ async function main() {
       title: "홍보자료 게시판 운영 계획",
       slug: "promotion-board-plan",
       summary:
-        "출범 전 기간 동안 연구소 소개 자료, 행사 안내, 공유 가능한 홍보 자료를 관리형 게시판으로 제공합니다.",
+        "출범 전 기간 동안 행사 안내와 공유 가능한 홍보 자료를 관리형 게시판으로 제공합니다.",
       content:
         "홍보자료 게시판은 관리자가 등록한 자료를 방문자가 확인하는 방식으로 시작합니다.",
       type: PostType.NOTICE,
@@ -105,27 +104,8 @@ async function main() {
     },
   });
 
-  await prisma.post.upsert({
+  await prisma.post.deleteMany({
     where: { slug: "institute-introduction-material" },
-    update: {
-      phase: PostPhase.PRE_LAUNCH,
-      status: PostStatus.PUBLISHED,
-      categoryId: introMaterialsCategory.id,
-    },
-    create: {
-      title: "연구소 소개 자료 준비본",
-      slug: "institute-introduction-material",
-      summary:
-        "출범 준비 단계에서 공유할 연구소 소개 자료의 기본 구조를 준비하고 있습니다.",
-      content:
-        "이 자료는 공식 원문이 확정되기 전까지 임시 홍보자료로 관리됩니다.",
-      type: PostType.PROMOTION,
-      status: PostStatus.PUBLISHED,
-      phase: PostPhase.PRE_LAUNCH,
-      isPinned: true,
-      publishedAt: new Date("2026-05-12T00:00:00.000Z"),
-      categoryId: introMaterialsCategory.id,
-    },
   });
 
   await prisma.inquiry.upsert({
