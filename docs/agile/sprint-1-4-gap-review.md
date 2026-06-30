@@ -67,8 +67,8 @@ Sprint 1~4의 핵심 목표는 대체로 충족되어 있다.
 
 보완 메모:
 
-- 추천 자료 관계는 여전히 수동 slug 배열이다. 운영자가 게시글 slug를 바꾸거나 자료를 비공개로 전환하면 추천 흐름이 조용히 비어 보일 수 있다.
-- fallback 자료 해설은 기본 관련 주제를 `/topics/life`로 고정한다. 향후 여러 카테고리의 운영 자료가 늘어나면 fallback도 게시글 카테고리를 참고해 더 정확한 주제로 연결하는 방식이 필요하다.
+- 추천 자료 관계는 여전히 수동 slug 배열이다. 운영자가 게시글 slug를 바꾸거나 자료를 비공개로 전환하면 추천 흐름이 조용히 비어 보일 수 있다. 이 규칙은 `docs/sitemap.md` 운영 메모에 추가했다.
+- fallback 자료 해설은 게시글 카테고리를 참고해 생애/말씀/업적 주제로 연결하도록 개선했다.
 - 실제 영상 업로드/재생은 Sprint 3 제외 범위였으므로 아직 준비 상태 링크만 제공한다.
 
 ### Sprint 4
@@ -83,18 +83,17 @@ Sprint 1~4의 핵심 목표는 대체로 충족되어 있다.
 
 보완 메모:
 
-- `docs/sitemap.md`의 Sprint 4 QA 대상이 예전 slug인 `/topics/pre-launch-archive`, `/materials/institute-introduction-material`를 가리킨다.
-- 현재 실제 대표 경로는 `/topics/life`, `/topics/words`, `/topics/achievements`, `/materials/life-research-material-guide` 등이다.
-- 최근 Hero 상단의 직접 CTA 버튼 2개가 제거되었으므로, 홈에서 주제/자료로 가는 주요 경로는 rotation card와 연구 주제 허브 섹션 중심으로 다시 QA하는 것이 좋다.
-- `/materials` 빈 상태는 안정적이지만, 현재 문구는 최소 안내만 제공한다. 자료가 0개인 운영 초기 상태를 더 친절하게 만들려면 `/topics` 또는 `/contact` CTA를 추가하는 개선 여지가 있다.
+- `docs/sitemap.md`의 Sprint 4 QA 대상은 현재 slug인 `/topics/life`, `/topics/words`, `/topics/achievements`, `/materials/life-research-material-guide` 기준으로 갱신했다.
+- Hero 상단의 직접 CTA 버튼 2개 제거 후 홈 진입 흐름은 rotation card와 연구 주제 허브 섹션 중심으로 데스크톱/모바일 QA를 완료했다.
+- `/materials` 빈 상태는 주제 허브와 문의 CTA를 포함하도록 개선되어 운영 초기 상태에서도 다음 경로를 제공한다.
 
 ## 우선 보완 제안
 
-1. `docs/sitemap.md` QA 경로를 현재 slug 기준으로 갱신한다.
-2. 자료 fallback guide가 게시글 카테고리에 맞는 주제를 선택하도록 개선한다.
-3. 수동 추천 slug 관리 규칙을 운영 문서에 더 명확히 적거나, 장기적으로 관리자 UI에서 추천 자료를 관리하도록 확장한다.
-4. Hero CTA 제거 후 모바일/데스크톱에서 홈 진입 흐름을 다시 Playwright로 확인한다.
-5. 자료가 하나도 없을 때의 `/materials` 빈 상태에 주제 허브 또는 문의 CTA를 추가할지 검토한다.
+1. 완료: `docs/sitemap.md` QA 경로를 현재 slug 기준으로 갱신한다.
+2. 완료: 자료 fallback guide가 게시글 카테고리에 맞는 주제를 선택하도록 개선한다.
+3. 완료: 수동 추천 slug 관리 규칙을 운영 문서에 더 명확히 적는다.
+4. 완료: Hero CTA 제거 후 모바일/데스크톱에서 홈 진입 흐름을 다시 Playwright로 확인한다.
+5. 완료: 자료가 하나도 없을 때의 `/materials` 빈 상태에 주제 허브와 문의 CTA를 제공한다.
 
 ## 결론
 

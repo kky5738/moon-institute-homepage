@@ -98,10 +98,13 @@ const materialGuides: MaterialGuide[] = [
   },
 ];
 
-export function getMaterialGuide(slug: string): MaterialGuide {
+export function getMaterialGuide(
+  slug: string,
+  categorySlug?: string,
+): MaterialGuide {
   return (
     materialGuides.find((guide) => guide.slug === slug) ??
-    createFallbackMaterialGuide(slug)
+    createFallbackMaterialGuide(slug, categorySlug)
   );
 }
 
@@ -109,7 +112,7 @@ export function getMaterialArchiveItems(posts: BoardPost[]) {
   return posts
     .map((post) => ({
       post,
-      guide: getMaterialGuide(post.slug),
+      guide: getMaterialGuide(post.slug, post.categorySlug),
     }))
     .sort((first, second) => {
       const orderDifference =
@@ -136,7 +139,12 @@ export function getRecommendedMaterialPosts(
     .filter((post) => post.slug !== currentSlug);
 }
 
-function createFallbackMaterialGuide(slug: string): MaterialGuide {
+function createFallbackMaterialGuide(
+  slug: string,
+  categorySlug?: string,
+): MaterialGuide {
+  const topic = getFallbackTopic(categorySlug);
+
   return {
     slug,
     readingOrder: fallbackReadingOrder,
@@ -151,8 +159,8 @@ function createFallbackMaterialGuide(slug: string): MaterialGuide {
       "필요한 맥락이 부족하면 문의 경로를 이용합니다.",
     ],
     recommendationSlugs: [],
-    topicHref: "/topics/life",
-    topicLabel: "생애",
+    topicHref: topic.href,
+    topicLabel: topic.label,
     videoGuide: {
       title: "영상 콘텐츠 안내",
       description:
@@ -160,4 +168,16 @@ function createFallbackMaterialGuide(slug: string): MaterialGuide {
       href: "/#media",
     },
   };
+}
+
+function getFallbackTopic(categorySlug?: string) {
+  if (categorySlug === "words-materials") {
+    return { href: "/topics/words", label: "말씀" };
+  }
+
+  if (categorySlug === "achievement-materials") {
+    return { href: "/topics/achievements", label: "업적" };
+  }
+
+  return { href: "/topics/life", label: "생애" };
 }

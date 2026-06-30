@@ -40,7 +40,7 @@ export default async function MaterialDetailPage({
     notFound();
   }
 
-  const guide = getMaterialGuide(post.slug);
+  const guide = getMaterialGuide(post.slug, post.categorySlug);
   const recommendedMaterials = getRecommendedMaterialPosts(post.slug, materials);
 
   return (
