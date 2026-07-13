@@ -148,8 +148,8 @@ npm run build
 
 Expected build shape:
 
-- `/`, `/contact`, `/topics`는 정적 페이지로 빌드된다.
-- `/notices`, `/materials`, 각 상세 경로와 `/admin` 아래 경로는 데이터베이스 또는 세션을 사용하므로 요청 시 서버 렌더링된다.
+- `/contact`, `/topics`는 정적 페이지로 빌드된다.
+- `/`, `/notices`, `/materials`, 각 상세 경로와 `/admin` 아래 경로는 데이터베이스 또는 세션을 사용하므로 요청 시 서버 렌더링된다.
 - `/login`과 `/api/auth/[...nextauth]`는 Auth.js를 사용하므로 요청 시 서버에서 처리된다.
 - There should be no TypeScript, hydration, or Server/Client Component boundary errors.
 

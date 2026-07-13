@@ -82,51 +82,6 @@ export const videoContentItems = [
   },
 ];
 
-export const activityItems = [
-  {
-    title: "연구소 활동",
-    description:
-      "활동 소식과 운영 기록을 차례로 정리해 공식 홈페이지의 중심 자료로 축적합니다.",
-    href: "/topics",
-    linkLabel: "주제 보기",
-  },
-  {
-    title: "자료",
-    description:
-      "공개 가능한 자료를 관리형 게시판으로 제공하고 필요에 따라 확장합니다.",
-    href: "/materials",
-    linkLabel: "자료 보기",
-  },
-  {
-    title: "공지",
-    description:
-      "운영 일정과 주요 안내를 공지사항으로 정리해 방문자가 빠르게 확인하도록 합니다.",
-    href: "/notices",
-    linkLabel: "공지 보기",
-  },
-];
-
-export const resourceNoticeItems = [
-  {
-    type: "자료",
-    title: "자료 아카이브",
-    description: "공개 가능한 자료를 게시판에 누적하고 자료 아카이브로 정리합니다.",
-    href: "/materials",
-  },
-  {
-    type: "공지",
-    title: "운영 일정 안내",
-    description: "출범 준비 과정의 주요 일정과 변동 사항을 공지사항으로 안내합니다.",
-    href: "/notices",
-  },
-  {
-    type: "활동",
-    title: "준비 활동 기록",
-    description: "연구소 활동과 공개 가능한 준비 과정을 차례로 정리합니다.",
-    href: "/notices",
-  },
-];
-
 export const participationItems = [
   "문의 접수",
   "참여 신청",
