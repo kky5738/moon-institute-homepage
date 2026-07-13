@@ -1,4 +1,6 @@
-# Vercel Deployment Checklist
+# Vercel 배포 체크리스트
+
+> 첫 공식 배포 환경은 아직 결정되지 않았다. 이 문서는 Vercel을 선택했을 때 사용하는 조건부 체크리스트이며, 선택 또는 배포 승인을 의미하지 않는다. AWS를 선택하면 `docs/aws-plan.md`를 기준으로 별도 절차를 확정한다.
 
 ## 1. Repository Readiness
 
@@ -29,14 +31,19 @@ npm run build
 
 ## 3. Environment Variables
 
-Set these in Vercel Project Settings for Production and Preview as needed:
+현재 애플리케이션 실행에 필요한 값을 Vercel Project Settings의 Production과 Preview에 각각 설정한다.
 
 ```bash
 DATABASE_URL=
 AUTH_SECRET=
-AUTH_URL=
 ADMIN_USERNAME=
 ADMIN_PASSWORD=
+```
+
+호스트 추론이 되지 않을 때만 다음 값을 추가한다.
+
+```bash
+AUTH_URL=
 ```
 
 Notes:
@@ -141,7 +148,9 @@ npm run build
 
 Expected build shape:
 
-- `/`, `/notices`, `/materials`, `/login`, `/admin`, and detail/admin routes should be dynamic or server-rendered on demand.
+- `/`, `/contact`, `/topics`는 정적 페이지로 빌드된다.
+- `/notices`, `/materials`, 각 상세 경로와 `/admin` 아래 경로는 데이터베이스 또는 세션을 사용하므로 요청 시 서버 렌더링된다.
+- `/login`과 `/api/auth/[...nextauth]`는 Auth.js를 사용하므로 요청 시 서버에서 처리된다.
 - There should be no TypeScript, hydration, or Server/Client Component boundary errors.
 
 ## 9. Runtime Error Diagnostics

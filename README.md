@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# M Institute Homepage
 
-## Getting Started
+문선명 연구소의 공개 홈페이지와 단일 관리자 운영 화면을 제공하는 Next.js App Router 프로젝트다.
 
-First, run the development server:
+## 기술 스택
+
+- Next.js 16 App Router, React 19, TypeScript, Tailwind CSS
+- PostgreSQL, Prisma
+- Auth.js Credentials 기반 단일 관리자 인증
+
+## 로컬 실행
+
+Node.js 20.9 이상과 PostgreSQL이 필요하다.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env`에 PostgreSQL 연결 정보와 `AUTH_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`를 설정한다. 로컬 PostgreSQL은 Docker로 실행할 수 있다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run docker:db:up
+npm run db:setup
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+브라우저에서 [http://localhost:3000](http://localhost:3000)을 연다. `AUTH_URL`은 배포 플랫폼이 호스트를 추론하지 못할 때 설정하며, 로컬에서 필요하면 `http://localhost:3000`을 사용한다.
 
-## Learn More
+## 주요 경로
 
-To learn more about Next.js, take a look at the following resources:
+- 공개: `/`, `/topics`, `/materials`, `/notices`, `/contact`
+- 관리자 로그인: `/login`
+- 인증 필요: `/admin`, `/admin/posts`, `/admin/inquiries`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+관리자 계정은 데이터베이스 사용자가 아니라 환경 변수의 단일 계정이다. OAuth와 공개 회원가입은 구현되어 있지 않다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+전체 경로는 `docs/sitemap.md`, 배포 후보별 준비 사항은 `docs/deployment-checklist.md`와 `docs/aws-plan.md`를 참고한다. 첫 공식 배포 환경은 아직 결정되지 않았다.
 
-## Deploy on Vercel
+## 검증
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run build
+```
