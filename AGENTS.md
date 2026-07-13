@@ -43,3 +43,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 인물, 역사, 사상 관련 설명은 사용자가 제공한 원문을 우선한다.
 - 임의로 사실을 단정하지 않는다.
 - 디자인은 공식적이고 차분한 연구소 느낌을 유지한다.
+
+## 공식 개시 작업
+- 공식 개시 준비 작업은 `docs/agent-work-plan.md`를 먼저 확인한다.
+- `READY` 작업만 수행하고, `WAITING` 작업은 필요한 사용자 결정 또는 승인이 기록될 때까지 시작하지 않는다.
