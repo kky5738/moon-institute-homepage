@@ -36,6 +36,18 @@
 - 게시글 카테고리 slug가 주제 연결 기준이므로, seed 또는 운영 DB의 `Category.slug` 값을 변경할 때는 `src/lib/topics.ts`의 `categoryConnections`도 함께 확인한다.
 - 인물, 역사, 사상 관련 설명은 공식 원문이 제공된 뒤 반영한다. 임시 문구는 안내 성격으로만 유지한다.
 
+### 주제·자료 연결 점검 (2026-07-13)
+
+| 주제 경로 | 공지 카테고리 | 자료 카테고리 | 입문 자료 slug | 다음 자료 slug |
+| --- | --- | --- | --- | --- |
+| `/topics/life` | `notice` | `life-materials` | `life-research-material-guide` | `words-research-material-guide` |
+| `/topics/words` | `notice` | `words-materials` | `words-research-material-guide` | `achievements-research-material-guide` |
+| `/topics/achievements` | `news` | `achievement-materials` | `achievements-research-material-guide` | `life-research-material-guide` |
+
+- 위 카테고리와 자료 slug는 `prisma/seed.ts`의 공개 seed 데이터와 일치한다.
+- `intro-materials`처럼 특정 주제에 속하지 않거나 카테고리가 없는 자료의 fallback은 `/topics`로 연결하며 자동 추천을 만들지 않는다.
+- 추천 slug에 해당하는 공개 자료가 없으면 추천 목록은 빈 상태 안내를 표시하고 존재하지 않는 상세 링크를 만들지 않는다.
+
 ## 주요 QA 경로
 
 - 데스크톱: `/`, `/topics`, `/topics/life`, `/topics/words`, `/topics/achievements`, `/materials`, `/materials/life-research-material-guide`

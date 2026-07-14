@@ -171,6 +171,10 @@ function createFallbackMaterialGuide(
 }
 
 function getFallbackTopic(categorySlug?: string) {
+  if (categorySlug === "life-materials") {
+    return { href: "/topics/life", label: "생애" };
+  }
+
   if (categorySlug === "words-materials") {
     return { href: "/topics/words", label: "말씀" };
   }
@@ -179,5 +183,5 @@ function getFallbackTopic(categorySlug?: string) {
     return { href: "/topics/achievements", label: "업적" };
   }
 
-  return { href: "/topics/life", label: "생애" };
+  return { href: "/topics", label: "연구 주제" };
 }
