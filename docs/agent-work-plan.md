@@ -35,7 +35,7 @@
 - 작업:
   - `README.md`, `docs/sitemap.md`, `docs/deployment-checklist.md`, `docs/launch-readiness.md`를 실제 라우트, 스크립트, 인증 방식과 대조한다.
   - 명백히 오래되거나 잘못된 설명만 현재 구현에 맞게 수정한다.
-  - 결정되지 않은 배포 환경, 공식 콘텐츠, 회원 정책은 확정된 것처럼 쓰지 않는다.
+  - Vercel·Supabase의 확정된 구성과 아직 확인하지 않은 설정을 구분하고, 공식 콘텐츠와 회원 정책은 확정된 것처럼 쓰지 않는다.
 - 완료 조건:
   - 현재 실행 방법, 공개·관리자 경로, 단일 관리자 인증 방식이 코드와 일치한다.
   - 미결정 사항은 미결정 상태로 남는다.
@@ -147,21 +147,24 @@
 - 승인 후 작업:
   - 정책 페이지와 문의 폼 동의·안내를 구현하고 footer에서 연결한다.
 
-### WAITING-03. 첫 공식 배포 환경
+### WAITING-03. Vercel·Supabase 운영 설정 확정
 
 - 상태: `WAITING`
-- 필요한 결정:
-  - Vercel 또는 AWS
+- 확정된 사항:
+  - 배포 환경은 Vercel
+  - 운영 PostgreSQL은 Supabase
+  - `main`은 Production, 다른 브랜치는 Preview 배포로 사용 중
+- 필요한 확인 및 결정:
   - 공식 도메인
-  - 운영 PostgreSQL 제공자
+  - Vercel Production Branch가 실제로 `main`인지 여부
   - Preview와 Production DB 분리 여부
+  - Supabase 요금제와 자동 백업 보존 범위
 - 필요한 승인:
-  - 외부 프로젝트 및 DB 생성
-  - 환경 변수 등록
-  - Migration 적용
+  - Production 환경 변수 변경
+  - 운영 DB Migration 적용
   - DNS 변경과 Production 배포
 - 승인 후 작업:
-  - Vercel이면 `docs/deployment-checklist.md`, AWS이면 `docs/aws-plan.md`를 기준으로 배포한다.
+  - `docs/deployment-checklist.md`를 기준으로 Vercel·Supabase 설정과 Production smoke test를 완료한다.
 
 ### WAITING-04. 백업·복구·모니터링 운영 정책
 
@@ -261,4 +264,4 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 
 | 날짜 | 관련 작업 ID | 결정 또는 승인 | 적용 범위 |
 | --- | --- | --- | --- |
-|  |  |  |  |
+| 2026-07-15 | WAITING-03 | 첫 배포 환경은 Vercel, 운영 DB는 Supabase로 결정 | 배포·DB 관련 문서와 후속 작업 |

@@ -1,6 +1,6 @@
 # Vercel 배포 체크리스트
 
-> 첫 공식 배포 환경은 아직 결정되지 않았다. 이 문서는 Vercel을 선택했을 때 사용하는 조건부 체크리스트이며, 선택 또는 배포 승인을 의미하지 않는다. AWS를 선택하면 `docs/aws-plan.md`를 기준으로 별도 절차를 확정한다.
+> 현재 Vercel에 배포하고 Supabase PostgreSQL을 사용한다. `main` 브랜치는 Production, 다른 브랜치는 Preview 배포로 사용 중이며 실제 Vercel Project Settings와 일치하는지 최종 확인한다.
 
 ## 1. Repository Readiness
 
@@ -19,6 +19,7 @@ npm run build
 ## 2. Vercel Project Settings
 
 - Import the Git repository into Vercel as a Next.js project.
+- Confirm the Production Branch is `main`; pushes to other branches should create Preview deployments.
 - Use the default Vercel build command:
 
 ```bash
@@ -66,19 +67,17 @@ npm exec auth secret
 
 ## 4. PostgreSQL Provider
 
-Recommended deployment-friendly options:
-
-- Vercel Postgres / Neon
-- Supabase PostgreSQL
-- AWS RDS PostgreSQL with a proxy or pooler when moving to AWS
+The current provider is Supabase PostgreSQL.
 
 Before first production deploy:
 
-- Create the database.
-- Copy the provider's PostgreSQL connection string into `DATABASE_URL`.
+- Confirm the existing Supabase project is the intended Production database.
+- Copy the Supabase PostgreSQL connection string into `DATABASE_URL`.
 - Ensure SSL is enabled when the provider requires it, usually with `sslmode=require`.
 - For Preview deployments, use a separate preview database if migrations may differ from Production.
 - Confirm the database connection limit is compatible with serverless traffic. Use provider pooling, RDS Proxy, or an equivalent pooler when needed.
+- Confirm the Supabase plan and available retention in Database > Backups. Free projects should not be treated as having the same daily backup guarantees as paid plans.
+- Document the restore path and test it before relying on the default backup settings for official operation.
 
 ## 5. Prisma
 
