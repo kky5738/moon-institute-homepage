@@ -19,9 +19,15 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full bg-background text-foreground">
+        <a
+          href="#main-content"
+          className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-md bg-white px-4 py-3 text-sm font-semibold text-primary-dark shadow-[var(--shadow-elegant)] focus:translate-y-0"
+        >
+          본문 바로가기
+        </a>
         <div className="flex min-h-screen flex-col">
           <SiteNavbar />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" tabIndex={-1} className="flex-1">{children}</main>
           <SiteFooter />
         </div>
       </body>

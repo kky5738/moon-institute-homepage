@@ -26,10 +26,10 @@ const variantClassNames: Record<ButtonVariant, string> = {
 
 const sizeClassNames: Record<ButtonSize, string> = {
   sm: "h-9 px-3 text-xs",
-  default: "h-10 px-4 text-sm",
+  default: "h-11 px-4 text-sm",
   lg: "h-11 px-5 text-sm",
   xl: "h-12 px-6 text-sm",
-  icon: "h-10 w-10 p-0",
+  icon: "h-11 w-11 p-0",
 };
 
 export function buttonVariants({

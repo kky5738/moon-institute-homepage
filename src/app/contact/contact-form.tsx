@@ -69,6 +69,7 @@ export function ContactForm() {
             type="email"
             maxLength={120}
             autoComplete="email"
+            aria-describedby="contact-method-help"
             className="mt-2"
           />
         </div>
@@ -84,9 +85,10 @@ export function ContactForm() {
           type="tel"
           maxLength={40}
           autoComplete="tel"
+          aria-describedby="contact-method-help"
           className="mt-2"
         />
-        <p className="mt-2 text-xs leading-5 text-muted">
+        <p id="contact-method-help" className="mt-2 text-xs leading-5 text-muted">
           이메일 또는 연락처 중 하나는 입력해주세요.
         </p>
       </div>
@@ -121,7 +123,8 @@ export function ContactForm() {
 
       {state.message ? (
         <p
-          aria-live="polite"
+          aria-live={state.status === "error" ? "assertive" : "polite"}
+          role={state.status === "error" ? "alert" : "status"}
           className={
             state.status === "success"
               ? "border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"

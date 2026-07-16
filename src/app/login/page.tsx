@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
 
         {error ? (
-          <p className="mt-5 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p id="login-error" role="alert" className="mt-5 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             아이디 또는 비밀번호가 올바르지 않습니다.
           </p>
         ) : null}
@@ -45,6 +45,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               name="username"
               required
               autoComplete="username"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
               className="mt-2"
             />
           </div>
@@ -59,6 +61,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               required
               type="password"
               autoComplete="current-password"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
               className="mt-2"
             />
           </div>

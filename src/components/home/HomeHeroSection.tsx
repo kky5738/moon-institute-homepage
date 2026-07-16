@@ -12,15 +12,33 @@ const slideIntervalMs = 6000;
 
 export function HomeHeroSection() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const activeSlide = heroSlides[activeIndex];
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotionPreference = () => {
+      setPrefersReducedMotion(mediaQuery.matches);
+    };
+
+    updateMotionPreference();
+    mediaQuery.addEventListener("change", updateMotionPreference);
+
+    return () => mediaQuery.removeEventListener("change", updateMotionPreference);
+  }, []);
+
+  useEffect(() => {
+    if (isPaused || prefersReducedMotion) {
+      return;
+    }
+
     const timer = window.setInterval(() => {
       setActiveIndex((current) => getNextIndex(current));
     }, slideIntervalMs);
 
     return () => window.clearInterval(timer);
-  }, []);
+  }, [isPaused, prefersReducedMotion]);
 
   return (
     <section id="top" className="relative min-h-[100svh] scroll-mt-16 overflow-hidden bg-primary-dark text-white">
@@ -76,22 +94,40 @@ export function HomeHeroSection() {
             <div
               className="mt-4 flex items-center gap-2"
               aria-label="연구 주제 슬라이드 위치"
+              role="group"
             >
               {heroSlides.map((slide, index) => (
                 <button
                   key={slide.title}
                   type="button"
                   aria-label={`${slide.title} 연구 주제 보기`}
-                  aria-current={index === activeIndex ? "true" : undefined}
+                  aria-pressed={index === activeIndex}
                   onClick={() => setActiveIndex(index)}
-                  className={[
-                    "h-1.5 cursor-pointer rounded-full transition-all",
-                    index === activeIndex
-                      ? "w-10 bg-gold"
-                      : "w-6 bg-white/35 hover:bg-white/55",
-                  ].join(" ")}
-                />
+                  className="group grid h-11 w-11 cursor-pointer place-items-center rounded-full"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={[
+                      "h-1.5 rounded-full transition-all",
+                      index === activeIndex
+                        ? "w-8 bg-gold"
+                        : "w-6 bg-white/35 group-hover:bg-white/55",
+                    ].join(" ")}
+                  />
+                </button>
               ))}
+              <button
+                type="button"
+                disabled={prefersReducedMotion}
+                onClick={() => setIsPaused((current) => !current)}
+                className="min-h-11 rounded-full border border-white/35 px-3 text-xs font-semibold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {prefersReducedMotion
+                  ? "자동 전환 꺼짐"
+                  : isPaused
+                    ? "자동 전환 시작"
+                    : "자동 전환 멈춤"}
+              </button>
             </div>
           </div>
         </div>

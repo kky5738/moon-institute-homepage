@@ -61,6 +61,7 @@ export function SiteNavbar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={pathname === item.href ? "page" : undefined}
               className={`text-sm font-medium transition-colors hover:text-gold ${mutedTextClassName}`}
             >
               {item.label}
@@ -80,6 +81,7 @@ export function SiteNavbar() {
           size="icon"
           aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
           aria-expanded={open}
+          aria-controls="mobile-menu"
           onClick={() => setOpen((current) => !current)}
           className={`grid lg:hidden ${
             elevated
@@ -94,13 +96,14 @@ export function SiteNavbar() {
       </nav>
 
       {open ? (
-        <div className="border-t border-border bg-background lg:hidden">
+        <div id="mobile-menu" className="border-t border-border bg-background lg:hidden">
           <div className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-6">
             <div className="grid gap-1">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={pathname === item.href ? "page" : undefined}
                   onClick={() => setOpen(false)}
                   className="border-b border-border/70 py-3 text-base font-medium text-foreground"
                 >
