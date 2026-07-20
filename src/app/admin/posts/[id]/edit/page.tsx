@@ -6,6 +6,7 @@ import {
   PostPhase,
   PostStatus,
 } from "@/generated/prisma/enums";
+import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { archivePost, updatePost } from "../../actions";
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
   await connection();
+  await requireAdmin();
 
   const { id: rawId } = await params;
   const id = Number(rawId);

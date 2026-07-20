@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { login } from "./actions";
 
 export const metadata: Metadata = {
-  title: "관리자 로그인",
-  description: "문선명 연구소 홈페이지 관리자 로그인입니다.",
+  title: "로그인",
+  description: "문선명 연구소 홈페이지 로그인입니다.",
 };
 
 type LoginPageProps = {
@@ -20,25 +21,24 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-5 py-14">
       <Card className="rounded-none bg-surface p-6">
-        <p className="text-sm font-semibold text-primary">관리자</p>
+        <p className="text-sm font-semibold text-primary">회원</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
           로그인
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted">
-          등록된 단일 관리자 계정으로 접속합니다.
+          관리자는 아이디로, 승인된 연구자는 이메일로 로그인합니다.
         </p>
 
         {error ? (
           <p id="login-error" role="alert" className="mt-5 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            아이디 또는 비밀번호가 올바르지 않습니다.
+            아이디 또는 이메일과 비밀번호를 확인해주세요.
           </p>
         ) : null}
 
         <form action={login} className="mt-6 space-y-5">
-          <input type="hidden" name="redirectTo" value="/admin" />
           <div>
             <Label htmlFor="username">
-              아이디
+              아이디 또는 이메일
             </Label>
             <Input
               id="username"
@@ -75,6 +75,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             로그인
           </Button>
         </form>
+
+        <p className="mt-5 text-center text-sm text-muted">
+          아직 계정이 없나요?{" "}
+          <Link href="/signup" className="font-semibold text-primary hover:underline">
+            회원가입
+          </Link>
+        </p>
       </Card>
     </div>
   );

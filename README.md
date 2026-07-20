@@ -6,7 +6,7 @@
 
 - Next.js 16 App Router, React 19, TypeScript, Tailwind CSS
 - PostgreSQL, Prisma
-- Auth.js Credentials 기반 단일 관리자 인증
+- Auth.js Credentials 기반 관리자·연구자 인증
 
 ## 로컬 실행
 
@@ -29,11 +29,11 @@ npm run dev
 
 ## 주요 경로
 
-- 공개: `/`, `/topics`, `/materials`, `/notices`, `/contact`
-- 관리자 로그인: `/login`
-- 인증 필요: `/admin`, `/admin/posts`, `/admin/inquiries`
+- 공개: `/`, `/topics`, `/materials`, `/notices`, `/contact`, `/signup`, `/login`
+- 연구자 인증 필요: `/account`
+- 관리자 인증 필요: `/admin`, `/admin/posts`, `/admin/inquiries`, `/admin/users`
 
-관리자 계정은 데이터베이스 사용자가 아니라 환경 변수의 단일 계정이다. OAuth와 공개 회원가입은 구현되어 있지 않다.
+관리자는 환경 변수의 단일 계정이며, 연구자는 이메일과 비밀번호로 가입한 뒤 관리자 승인을 받아 로그인한다. 소셜 로그인은 구현되어 있지 않다. 연구자 사용자 migration의 Production 적용은 별도 승인을 받아야 한다.
 
 전체 경로는 `docs/sitemap.md`, 배포 후보별 준비 사항은 `docs/deployment-checklist.md`와 `docs/aws-plan.md`를 참고한다. 첫 공식 배포 환경은 아직 결정되지 않았다.
 
@@ -41,5 +41,6 @@ npm run dev
 
 ```bash
 npm run lint
+npm run test:auth
 npm run build
 ```

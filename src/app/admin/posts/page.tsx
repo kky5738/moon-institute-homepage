@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { archivePost } from "./actions";
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 
 export default async function AdminPostsPage() {
   await connection();
+  await requireAdmin();
 
   let posts;
 

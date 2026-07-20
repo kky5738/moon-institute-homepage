@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {
   title: "관리자",
   description: "문선명 연구소 홈페이지 관리자 화면입니다.",
 };
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  await requireAdmin();
+
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
       <div className="border-b border-border pb-8">
@@ -16,7 +19,7 @@ export default function AdminPage() {
           관리자 홈
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
-          단일 관리자 계정으로 공지사항, 홍보자료, 문의 접수 내역을 관리합니다.
+          단일 관리자 계정으로 게시글, 문의 접수 내역과 연구자 계정을 관리합니다.
         </p>
       </div>
 
@@ -34,6 +37,14 @@ export default function AdminPage() {
             <h2 className="text-xl font-semibold text-foreground">문의 관리</h2>
             <p className="mt-3 text-sm leading-6 text-muted">
               일반 문의, 참여 신청, 후원 관심 접수 내역을 확인하고 상태를 관리합니다.
+            </p>
+          </Link>
+        </Card>
+        <Card className="rounded-none bg-surface p-0 transition-colors hover:border-accent">
+          <Link href="/admin/users" className="block p-6">
+            <h2 className="text-xl font-semibold text-foreground">회원 관리</h2>
+            <p className="mt-3 text-sm leading-6 text-muted">
+              연구자 가입 신청을 승인하고 계정 상태를 관리합니다.
             </p>
           </Link>
         </Card>

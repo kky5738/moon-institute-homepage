@@ -5,6 +5,7 @@ import {
   PostPhase,
   PostStatus,
 } from "@/generated/prisma/enums";
+import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { createPost } from "../actions";
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 
 export default async function NewPostPage() {
   await connection();
+  await requireAdmin();
 
   let categories;
 

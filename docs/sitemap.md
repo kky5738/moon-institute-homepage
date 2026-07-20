@@ -13,7 +13,9 @@
 - `/notices`: 공지사항 목록. 기존 게시판형 탐색 경로로 유지한다.
 - `/notices/[slug]`: 공지사항 상세.
 - `/contact`: 문의/참여 신청 폼.
-- `/login`: 관리자 로그인.
+- `/signup`: 연구자 계정 가입 신청. 기본 상태는 승인 대기이다.
+- `/login`: 관리자 아이디 또는 승인된 연구자 이메일 로그인.
+- `/account`: 승인된 연구자의 계정 확인, 로그아웃, 회원 탈퇴.
 
 ## 관리자 페이지
 
@@ -24,6 +26,7 @@
 - `/admin/posts/new`: 관리자 게시글 작성.
 - `/admin/posts/[id]/edit`: 관리자 게시글 수정.
 - `/admin/inquiries`: 관리자 문의/참여 신청 확인.
+- `/admin/users`: 연구자 가입 신청 승인과 계정 비활성화.
 
 ## 운영 메모
 
@@ -31,8 +34,8 @@
 - 자료 상세의 해설 요약, 읽기 포인트, 추천 자료, 관련 주제는 `src/lib/material-guides.ts`에서 관리한다.
 - 추천 자료는 `src/lib/material-guides.ts`의 `recommendationSlugs`에 공개 자료 slug를 수동으로 적어 관리한다. 게시글 slug를 바꾸거나 자료를 비공개로 전환하면 추천 연결도 함께 확인한다.
 - 공지와 홍보자료의 실제 게시글은 관리자 게시글 화면에서 관리한다.
-- 관리자 로그인은 Auth.js Credentials와 `ADMIN_USERNAME`, `ADMIN_PASSWORD` 환경 변수로 구성한 단일 계정만 지원한다. 사용자 DB, 공개 회원가입, OAuth는 아직 없다.
-- 관리자 레이아웃이 모든 `/admin` 페이지의 세션을 확인하고, 게시글·문의 Server Action도 세션을 다시 확인한다.
+- 관리자 로그인은 Auth.js Credentials와 `ADMIN_USERNAME`, `ADMIN_PASSWORD` 환경 변수로 구성한 단일 계정을 유지한다. 연구자는 DB 계정으로 로그인하며 승인 상태를 서버에서 확인한다. OAuth는 지원하지 않는다.
+- 관리자 레이아웃이 모든 `/admin` 페이지의 `ADMIN` 역할을 확인하고, 게시글·문의·회원 Server Action도 역할을 다시 확인한다.
 - 게시글 카테고리 slug가 주제 연결 기준이므로, seed 또는 운영 DB의 `Category.slug` 값을 변경할 때는 `src/lib/topics.ts`의 `categoryConnections`도 함께 확인한다.
 - 인물, 역사, 사상 관련 설명은 공식 원문이 제공된 뒤 반영한다. 임시 문구는 안내 성격으로만 유지한다.
 

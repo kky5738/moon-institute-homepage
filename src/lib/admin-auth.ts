@@ -13,7 +13,7 @@ export async function requireAdmin() {
     throw error;
   }
 
-  if (!session?.user) {
+  if (session?.user?.role !== "ADMIN") {
     redirect("/login");
   }
 
@@ -31,7 +31,7 @@ export async function assertAdmin() {
     throw error;
   }
 
-  if (!session?.user) {
+  if (session?.user?.role !== "ADMIN") {
     console.error("[auth-error] Unauthorized admin server action attempt.");
     throw new Error("Unauthorized");
   }

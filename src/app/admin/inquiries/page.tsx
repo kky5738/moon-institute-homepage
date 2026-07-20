@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { InquiryStatus, InquiryType } from "@/generated/prisma/enums";
+import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { updateInquiryStatus } from "./actions";
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 
 export default async function AdminInquiriesPage() {
   await connection();
+  await requireAdmin();
 
   let inquiries;
 

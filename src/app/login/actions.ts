@@ -7,7 +7,11 @@ import { logServerError } from "@/lib/server-log";
 
 export async function login(formData: FormData) {
   try {
-    await signIn("credentials", formData);
+    await signIn("credentials", {
+      username: formData.get("username"),
+      password: formData.get("password"),
+      redirectTo: "/auth/continue",
+    });
   } catch (error) {
     unstable_rethrow(error);
 
