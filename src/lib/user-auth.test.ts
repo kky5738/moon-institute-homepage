@@ -28,6 +28,22 @@ test("only approved researchers can sign in", () => {
   assert.equal(canResearcherSignIn(UserStatus.DISABLED), false);
 });
 
+test("password mismatch identifies only the confirmation field", () => {
+  const result = parseSignupInput({
+    name: "연구자",
+    email: "researcher@example.com",
+    password: "safe-password-1234",
+    passwordConfirmation: "different-password-1234",
+    privacyConsent: true,
+  });
+
+  assert.deepEqual(result, {
+    ok: false,
+    field: "passwordConfirmation",
+    message: "비밀번호 확인이 일치하지 않습니다.",
+  });
+});
+
 test("passwords use salted one-way hashes", async () => {
   const password = "safe-password-1234";
   const first = await hashPassword(password);

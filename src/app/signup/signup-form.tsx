@@ -1,29 +1,66 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createUser, type SignupFormState } from "./actions";
 
 const initialState: SignupFormState = {
   status: "idle",
+  field: null,
   message: "",
-  submissionId: 0,
 };
 
 export function SignupForm() {
-  const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(createUser, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.submissionId > 0) {
-      formRef.current?.reset();
+    if (state.status !== "error") {
+      return;
     }
-  }, [state.submissionId]);
+
+    const form = formRef.current;
+    if (!form) return;
+
+    for (const name of ["password", "passwordConfirmation"]) {
+      const input = form.elements.namedItem(name);
+      if (input instanceof HTMLInputElement) input.value = "";
+    }
+
+    const invalidField = state.field && form.elements.namedItem(state.field);
+    if (invalidField instanceof HTMLInputElement) invalidField.focus();
+  }, [state]);
+
+  if (state.status === "success") {
+    return (
+      <section
+        role="status"
+        aria-live="polite"
+        className="mt-6 border border-emerald-200 bg-emerald-50 p-5 text-emerald-950"
+      >
+        <h2 className="text-xl font-semibold">관리자 승인 대기 중</h2>
+        <p className="mt-3 text-sm leading-6">{state.message}</p>
+        <p className="mt-2 text-sm leading-6">
+          승인 전에는 로그인할 수 없습니다. 승인이 완료된 뒤 가입한 이메일과
+          비밀번호로 로그인해주세요.
+        </p>
+        <Link href="/" className={buttonVariants({ className: "mt-5" })}>
+          랜딩 페이지로 돌아가기
+        </Link>
+      </section>
+    );
+  }
 
   return (
-    <form ref={formRef} action={formAction} className="mt-6 space-y-5">
+    <form
+      ref={formRef}
+      action={formAction}
+      onReset={(event) => event.preventDefault()}
+      className="mt-6 space-y-5"
+    >
       <div>
         <Label htmlFor="name">이름</Label>
         <Input
@@ -33,6 +70,8 @@ export function SignupForm() {
           minLength={2}
           maxLength={80}
           autoComplete="name"
+          aria-invalid={state.field === "name" ? true : undefined}
+          aria-describedby={state.field === "name" ? "signup-error" : undefined}
           className="mt-2"
         />
       </div>
@@ -46,6 +85,8 @@ export function SignupForm() {
           required
           maxLength={120}
           autoComplete="email"
+          aria-invalid={state.field === "email" ? true : undefined}
+          aria-describedby={state.field === "email" ? "signup-error" : undefined}
           className="mt-2"
         />
       </div>
@@ -61,7 +102,12 @@ export function SignupForm() {
           maxLength={128}
           pattern="(?=.*[A-Za-z])(?=.*[0-9]).{12,128}"
           autoComplete="new-password"
-          aria-describedby="password-help"
+          aria-invalid={state.field === "password" ? true : undefined}
+          aria-describedby={
+            state.field === "password"
+              ? "password-help signup-error"
+              : "password-help"
+          }
           className="mt-2"
         />
         <p id="password-help" className="mt-2 text-xs leading-5 text-muted">
@@ -79,6 +125,12 @@ export function SignupForm() {
           minLength={12}
           maxLength={128}
           autoComplete="new-password"
+          aria-invalid={
+            state.field === "passwordConfirmation" ? true : undefined
+          }
+          aria-describedby={
+            state.field === "passwordConfirmation" ? "signup-error" : undefined
+          }
           className="mt-2"
         />
       </div>
@@ -97,6 +149,12 @@ export function SignupForm() {
             name="privacyConsent"
             value="yes"
             required
+            aria-invalid={
+              state.field === "privacyConsent" ? true : undefined
+            }
+            aria-describedby={
+              state.field === "privacyConsent" ? "signup-error" : undefined
+            }
             className="mt-1"
           />
           <span>필수 개인정보 수집·이용에 동의합니다.</span>
@@ -110,13 +168,10 @@ export function SignupForm() {
 
       {state.message ? (
         <p
-          role={state.status === "error" ? "alert" : "status"}
-          aria-live={state.status === "error" ? "assertive" : "polite"}
-          className={
-            state.status === "success"
-              ? "border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
-              : "border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
-          }
+          id="signup-error"
+          role="alert"
+          aria-live="assertive"
+          className="border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
         >
           {state.message}
         </p>
