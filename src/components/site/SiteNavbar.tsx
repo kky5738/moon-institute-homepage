@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { getAuthNavigation } from "@/lib/user-auth";
 
 const navItems = [
   { label: "연구 주제", href: "/topics" },
@@ -12,8 +13,13 @@ const navItems = [
   { label: "문의/참여", href: "/contact" },
 ];
 
-export function SiteNavbar() {
+export function SiteNavbar({
+  role,
+}: {
+  role: "ADMIN" | "RESEARCHER" | null;
+}) {
   const pathname = usePathname();
+  const authItem = getAuthNavigation(role);
   const isHome = pathname === "/";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -69,7 +75,16 @@ export function SiteNavbar() {
           ))}
         </div>
 
-        <div className="hidden lg:block">
+        <div className="hidden items-center gap-2 lg:flex">
+          <Link
+            href={authItem.href}
+            aria-current={pathname === authItem.href ? "page" : undefined}
+            className={buttonVariants({
+              variant: elevated ? "outline" : "inverseOutline",
+            })}
+          >
+            {authItem.label}
+          </Link>
           <Link href="/contact" className={buttonVariants()}>
             참여 신청
           </Link>
@@ -112,11 +127,23 @@ export function SiteNavbar() {
               ))}
             </div>
             <Link
+              href={authItem.href}
+              aria-current={pathname === authItem.href ? "page" : undefined}
+              onClick={() => setOpen(false)}
+              className={buttonVariants({
+                variant: "outline",
+                size: "lg",
+                className: "mt-4 w-full",
+              })}
+            >
+              {authItem.label}
+            </Link>
+            <Link
               href="/contact"
               onClick={() => setOpen(false)}
               className={buttonVariants({
                 size: "lg",
-                className: "mt-4 w-full",
+                className: "mt-2 w-full",
               })}
             >
               참여 신청

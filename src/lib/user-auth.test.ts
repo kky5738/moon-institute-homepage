@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { UserRole, UserStatus } from "@/generated/prisma/enums";
 import { hashPassword, verifyPassword } from "@/lib/password";
-import { canResearcherSignIn, parseSignupInput } from "@/lib/user-auth";
+import {
+  canResearcherSignIn,
+  getAuthNavigation,
+  getPostLoginPath,
+  parseSignupInput,
+} from "@/lib/user-auth";
 
 test("signup applies researcher and pending defaults", () => {
   const result = parseSignupInput({
@@ -26,6 +31,27 @@ test("only approved researchers can sign in", () => {
   assert.equal(canResearcherSignIn(UserStatus.PENDING), false);
   assert.equal(canResearcherSignIn(UserStatus.APPROVED), true);
   assert.equal(canResearcherSignIn(UserStatus.DISABLED), false);
+});
+
+test("auth navigation matches each session role", () => {
+  assert.deepEqual(getAuthNavigation(null), {
+    label: "로그인",
+    href: "/login",
+  });
+  assert.deepEqual(getAuthNavigation("RESEARCHER"), {
+    label: "내 정보",
+    href: "/account",
+  });
+  assert.deepEqual(getAuthNavigation("ADMIN"), {
+    label: "관리자",
+    href: "/admin",
+  });
+});
+
+test("post-login destinations match each session role", () => {
+  assert.equal(getPostLoginPath(null), "/login");
+  assert.equal(getPostLoginPath("RESEARCHER"), "/");
+  assert.equal(getPostLoginPath("ADMIN"), "/admin");
 });
 
 test("password mismatch identifies only the confirmation field", () => {

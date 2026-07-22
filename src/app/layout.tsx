@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteNavbar } from "@/components/site/SiteNavbar";
+import { auth } from "../../auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,11 +12,13 @@ export const metadata: Metadata = {
   description: "문선명 연구소 공식 홈페이지입니다.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full bg-background text-foreground">
@@ -26,7 +29,7 @@ export default function RootLayout({
           본문 바로가기
         </a>
         <div className="flex min-h-screen flex-col">
-          <SiteNavbar />
+          <SiteNavbar role={session?.user?.role ?? null} />
           <main id="main-content" tabIndex={-1} className="flex-1">{children}</main>
           <SiteFooter />
         </div>

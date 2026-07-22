@@ -1,18 +1,10 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { auth } from "../../../../auth";
+import { getPostLoginPath } from "@/lib/user-auth";
 
 export default async function ContinuePage() {
   await connection();
   const session = await auth();
-
-  if (session?.user?.role === "ADMIN") {
-    redirect("/admin");
-  }
-
-  if (session?.user?.role === "RESEARCHER") {
-    redirect("/account");
-  }
-
-  redirect("/login");
+  redirect(getPostLoginPath(session?.user?.role ?? null));
 }

@@ -90,3 +90,17 @@ export function isValidEmail(value: string) {
 export function canResearcherSignIn(status: UserStatus) {
   return status === UserStatus.APPROVED;
 }
+
+type AuthRole = "ADMIN" | "RESEARCHER";
+
+export function getAuthNavigation(role: AuthRole | null) {
+  if (role === "ADMIN") return { label: "관리자", href: "/admin" };
+  if (role === "RESEARCHER") return { label: "내 정보", href: "/account" };
+  return { label: "로그인", href: "/login" };
+}
+
+export function getPostLoginPath(role: AuthRole | null) {
+  if (role === "ADMIN") return "/admin";
+  if (role === "RESEARCHER") return "/";
+  return "/login";
+}
