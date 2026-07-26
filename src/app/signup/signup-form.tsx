@@ -48,7 +48,7 @@ export function SignupForm() {
           비밀번호로 로그인해주세요.
         </p>
         <Link href="/" className={buttonVariants({ className: "mt-5" })}>
-          랜딩 페이지로 돌아가기
+          홈페이지로 돌아가기
         </Link>
       </section>
     );
@@ -98,9 +98,8 @@ export function SignupForm() {
           name="password"
           type="password"
           required
-          minLength={12}
+          minLength={15}
           maxLength={128}
-          pattern="(?=.*[A-Za-z])(?=.*[0-9]).{12,128}"
           autoComplete="new-password"
           aria-invalid={state.field === "password" ? true : undefined}
           aria-describedby={
@@ -111,7 +110,7 @@ export function SignupForm() {
           className="mt-2"
         />
         <p id="password-help" className="mt-2 text-xs leading-5 text-muted">
-          12~128자로 영문자와 숫자를 포함해주세요.
+          15~128자로 입력해주세요.
         </p>
       </div>
 
@@ -122,7 +121,7 @@ export function SignupForm() {
           name="passwordConfirmation"
           type="password"
           required
-          minLength={12}
+          minLength={15}
           maxLength={128}
           autoComplete="new-password"
           aria-invalid={

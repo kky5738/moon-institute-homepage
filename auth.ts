@@ -7,6 +7,7 @@ import { logServerError } from "@/lib/server-log";
 import {
   canResearcherSignIn,
   isValidEmail,
+  isLoginPassword,
   normalizeEmail,
 } from "@/lib/user-auth";
 
@@ -52,7 +53,7 @@ export const {
         const username = credentials?.username;
         const password = credentials?.password;
 
-        if (typeof username !== "string" || typeof password !== "string") {
+        if (typeof username !== "string" || !isLoginPassword(password)) {
           return null;
         }
 

@@ -6,8 +6,19 @@ import {
   canResearcherSignIn,
   getAuthNavigation,
   getPostLoginPath,
+  isLoginPassword,
   parseSignupInput,
 } from "@/lib/user-auth";
+
+function parsePassword(password: string) {
+  return parseSignupInput({
+    name: "연구자",
+    email: "researcher@example.com",
+    password,
+    passwordConfirmation: password,
+    privacyConsent: true,
+  });
+}
 
 test("signup applies researcher and pending defaults", () => {
   const result = parseSignupInput({
@@ -31,6 +42,16 @@ test("only approved researchers can sign in", () => {
   assert.equal(canResearcherSignIn(UserStatus.PENDING), false);
   assert.equal(canResearcherSignIn(UserStatus.APPROVED), true);
   assert.equal(canResearcherSignIn(UserStatus.DISABLED), false);
+});
+
+test("password length boundaries allow any character composition", () => {
+  assert.equal(parsePassword("가".repeat(14)).ok, false);
+  assert.equal(parsePassword("가".repeat(15)).ok, true);
+  assert.equal(parsePassword(" ".repeat(128)).ok, true);
+  assert.equal(parsePassword("!".repeat(129)).ok, false);
+  assert.equal(isLoginPassword("x".repeat(128)), true);
+  assert.equal(isLoginPassword("x".repeat(129)), false);
+  assert.equal(isLoginPassword(128), false);
 });
 
 test("auth navigation matches each session role", () => {

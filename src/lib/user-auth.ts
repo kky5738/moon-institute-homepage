@@ -1,6 +1,6 @@
 import { UserRole, UserStatus } from "@/generated/prisma/enums";
 
-export const minimumPasswordLength = 12;
+export const minimumPasswordLength = 15;
 export const maximumPasswordLength = 128;
 
 type SignupInput = {
@@ -40,14 +40,12 @@ export function parseSignupInput(input: SignupInput) {
 
   if (
     password.length < minimumPasswordLength ||
-    password.length > maximumPasswordLength ||
-    !/[A-Za-z]/.test(password) ||
-    !/[0-9]/.test(password)
+    password.length > maximumPasswordLength
   ) {
     return {
       ok: false as const,
       field: "password" as const,
-      message: "비밀번호는 12~128자로 영문자와 숫자를 포함해주세요.",
+      message: "비밀번호는 15~128자로 입력해주세요.",
     };
   }
 
@@ -89,6 +87,10 @@ export function isValidEmail(value: string) {
 
 export function canResearcherSignIn(status: UserStatus) {
   return status === UserStatus.APPROVED;
+}
+
+export function isLoginPassword(value: unknown): value is string {
+  return typeof value === "string" && value.length <= maximumPasswordLength;
 }
 
 type AuthRole = "ADMIN" | "RESEARCHER";
