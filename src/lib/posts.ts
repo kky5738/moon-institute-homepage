@@ -1,4 +1,4 @@
-import { PostPhase, PostStatus, PostType } from "@/generated/prisma/enums";
+import { PostStatus, PostType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { isPrismaMissingTableError, logServerError } from "@/lib/server-log";
 
@@ -13,7 +13,7 @@ export type BoardPost = {
   summary: string;
   publishedAt: string;
   isPinned: boolean;
-  phase: string;
+  authorName: string | null;
 };
 
 export type BoardPostDetail = BoardPost & {
@@ -33,6 +33,11 @@ export async function getPublishedPosts(type: PostType): Promise<BoardPost[]> {
       },
       include: {
         category: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
       },
       orderBy: [
         { isPinned: "desc" },
@@ -50,7 +55,7 @@ export async function getPublishedPosts(type: PostType): Promise<BoardPost[]> {
       summary: post.summary ?? post.content.slice(0, 120),
       publishedAt: formatDate(post.publishedAt ?? post.createdAt),
       isPinned: post.isPinned,
-      phase: getPhaseLabel(post.phase),
+      authorName: post.author?.name ?? null,
     }));
   } catch (error) {
     logServerError("posts.getPublishedPosts", error, { type });
@@ -84,6 +89,11 @@ export async function getPublishedPostBySlug(
       },
       include: {
         category: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
@@ -101,7 +111,7 @@ export async function getPublishedPostBySlug(
       content: post.content,
       publishedAt: formatDate(post.publishedAt ?? post.createdAt),
       isPinned: post.isPinned,
-      phase: getPhaseLabel(post.phase),
+      authorName: post.author?.name ?? null,
     };
   } catch (error) {
     logServerError("posts.getPublishedPostBySlug", error, { type, slug });
@@ -127,6 +137,10 @@ function getDefaultCategoryName(type: PostType) {
     return "공지";
   }
 
+  if (type === PostType.RESEARCH) {
+    return "연구 글";
+  }
+
   return "홍보자료";
 }
 
@@ -135,17 +149,13 @@ function getDefaultCategorySlug(type: PostType) {
     return "notice";
   }
 
+  if (type === PostType.RESEARCH) {
+    return "research";
+  }
+
   return "promotion";
 }
 
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10);
-}
-
-function getPhaseLabel(phase: PostPhase) {
-  if (phase === PostPhase.OFFICIAL) {
-    return "출범 후";
-  }
-
-  return "출범 전";
 }

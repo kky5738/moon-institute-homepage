@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireResearcher } from "@/lib/researcher-auth";
 import { deleteAccount, logout } from "./actions";
@@ -34,9 +35,14 @@ export default async function AccountPage() {
         </dl>
 
         <form action={logout} className="mt-6 border-t border-border pt-6">
-          <Button type="submit" variant="outline">
-            로그아웃
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/account/posts" className={buttonVariants()}>
+              내 글 관리
+            </Link>
+            <Button type="submit" variant="outline">
+              로그아웃
+            </Button>
+          </div>
         </form>
       </Card>
 
@@ -44,7 +50,8 @@ export default async function AccountPage() {
         <h2 className="text-lg font-semibold text-red-900">회원 탈퇴</h2>
         <p className="mt-3 text-sm leading-6 text-red-800">
           탈퇴하면 이름, 이메일, 비밀번호 해시와 계정 상태가 즉시 삭제되며
-          복구할 수 없습니다.
+          복구할 수 없습니다. 임시저장 글은 삭제되고 공개한 글은 작성자
+          개인정보 없이 보존됩니다.
         </p>
         <form action={deleteAccount} className="mt-4">
           <label className="flex items-start gap-2 text-sm font-medium text-red-900">

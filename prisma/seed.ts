@@ -4,7 +4,6 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import {
   InquiryStatus,
   InquiryType,
-  PostPhase,
   PostStatus,
   PostType,
 } from "../src/generated/prisma/enums";
@@ -94,7 +93,6 @@ async function main() {
   await prisma.post.upsert({
     where: { slug: "launch-preparation-notice" },
     update: {
-      phase: PostPhase.PRE_LAUNCH,
       status: PostStatus.PUBLISHED,
       categoryId: noticeCategory.id,
     },
@@ -107,7 +105,6 @@ async function main() {
         "문선명 연구소 출범 준비를 위한 공지사항입니다. 자세한 공식 소개 원문은 확정 후 반영합니다.",
       type: PostType.NOTICE,
       status: PostStatus.PUBLISHED,
-      phase: PostPhase.PRE_LAUNCH,
       isPinned: true,
       publishedAt: new Date("2026-05-01T00:00:00.000Z"),
       categoryId: noticeCategory.id,
@@ -117,7 +114,6 @@ async function main() {
   await prisma.post.upsert({
     where: { slug: "promotion-board-plan" },
     update: {
-      phase: PostPhase.PRE_LAUNCH,
       status: PostStatus.PUBLISHED,
       categoryId: newsCategory.id,
     },
@@ -130,7 +126,6 @@ async function main() {
         "홍보자료 게시판은 관리자가 등록한 자료를 방문자가 확인하는 방식으로 시작합니다.",
       type: PostType.NOTICE,
       status: PostStatus.PUBLISHED,
-      phase: PostPhase.PRE_LAUNCH,
       publishedAt: new Date("2026-05-08T00:00:00.000Z"),
       categoryId: newsCategory.id,
     },
@@ -139,7 +134,6 @@ async function main() {
   await prisma.post.upsert({
     where: { slug: "life-research-material-guide" },
     update: {
-      phase: PostPhase.PRE_LAUNCH,
       status: PostStatus.PUBLISHED,
       categoryId: lifeMaterialsCategory.id,
     },
@@ -152,7 +146,6 @@ async function main() {
         "생애 연구 자료 안내입니다. 공식 원문과 세부 기준이 확정되면 자료 본문과 해설을 보완합니다.",
       type: PostType.PROMOTION,
       status: PostStatus.PUBLISHED,
-      phase: PostPhase.PRE_LAUNCH,
       isPinned: true,
       publishedAt: new Date("2026-05-12T00:00:00.000Z"),
       categoryId: lifeMaterialsCategory.id,
@@ -162,7 +155,6 @@ async function main() {
   await prisma.post.upsert({
     where: { slug: "words-research-material-guide" },
     update: {
-      phase: PostPhase.PRE_LAUNCH,
       status: PostStatus.PUBLISHED,
       categoryId: wordsMaterialsCategory.id,
     },
@@ -175,7 +167,6 @@ async function main() {
         "말씀 연구 자료 안내입니다. 원문 제공 범위와 해설 기준이 확정되면 자료 본문을 보완합니다.",
       type: PostType.PROMOTION,
       status: PostStatus.PUBLISHED,
-      phase: PostPhase.PRE_LAUNCH,
       publishedAt: new Date("2026-05-13T00:00:00.000Z"),
       categoryId: wordsMaterialsCategory.id,
     },
@@ -184,7 +175,6 @@ async function main() {
   await prisma.post.upsert({
     where: { slug: "achievements-research-material-guide" },
     update: {
-      phase: PostPhase.PRE_LAUNCH,
       status: PostStatus.PUBLISHED,
       categoryId: achievementMaterialsCategory.id,
     },
@@ -197,7 +187,6 @@ async function main() {
         "업적 연구 자료 안내입니다. 공식 설명과 공개 가능한 활동 기록이 확정되면 자료 본문을 보완합니다.",
       type: PostType.PROMOTION,
       status: PostStatus.PUBLISHED,
-      phase: PostPhase.PRE_LAUNCH,
       publishedAt: new Date("2026-05-14T00:00:00.000Z"),
       categoryId: achievementMaterialsCategory.id,
     },

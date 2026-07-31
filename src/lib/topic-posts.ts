@@ -1,4 +1,5 @@
 import { PostType } from "@/generated/prisma/enums";
+import { getMaterialArchiveItems } from "@/lib/material-guides";
 import { getPublishedPosts, type BoardPost } from "@/lib/posts";
 import type { ResearchTopic } from "@/lib/topics";
 
@@ -19,7 +20,11 @@ export async function getTopicRelatedPosts(
 
   return {
     notices: filterByTopicCategory(notices, topic, PostType.NOTICE),
-    materials: filterByTopicCategory(materials, topic, PostType.PROMOTION),
+    materials: filterByTopicCategory(
+      getMaterialArchiveItems(materials).map((item) => item.post),
+      topic,
+      PostType.PROMOTION,
+    ),
   };
 }
 

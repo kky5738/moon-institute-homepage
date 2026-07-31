@@ -24,8 +24,6 @@ export type MaterialArchiveItem = {
   guide: MaterialGuide;
 };
 
-const fallbackReadingOrder = 99;
-
 const materialGuides: MaterialGuide[] = [
   {
     slug: "life-research-material-guide",
@@ -100,20 +98,17 @@ const materialGuides: MaterialGuide[] = [
 
 export function getMaterialGuide(
   slug: string,
-  categorySlug?: string,
-): MaterialGuide {
-  return (
-    materialGuides.find((guide) => guide.slug === slug) ??
-    createFallbackMaterialGuide(slug, categorySlug)
-  );
+): MaterialGuide | null {
+  return materialGuides.find((guide) => guide.slug === slug) ?? null;
 }
 
 export function getMaterialArchiveItems(posts: BoardPost[]) {
   return posts
-    .map((post) => ({
-      post,
-      guide: getMaterialGuide(post.slug, post.categorySlug),
-    }))
+    .map((post) => {
+      const guide = getMaterialGuide(post.slug);
+      return guide ? { post, guide } : null;
+    })
+    .filter((item): item is MaterialArchiveItem => item !== null)
     .sort((first, second) => {
       const orderDifference =
         first.guide.readingOrder - second.guide.readingOrder;
@@ -131,57 +126,16 @@ export function getRecommendedMaterialPosts(
   posts: BoardPost[],
 ) {
   const guide = getMaterialGuide(currentSlug);
+
+  if (!guide) {
+    return [];
+  }
+
   const postBySlug = new Map(posts.map((post) => [post.slug, post]));
 
   return guide.recommendationSlugs
+    .filter((slug) => getMaterialGuide(slug) !== null)
     .map((slug) => postBySlug.get(slug))
     .filter((post): post is BoardPost => Boolean(post))
     .filter((post) => post.slug !== currentSlug);
-}
-
-function createFallbackMaterialGuide(
-  slug: string,
-  categorySlug?: string,
-): MaterialGuide {
-  const topic = getFallbackTopic(categorySlug);
-
-  return {
-    slug,
-    readingOrder: fallbackReadingOrder,
-    stepLabel: "보관 자료",
-    archiveSummary:
-      "아직 별도 해설 요약이 준비되지 않은 자료입니다. 기본 게시글 정보와 함께 보관 자료로 표시합니다.",
-    explanationSummary:
-      "이 자료에는 아직 별도 해설 요약이 연결되지 않았습니다. 자료 본문과 목록 정보를 중심으로 확인합니다.",
-    readingPoints: [
-      "자료 제목과 요약을 먼저 확인합니다.",
-      "관련 공지나 주제 페이지에서 공개 흐름을 함께 확인합니다.",
-      "필요한 맥락이 부족하면 문의 경로를 이용합니다.",
-    ],
-    recommendationSlugs: [],
-    topicHref: topic.href,
-    topicLabel: topic.label,
-    videoGuide: {
-      title: "영상 콘텐츠 안내",
-      description:
-        "관련 영상이 준비되면 자료 해설과 함께 볼 수 있도록 연결합니다.",
-      href: "/#media",
-    },
-  };
-}
-
-function getFallbackTopic(categorySlug?: string) {
-  if (categorySlug === "life-materials") {
-    return { href: "/topics/life", label: "생애" };
-  }
-
-  if (categorySlug === "words-materials") {
-    return { href: "/topics/words", label: "말씀" };
-  }
-
-  if (categorySlug === "achievement-materials") {
-    return { href: "/topics/achievements", label: "업적" };
-  }
-
-  return { href: "/topics", label: "연구 주제" };
 }

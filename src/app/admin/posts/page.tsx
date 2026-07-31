@@ -21,6 +21,11 @@ export default async function AdminPostsPage() {
     posts = await prisma.post.findMany({
       include: {
         category: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
       },
       orderBy: [
         { createdAt: "desc" },
@@ -57,8 +62,17 @@ export default async function AdminPostsPage() {
               className="grid gap-4 px-5 py-5 md:grid-cols-[160px_1fr_240px] md:px-6"
             >
               <div className="text-sm text-muted">
-                <p>{post.type === "NOTICE" ? "공지사항" : "홍보자료"}</p>
+                <p>
+                  {post.type === "NOTICE"
+                    ? "공지사항"
+                    : post.type === "PROMOTION"
+                      ? "홍보자료"
+                      : "회원 연구 글"}
+                </p>
                 <p className="mt-2">{post.category?.name ?? "카테고리 없음"}</p>
+                {post.author ? (
+                  <p className="mt-2">작성자: {post.author.name}</p>
+                ) : null}
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
@@ -76,17 +90,25 @@ export default async function AdminPostsPage() {
                   <span className="border border-border px-2 py-1 text-muted">
                     {post.status}
                   </span>
-                  <span className="border border-border px-2 py-1 text-muted">
-                    {post.phase}
-                  </span>
                 </div>
                 <div className="flex flex-wrap gap-2 md:justify-end">
-                  <Link
-                    href={`/admin/posts/${post.id}/edit`}
-                    className="inline-flex h-9 items-center border border-border bg-surface px-3 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
-                  >
-                    수정
-                  </Link>
+                  {post.type === "RESEARCH" ? (
+                    post.status === "PUBLISHED" ? (
+                      <Link
+                        href={`/research/${post.slug}`}
+                        className="inline-flex h-9 items-center border border-border bg-surface px-3 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
+                      >
+                        보기
+                      </Link>
+                    ) : null
+                  ) : (
+                    <Link
+                      href={`/admin/posts/${post.id}/edit`}
+                      className="inline-flex h-9 items-center border border-border bg-surface px-3 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
+                    >
+                      수정
+                    </Link>
+                  )}
                   {post.status !== "ARCHIVED" ? (
                     <form action={archivePost}>
                       <input type="hidden" name="id" value={post.id} />

@@ -53,7 +53,6 @@ export function TopicPostList({
                 {post.isPinned ? (
                   <Badge variant="secondary" className="rounded-none">고정</Badge>
                 ) : null}
-                <span>{post.phase}</span>
               </div>
               <h3 className="mt-3 text-lg font-semibold text-foreground">
                 <Link

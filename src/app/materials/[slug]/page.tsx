@@ -40,7 +40,12 @@ export default async function MaterialDetailPage({
     notFound();
   }
 
-  const guide = getMaterialGuide(post.slug, post.categorySlug);
+  const guide = getMaterialGuide(post.slug);
+
+  if (!guide) {
+    notFound();
+  }
+
   const recommendedMaterials = getRecommendedMaterialPosts(post.slug, materials);
 
   return (
@@ -64,7 +69,6 @@ export default async function MaterialDetailPage({
                 </span>
                 <span>{post.publishedAt}</span>
                 <span>{post.category}</span>
-                <span>{post.phase}</span>
               </div>
               <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-tight tracking-tight text-foreground [word-break:keep-all] sm:text-5xl">
                 {post.title}

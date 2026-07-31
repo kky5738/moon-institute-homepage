@@ -22,7 +22,7 @@ export function MaterialArchiveCard({ item }: { item: MaterialArchiveItem }) {
       </div>
 
       <p className="mt-5 text-xs font-semibold tracking-wider text-muted-foreground">
-        {post.category} / {post.phase} / {post.publishedAt}
+        {post.category} / {post.publishedAt}
       </p>
       <h2 className="mt-3 text-xl font-semibold leading-snug text-foreground [word-break:keep-all] transition-colors group-hover:text-primary sm:text-2xl">
         <Link href={`/materials/${post.slug}`}>

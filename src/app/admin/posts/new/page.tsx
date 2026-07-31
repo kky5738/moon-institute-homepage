@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import {
-  PostPhase,
-  PostStatus,
-} from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
@@ -106,62 +102,29 @@ export default async function NewPostPage() {
           />
         </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          <div>
-            <label className="block text-sm font-semibold text-foreground" htmlFor="categoryId">
-              카테고리
-            </label>
-            <select
-              id="categoryId"
-              name="categoryId"
-              required
-              disabled={!hasCategories}
-              className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-            >
-              <option value="">선택</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.postType === "NOTICE" ? "공지사항" : "홍보자료"} / {category.name}
-                </option>
-              ))}
-            </select>
-            {!hasCategories ? (
-              <p className="mt-2 text-sm text-red-700">
-                활성 카테고리가 없습니다. 먼저 seed 또는 관리자 카테고리 데이터를 확인해주세요.
-              </p>
-            ) : null}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-foreground" htmlFor="status">
-              상태
-            </label>
-            <select
-              id="status"
-              name="status"
-              defaultValue={PostStatus.DRAFT}
-              className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-            >
-              <option value={PostStatus.DRAFT}>초안</option>
-              <option value={PostStatus.PUBLISHED}>공개</option>
-              <option value={PostStatus.ARCHIVED}>보관</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-foreground" htmlFor="phase">
-              운영 단계
-            </label>
-            <select
-              id="phase"
-              name="phase"
-              defaultValue={PostPhase.PRE_LAUNCH}
-              className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-            >
-              <option value={PostPhase.PRE_LAUNCH}>출범 전</option>
-              <option value={PostPhase.OFFICIAL}>출범 후</option>
-            </select>
-          </div>
+        <div>
+          <label className="block text-sm font-semibold text-foreground" htmlFor="categoryId">
+            카테고리
+          </label>
+          <select
+            id="categoryId"
+            name="categoryId"
+            required
+            disabled={!hasCategories}
+            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+          >
+            <option value="">선택</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.postType === "NOTICE" ? "공지사항" : "홍보자료"} / {category.name}
+              </option>
+            ))}
+          </select>
+          {!hasCategories ? (
+            <p className="mt-2 text-sm text-red-700">
+              활성 카테고리가 없습니다. 먼저 seed 또는 관리자 카테고리 데이터를 확인해주세요.
+            </p>
+          ) : null}
         </div>
 
         <div className="flex justify-end gap-3 border-t border-border pt-6">
@@ -173,10 +136,21 @@ export default async function NewPostPage() {
           </Link>
           <button
             type="submit"
+            name="intent"
+            value="draft"
+            disabled={!hasCategories}
+            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-primary-dark hover:border-primary disabled:cursor-not-allowed"
+          >
+            임시저장
+          </button>
+          <button
+            type="submit"
+            name="intent"
+            value="publish"
             disabled={!hasCategories}
             className="inline-flex h-11 items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary"
           >
-            저장
+            공개하기
           </button>
         </div>
       </form>

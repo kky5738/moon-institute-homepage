@@ -14,6 +14,11 @@
 - `/notices/[slug]`: 공지사항 상세.
 - `/contact`: 문의/참여 신청 폼.
 - `/signup`: 연구자 계정 가입 신청. 기본 상태는 승인 대기이다.
+- `/research`: 승인된 연구자가 공개한 글을 최신순으로 보는 전통형 게시판이다.
+- `/research/[slug]`: 공개된 회원 연구 글 상세 화면이다.
+- `/account/posts`: 로그인한 연구자가 본인 글을 관리한다.
+- `/account/posts/new`: 회원 연구 글 작성 화면이다.
+- `/account/posts/[id]/edit`: 작성자 본인만 접근할 수 있는 연구 글 수정 화면이다.
 - `/login`: 관리자 아이디 또는 승인된 연구자 이메일 로그인.
 - `/account`: 승인된 연구자의 계정 확인, 로그아웃, 회원 탈퇴.
 
@@ -48,10 +53,10 @@
 | `/topics/achievements` | `news` | `achievement-materials` | `achievements-research-material-guide` | `life-research-material-guide` |
 
 - 위 카테고리와 자료 slug는 `prisma/seed.ts`의 공개 seed 데이터와 일치한다.
-- `intro-materials`처럼 특정 주제에 속하지 않거나 카테고리가 없는 자료의 fallback은 `/topics`로 연결하며 자동 추천을 만들지 않는다.
+- `src/lib/material-guides.ts`에 해설이 등록되지 않은 홍보자료는 자료 아카이브와 주제별 관련 자료에 노출하지 않는다.
 - 추천 slug에 해당하는 공개 자료가 없으면 추천 목록은 빈 상태 안내를 표시하고 존재하지 않는 상세 링크를 만들지 않는다.
 
 ## 주요 QA 경로
 
-- 데스크톱: `/`, `/topics`, `/topics/life`, `/topics/words`, `/topics/achievements`, `/materials`, `/materials/life-research-material-guide`
-- 모바일: `/`, `/topics`, `/topics/life`, `/materials`, `/materials/life-research-material-guide`
+- 데스크톱: `/`, `/topics`, `/topics/life`, `/topics/words`, `/topics/achievements`, `/materials`, `/materials/life-research-material-guide`, `/research`, `/account/posts`
+- 모바일: `/`, `/topics`, `/topics/life`, `/materials`, `/materials/life-research-material-guide`, `/research`, `/account/posts`

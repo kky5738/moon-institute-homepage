@@ -39,7 +39,6 @@ export default async function NoticesPage() {
               <p className="mt-2 inline-flex border border-border px-2 py-1 text-xs font-semibold text-primary">
                 {notice.category}
               </p>
-              <p className="mt-2 text-xs text-muted">{notice.phase}</p>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">

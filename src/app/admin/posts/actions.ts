@@ -2,10 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import {
-  PostPhase,
-  PostStatus,
-} from "@/generated/prisma/enums";
+import { PostStatus } from "@/generated/prisma/enums";
 import { assertAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
@@ -19,8 +16,7 @@ export async function createPost(formData: FormData) {
     const content = getRequiredString(formData, "content");
     const summary = getOptionalString(formData, "summary");
     const categoryId = Number(getRequiredString(formData, "categoryId"));
-    const status = parsePostStatus(getRequiredString(formData, "status"));
-    const phase = parsePostPhase(getRequiredString(formData, "phase"));
+    const status = parsePostIntent(formData);
 
     if (!Number.isInteger(categoryId) || categoryId < 1) {
       throw new Error("유효한 카테고리를 선택해주세요.");
@@ -59,7 +55,6 @@ export async function createPost(formData: FormData) {
         categoryId: category.id,
         type: category.postType,
         status,
-        phase,
         publishedAt: status === PostStatus.PUBLISHED ? new Date() : null,
       },
     });
@@ -83,8 +78,7 @@ export async function updatePost(formData: FormData) {
     const content = getRequiredString(formData, "content");
     const summary = getOptionalString(formData, "summary");
     const categoryId = Number(getRequiredString(formData, "categoryId"));
-    const status = parsePostStatus(getRequiredString(formData, "status"));
-    const phase = parsePostPhase(getRequiredString(formData, "phase"));
+    const status = parsePostIntent(formData);
 
     if (!Number.isInteger(id) || id < 1) {
       throw new Error("유효한 게시글 ID가 필요합니다.");
@@ -143,7 +137,6 @@ export async function updatePost(formData: FormData) {
         categoryId: category.id,
         type: category.postType,
         status,
-        phase,
         publishedAt:
           status === PostStatus.PUBLISHED
             ? (post.publishedAt ?? new Date())
@@ -190,6 +183,7 @@ function revalidatePostPaths() {
   revalidatePath("/");
   revalidatePath("/notices");
   revalidatePath("/materials");
+  revalidatePath("/research");
   revalidatePath("/admin/posts");
 }
 
@@ -224,30 +218,16 @@ function normalizeSlug(value: string) {
   return slug;
 }
 
-function parsePostStatus(value: string) {
-  if (value === PostStatus.DRAFT) {
+function parsePostIntent(formData: FormData) {
+  const value = formData.get("intent");
+
+  if (value === "draft") {
     return PostStatus.DRAFT;
   }
 
-  if (value === PostStatus.PUBLISHED) {
+  if (value === "publish") {
     return PostStatus.PUBLISHED;
   }
 
-  if (value === PostStatus.ARCHIVED) {
-    return PostStatus.ARCHIVED;
-  }
-
-  throw new Error("유효하지 않은 게시글 상태입니다.");
-}
-
-function parsePostPhase(value: string) {
-  if (value === PostPhase.PRE_LAUNCH) {
-    return PostPhase.PRE_LAUNCH;
-  }
-
-  if (value === PostPhase.OFFICIAL) {
-    return PostPhase.OFFICIAL;
-  }
-
-  throw new Error("유효하지 않은 운영 단계입니다.");
+  throw new Error("저장 방식을 선택해주세요.");
 }
