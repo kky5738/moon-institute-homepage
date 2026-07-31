@@ -33,7 +33,7 @@ export async function assertResearcher() {
   return user;
 }
 
-async function getApprovedResearcher() {
+export async function getApprovedResearcher() {
   try {
     const session = await auth();
     const id = Number(session?.user?.id);

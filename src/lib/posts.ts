@@ -18,6 +18,7 @@ export type BoardPost = {
 
 export type BoardPostDetail = BoardPost & {
   content: string;
+  authorId: number | null;
 };
 
 export async function getPublishedPosts(type: PostType): Promise<BoardPost[]> {
@@ -109,6 +110,7 @@ export async function getPublishedPostBySlug(
       categorySlug: post.category?.slug ?? getDefaultCategorySlug(post.type),
       summary: post.summary ?? post.content.slice(0, 120),
       content: post.content,
+      authorId: post.authorId,
       publishedAt: formatDate(post.publishedAt ?? post.createdAt),
       isPinned: post.isPinned,
       authorName: post.author?.name ?? null,
