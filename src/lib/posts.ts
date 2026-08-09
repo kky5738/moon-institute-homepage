@@ -1,4 +1,5 @@
 import { PostStatus, PostType } from "@/generated/prisma/enums";
+import { decodePostSlug } from "@/lib/post-slug";
 import { prisma } from "@/lib/prisma";
 import { isPrismaMissingTableError, logServerError } from "@/lib/server-log";
 
@@ -76,14 +77,16 @@ export async function getPublishedPostBySlug(
   type: PostType,
   slug: string,
 ): Promise<BoardPostDetail | null> {
-  if (hiddenPublicPostSlugs.includes(slug)) {
+  const decodedSlug = decodePostSlug(slug);
+
+  if (!decodedSlug || hiddenPublicPostSlugs.includes(decodedSlug)) {
     return null;
   }
 
   try {
     const post = await prisma.post.findFirst({
       where: {
-        slug,
+        slug: decodedSlug,
         type,
         status: PostStatus.PUBLISHED,
         deletedAt: null,

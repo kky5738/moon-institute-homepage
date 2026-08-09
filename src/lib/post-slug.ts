@@ -10,3 +10,11 @@ export function createPostSlug(title: string, suffix: string) {
 
   return `${base}-${suffix.toLowerCase()}`;
 }
+
+export function decodePostSlug(slug: string) {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return null;
+  }
+}

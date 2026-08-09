@@ -49,12 +49,14 @@ export default async function ResearchPage() {
         </div>
         {posts.length > 0 ? (
           <div className="divide-y divide-border">
-            {posts.map((post) => (
+            {posts.map((post, index) => (
               <article
                 key={post.id}
                 className="grid gap-2 px-5 py-5 sm:grid-cols-[100px_1fr_140px_120px] sm:items-center"
               >
-                <span className="hidden text-sm text-muted sm:block">{post.id}</span>
+                <span className="hidden text-sm text-muted sm:block">
+                  {posts.length - index}
+                </span>
                 <div>
                   <Link
                     href={`/research/${post.slug}`}
