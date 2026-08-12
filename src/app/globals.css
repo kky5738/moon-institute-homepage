@@ -72,6 +72,13 @@ a {
   text-underline-offset: 4px;
 }
 
+.life-timeline-paper {
+  background-color: #f8f4ea;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgb(255 255 255 / 70%), transparent 32rem),
+    repeating-linear-gradient(0deg, rgb(76 58 122 / 2%) 0 1px, transparent 1px 4px);
+}
+
 :where(a, button, input, textarea, select):focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
