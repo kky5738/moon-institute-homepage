@@ -107,24 +107,6 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                     </g>
                   );
                 })}
-
-                {timeline.events.map((event) => {
-                  const x = chartSide + event.position * chartWidth;
-                  const y = firstLaneY + event.lane * laneGap;
-
-                  return (
-                    <line
-                      key={event.id}
-                      x1={x}
-                      x2={x}
-                      y1={y + 7}
-                      y2={axisY}
-                      stroke="var(--gold)"
-                      strokeOpacity="0.28"
-                      strokeWidth="1"
-                    />
-                  );
-                })}
               </svg>
 
               {timeline.events.map((event) => {
@@ -200,13 +182,13 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
 
           <article
             aria-live="polite"
-            className="grid gap-5 border-t border-gold/30 bg-[#fffdf8] px-5 py-6 sm:grid-cols-[10rem_minmax(0,1fr)] sm:px-8 sm:py-8"
+            className="grid gap-5 border-t border-gold/30 bg-[#fffdf8] px-5 py-6 sm:grid-cols-[13rem_minmax(0,1fr)] sm:px-8 sm:py-8"
           >
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent-purple">
                 선택한 사건
               </p>
-              <p className="mt-2 font-serif text-3xl text-primary-dark sm:text-4xl">
+              <p className="mt-2 whitespace-nowrap font-serif text-3xl text-primary-dark sm:text-4xl">
                 {formatLifeEventDate(selected.date)}
               </p>
             </div>
