@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  getOverviewTimelineWidth,
   getYearTicks,
   groupLifeEventsByYear,
   layoutLifeEvents,
@@ -74,6 +75,12 @@ test("연도별 사건을 빠짐없이 묶고 긴 축의 연도 라벨 간격을
       1920, 1925, 1930, 1935, 1940, 1945, 1950, 1955, 1960, 1965,
       1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2012,
     ],
+  );
+  assert.equal(
+    getOverviewTimelineWidth(
+      Array.from({ length: 93 }, (_, index) => 1920 + index),
+    ),
+    5208,
   );
 });
 

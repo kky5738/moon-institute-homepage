@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatLifeEventDate,
+  getOverviewTimelineWidth,
   getYearTicks,
   groupLifeEventsByYear,
   layoutLifeEvents,
@@ -10,7 +11,7 @@ import {
 } from "@/lib/life-events";
 
 const chartSide = 30;
-const chartWidth = 940;
+const detailChartWidth = 1120;
 const firstLaneY = 64;
 const laneGap = 28;
 const overviewAxisY = 150;
@@ -30,6 +31,11 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
   );
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [previewYear, setPreviewYear] = useState<number | null>(null);
+  const timelineScrollerRef = useRef<HTMLDivElement>(null);
+  const clusterRefs = useRef(new Map<number, HTMLButtonElement>());
+  const firstEventRef = useRef<HTMLButtonElement>(null);
+  const focusEventOnOpenRef = useRef(false);
+  const focusClusterOnCloseRef = useRef(false);
   const detailTimeline = useMemo(
     () =>
       zoomYear === null
@@ -43,6 +49,8 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
   const active =
     detailTimeline?.events.find((event) => event.id === previewId) ?? selected;
   const isOverview = zoomYear === null;
+  const zoomIndex = yearGroups.findIndex((group) => group.year === zoomYear);
+  const zoomGroup = zoomIndex === -1 ? null : yearGroups[zoomIndex];
   const axisY = isOverview
     ? overviewAxisY
     : Math.max(
@@ -50,17 +58,63 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
         firstLaneY + (detailTimeline?.laneCount ?? 0) * laneGap + 28,
       );
   const chartHeight = axisY + 68;
+  const timelineWidth = isOverview
+    ? getOverviewTimelineWidth(fullTimeline.years)
+    : detailChartWidth;
+  const plotWidth = timelineWidth - chartSide * 2;
   const firstYear = fullTimeline.years[0];
   const yearSpan = fullTimeline.years.length;
+
+  useEffect(() => {
+    if (zoomYear === null) {
+      return;
+    }
+
+    if (timelineScrollerRef.current) {
+      timelineScrollerRef.current.scrollLeft = 0;
+    }
+    if (focusEventOnOpenRef.current) {
+      firstEventRef.current?.focus();
+      focusEventOnOpenRef.current = false;
+    }
+  }, [zoomYear]);
+
+  useEffect(() => {
+    if (zoomYear !== null || lastZoomYear === null) {
+      return;
+    }
+
+    const cluster = clusterRefs.current.get(lastZoomYear);
+    const scroller = timelineScrollerRef.current;
+    if (!cluster || !scroller) {
+      return;
+    }
+
+    scroller.scrollLeft = Math.max(
+      0,
+      cluster.offsetLeft - scroller.clientWidth / 2 + cluster.offsetWidth / 2,
+    );
+    if (focusClusterOnCloseRef.current) {
+      cluster.focus();
+    }
+    focusClusterOnCloseRef.current = false;
+  }, [lastZoomYear, zoomYear]);
 
   if (yearGroups.length === 0) {
     return null;
   }
 
-  function openYear(year: number) {
+  function openYear(year: number, moveFocus = false) {
+    focusEventOnOpenRef.current = moveFocus;
     setZoomYear(year);
     setLastZoomYear(year);
     setPreviewYear(null);
+    setPreviewId(null);
+  }
+
+  function closeYear(moveFocus: boolean) {
+    focusClusterOnCloseRef.current = moveFocus;
+    setZoomYear(null);
     setPreviewId(null);
   }
 
@@ -94,52 +148,79 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
         </div>
 
         <div className="mt-8 overflow-hidden rounded-xl border border-gold/35 bg-white/70 shadow-[var(--shadow-elegant)]">
-          <div className="flex flex-col gap-3 border-b border-gold/25 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p className="text-xs leading-5 text-muted-foreground" aria-live="polite">
-              {isOverview
-                ? "숫자가 표시된 연도 점을 선택하면 월별 기록으로 확대됩니다."
-                : `${zoomYear}년의 모든 사건을 월별로 표시하고 있습니다.`}
-            </p>
-            <label className="flex items-center gap-2 text-xs font-semibold text-primary-dark">
-              보기 범위
-              <select
-                data-timeline-range="true"
-                value={zoomYear ?? ""}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (value) {
-                    openYear(Number(value));
-                  } else {
-                    setZoomYear(null);
-                    setPreviewId(null);
-                  }
-                }}
-                className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          <div className="border-b border-gold/25 px-5 py-3 sm:px-6">
+            {isOverview ? (
+              <p
+                className="text-xs leading-5 text-muted-foreground"
+                aria-live="polite"
               >
-                <option value="">전체 연도 보기</option>
-                {yearGroups.map((group) => (
-                  <option key={group.year} value={group.year}>
-                    {group.year}년 월별 상세
-                  </option>
-                ))}
-              </select>
-            </label>
+                숫자가 표시된 연도 점을 선택하면 월별 기록으로 확대됩니다.
+              </p>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={(event) => closeYear(event.detail === 0)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      closeYear(true);
+                    }
+                  }}
+                  className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  ← 전체 연도 보기
+                </button>
+                <p
+                  className="text-sm font-semibold text-primary-dark"
+                  aria-live="polite"
+                >
+                  {zoomYear}년 · 사건 {zoomGroup?.events.length ?? 0}건
+                </p>
+                <div
+                  className="flex gap-2"
+                  role="group"
+                  aria-label="상세 연도 이동"
+                >
+                  <button
+                    type="button"
+                    disabled={zoomIndex <= 0}
+                    onClick={() => openYear(yearGroups[zoomIndex - 1].year)}
+                    className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary active:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    이전 연도
+                  </button>
+                  <button
+                    type="button"
+                    disabled={zoomIndex === yearGroups.length - 1}
+                    onClick={() => openYear(yearGroups[zoomIndex + 1].year)}
+                    className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary active:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    다음 연도
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="overflow-x-auto overscroll-x-contain">
+          <div
+            ref={timelineScrollerRef}
+            data-timeline-scroller="true"
+            className="overflow-x-auto overscroll-x-contain"
+          >
             <div
-              className="relative min-w-[70rem]"
-              style={{ height: `${chartHeight}px` }}
+              className="relative"
+              style={{ height: `${chartHeight}px`, width: `${timelineWidth}px` }}
             >
               <svg
                 aria-hidden="true"
                 className="absolute inset-0 h-full w-full"
                 preserveAspectRatio="none"
-                viewBox={`0 0 1000 ${chartHeight}`}
+                viewBox={`0 0 ${timelineWidth} ${chartHeight}`}
               >
                 <line
                   x1={chartSide}
-                  x2={chartSide + chartWidth}
+                  x2={chartSide + plotWidth}
                   y1={axisY}
                   y2={axisY}
                   stroke="var(--gold)"
@@ -150,7 +231,7 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                   const position = isOverview
                     ? (tick - firstYear) / yearSpan
                     : (tick - 1) / 12;
-                  const x = chartSide + position * chartWidth;
+                  const x = chartSide + position * plotWidth;
 
                   return (
                     <g key={tick}>
@@ -185,24 +266,33 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                     return (
                       <button
                         key={group.year}
+                        ref={(node) => {
+                          if (node) {
+                            clusterRefs.current.set(group.year, node);
+                          } else {
+                            clusterRefs.current.delete(group.year);
+                          }
+                        }}
                         type="button"
                         aria-label={`${group.year}년 사건 ${group.events.length}건, 월별 상세 보기`}
                         data-timeline-cluster="true"
                         data-event-count={group.events.length}
                         onBlur={() => setPreviewYear(null)}
-                        onClick={() => openYear(group.year)}
+                        onClick={(event) =>
+                          openYear(group.year, event.detail === 0)
+                        }
                         onFocus={() => setPreviewYear(group.year)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter") {
                             event.preventDefault();
-                            openYear(group.year);
+                            openYear(group.year, true);
                           }
                         }}
                         onMouseEnter={() => setPreviewYear(group.year)}
                         onMouseLeave={() => setPreviewYear(null)}
                         className="group absolute grid h-12 w-12 cursor-pointer place-items-center rounded-full transition-transform active:scale-90"
                         style={{
-                          left: `${3 + position * 94}%`,
+                          left: `${chartSide + position * plotWidth}px`,
                           top: `${firstLaneY}px`,
                           transform: "translate(-50%, -50%)",
                         }}
@@ -221,13 +311,14 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                       </button>
                     );
                   })
-                : detailTimeline?.events.map((event) => {
+                : detailTimeline?.events.map((event, index) => {
                     const isSelected = event.id === selected?.id;
                     const y = firstLaneY + event.lane * laneGap;
 
                     return (
                       <button
                         key={event.id}
+                        ref={index === 0 ? firstEventRef : undefined}
                         type="button"
                         aria-label={`${formatLifeEventDate(event.date)} ${event.title}`}
                         aria-pressed={isSelected}
@@ -245,7 +336,7 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                         onMouseLeave={() => setPreviewId(null)}
                         className="group absolute grid h-11 w-11 cursor-pointer place-items-center rounded-full transition-transform active:scale-90"
                         style={{
-                          left: `${3 + event.position * 94}%`,
+                          left: `${chartSide + event.position * plotWidth}px`,
                           top: `${y}px`,
                           transform: "translate(-50%, -50%)",
                         }}
@@ -271,13 +362,14 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                   className="pointer-events-none absolute z-10 rounded-lg border border-gold/45 bg-white px-4 py-3 text-sm font-semibold text-foreground shadow-[var(--shadow-elegant)]"
                   style={{
                     left: `${Math.max(
-                      12,
+                      100,
                       Math.min(
-                        88,
-                        3 +
-                          ((previewYear - firstYear + 0.5) / yearSpan) * 94,
+                        timelineWidth - 100,
+                        chartSide +
+                          ((previewYear - firstYear + 0.5) / yearSpan) *
+                            plotWidth,
                       ),
-                    )}%`,
+                    )}px`,
                     top: `${firstLaneY + 30}px`,
                     transform: "translateX(-50%)",
                   }}
@@ -294,7 +386,13 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                   role="tooltip"
                   className="pointer-events-none absolute z-10 w-72 rounded-lg border border-gold/45 bg-white px-4 py-3 text-left shadow-[var(--shadow-elegant)]"
                   style={{
-                    left: `${Math.max(15, Math.min(85, 3 + active.position * 94))}%`,
+                    left: `${Math.max(
+                      180,
+                      Math.min(
+                        timelineWidth - 180,
+                        chartSide + active.position * plotWidth,
+                      ),
+                    )}px`,
                     top: `${
                       firstLaneY +
                       active.lane * laneGap +

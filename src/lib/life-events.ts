@@ -106,6 +106,10 @@ export function getYearTicks(years: number[]) {
   );
 }
 
+export function getOverviewTimelineWidth(years: number[]) {
+  return Math.max(1120, years.length * 56);
+}
+
 export function layoutLifeEvents(
   events: LifeEvent[],
   minimumGap = 0.025,
