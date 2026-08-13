@@ -10,6 +10,11 @@ export type TimelineEvent = LifeEvent & {
   position: number;
 };
 
+export type LifeEventYearGroup = {
+  year: number;
+  events: LifeEvent[];
+};
+
 export function parseLifeEventDate(value: string) {
   const match = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(value.trim());
 
@@ -71,9 +76,40 @@ export function parseLifeEventsCsv(csv: string): LifeEvent[] {
   });
 }
 
+export function groupLifeEventsByYear(events: LifeEvent[]) {
+  const groups = new Map<number, LifeEvent[]>();
+
+  for (const event of events) {
+    const { year } = parseLifeEventDate(event.date);
+    const group = groups.get(year);
+    if (group) {
+      group.push(event);
+    } else {
+      groups.set(year, [event]);
+    }
+  }
+
+  return [...groups]
+    .sort(([yearA], [yearB]) => yearA - yearB)
+    .map(([year, groupedEvents]): LifeEventYearGroup => ({
+      year,
+      events: groupedEvents,
+    }));
+}
+
+export function getYearTicks(years: number[]) {
+  const interval =
+    years.length <= 20 ? 1 : years.length <= 40 ? 2 : years.length <= 100 ? 5 : 10;
+
+  return years.filter(
+    (_, index) => index % interval === 0 || index === years.length - 1,
+  );
+}
+
 export function layoutLifeEvents(
   events: LifeEvent[],
   minimumGap = 0.025,
+  selectedYear?: number,
 ) {
   if (events.length === 0) {
     return { events: [] as TimelineEvent[], years: [] as number[], laneCount: 0 };
@@ -81,9 +117,15 @@ export function layoutLifeEvents(
 
   const datedEvents = events
     .map((event, index) => ({ event, index, ...parseLifeEventDate(event.date) }))
+    .filter(({ year }) => selectedYear === undefined || year === selectedYear)
     .sort((a, b) => a.timestamp - b.timestamp || a.index - b.index);
-  const firstYear = datedEvents[0].year;
-  const lastYear = datedEvents.at(-1)!.year;
+
+  if (datedEvents.length === 0) {
+    return { events: [] as TimelineEvent[], years: [] as number[], laneCount: 0 };
+  }
+
+  const firstYear = selectedYear ?? datedEvents[0].year;
+  const lastYear = selectedYear ?? datedEvents.at(-1)!.year;
   const start = Date.UTC(firstYear, 0, 1);
   const end = Date.UTC(lastYear + 1, 0, 1);
   const laneEnds: number[] = [];
