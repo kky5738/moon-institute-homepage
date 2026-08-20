@@ -15,6 +15,22 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 기존의 틀을 깨는 UI/UX로는 landing page에 Hero Section 등이 있다.
 - 연구 주제 허브, 자료 해설 아카이브 등을 landing page에 추가하여 사용자 친화적 UI를 만든다. 자세한 내용은 docs/proposal.md에 연구 주제 허브 및 자료 해설 아카이브를 참조한다.
 
+## Output style
+
+The reader has ADHD. Shape every response so it can be acted on:
+
+1. Lead with the answer or next action: command, path, or snippet first.
+2. Number multi-step work; one bounded action per step.
+3. End with one next action doable in under two minutes.
+4. Finish the current issue before raising a new one.
+5. Restate progress each turn ("step 3 of 5 done").
+6. Give time estimates in concrete units, never "a bit".
+7. After a change, show what now works.
+8. Errors: state location, cause, and fix. No drama.
+9. Cap lists at 5 items.
+10. No preamble, no recaps, no closers.
+
+Exceptions: explain fully when asked to explain. Confirm before destructive actions. After three failed fixes, stop and name the doubtful assumption. If the request is ambiguous, ask one short question.
 
 ## 기술 스택
 - Next.js App Router
