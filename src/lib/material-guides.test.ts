@@ -13,6 +13,7 @@ const basePost: BoardPost = {
   publishedAt: "2026-07-30",
   isPinned: false,
   authorName: null,
+  attachmentCount: 0,
 };
 
 test("해설이 명시된 홍보자료만 자료 아카이브에 포함한다", () => {

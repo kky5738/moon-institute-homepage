@@ -25,6 +25,11 @@ enum PostStatus {
   ARCHIVED
 }
 
+enum AttachmentKind {
+  ATTACHMENT
+  INLINE_IMAGE
+}
+
 enum InquiryType {
   GENERAL
   PARTICIPATION
@@ -83,10 +88,33 @@ model Post {
   authorId   Int?
   author     User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
+  attachments PostAttachment[]
+
   @@index([type, status, deletedAt, isPinned, publishedAt])
   @@index([categoryId])
   @@index([authorId, status, updatedAt])
   @@map("posts")
+}
+
+model PostAttachment {
+  id           String         @id @default(uuid()) @db.Uuid
+  kind         AttachmentKind
+  originalName String
+  objectPath   String         @unique
+  contentType  String
+  size         Int
+  altText      String?
+  imageWidth   Int?
+  imageHeight  Int?
+  uploadedAt   DateTime?
+  createdAt    DateTime       @default(now())
+  deletedAt    DateTime?
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, kind, deletedAt, uploadedAt])
+  @@map("post_attachments")
 }
 
 model Inquiry {

@@ -39,6 +39,10 @@ DATABASE_URL=
 AUTH_SECRET=
 ADMIN_USERNAME=
 ADMIN_PASSWORD=
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
+SUPABASE_STORAGE_BUCKET=research-files
 ```
 
 호스트 추론이 되지 않을 때만 다음 값을 추가한다.
@@ -61,6 +65,8 @@ npm exec auth secret
 - `AUTH_TRUST_HOST` is usually inferred on Vercel. Set `AUTH_TRUST_HOST=true` if deploying behind a proxy in a future AWS/self-hosted setup and Auth.js cannot infer trusted forwarded headers.
 - Use different admin passwords for Preview and Production if Preview is publicly accessible.
 - Do not prefix any secret with `NEXT_PUBLIC_`; that would expose it to the browser bundle.
+- Keep `SUPABASE_SECRET_KEY` server-only. `SUPABASE_PUBLISHABLE_KEY` is returned only with a short-lived signed upload token after the existing researcher authorization check.
+- Create `research-files` as a private Storage bucket with a 20MiB per-file limit and the MIME allowlist documented in `READY-18` before enabling uploads.
 - After changing any Vercel environment variable, redeploy. Existing deployments do not automatically receive updated values.
 - If a required variable is missing, Vercel Runtime Logs should contain `[server-error] env.missing-required` with the missing variable name.
 - For Auth.js compatibility, this project uses the current `AUTH_*` naming. If older docs or tools mention `NEXTAUTH_URL`, treat it as an alias for `AUTH_URL`; do not set conflicting values.

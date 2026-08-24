@@ -490,7 +490,7 @@ type LifeEvent = {
 
 ### READY-18. 연구 게시판 전통형 UI와 Supabase Storage 파일 업로드
 
-- 상태: `READY`
+- 상태: `BLOCKED`
 - 우선순위: 높음
 - 목적: 연구 게시판을 데스크톱에서는 조밀한 전통형 목록과 문서형 상세 화면으로 제공하고, 현재 인증을 유지한 채 연구 글에 문서 첨부와 본문 이미지를 안전하게 추가한다.
 - 승인된 최소 범위:
@@ -546,6 +546,15 @@ type LifeEvent = {
   - 승인된 연구자가 PDF/HWP/DOCX와 본문 이미지를 파일당 20MiB 이내에서 추가·수정할 수 있고 다른 사용자는 변경할 수 없다.
   - Supabase service/secret key가 서버 밖으로 노출되지 않고 공개 글과 초안의 파일 접근 경계가 유지된다.
   - 관련 migration·테스트·lint·build와 사용 가능한 환경의 Storage 브라우저 검증이 모두 통과한다.
+- 구현 및 검증 결과:
+  - `PostAttachment` 모델과 migration을 추가하고, 현재 연구자 인증·작성자 소유권 검사 뒤에만 Supabase Storage signed upload URL을 발급하도록 구현했다. object path는 애플리케이션 사용자·게시글 ID와 UUID로 구성하며 secret key는 서버 전용 모듈에서만 사용한다.
+  - 글을 먼저 `DRAFT`로 생성한 뒤 PDF/HWP/DOCX 및 JPEG/PNG/WebP를 파일당 20MiB로 검증·업로드·확인하고, 실패 시 공개하지 않는 흐름을 구현했다. 기존 첨부 제거와 사용하지 않는 본문 이미지는 DB에서 soft delete한다.
+  - 네이티브 파일 입력과 textarea 이미지 표식을 이용한 첨부·본문 이미지 삽입을 추가했으며 드래그앤드롭, 미리보기, 업로드 퍼센트와 범용 리치 텍스트는 제외했다.
+  - `/research`를 데스크톱 한 줄 표와 모바일 두 줄 목록으로 바꾸고, 상세를 넓은 프레임·`78ch` 본문·첨부 다운로드·비율 유지 이미지로 정리했다. 1280px와 390px에서 문서 가로 넘침 없음, 데스크톱 열 정렬, 모바일 헤더 숨김, 제목·본문·이미지 폭과 브라우저 오류 없음을 확인했다.
+  - Prisma validate·generate, 인증 테스트 7개, 게시글·파일 테스트 8개, 타임라인 테스트 6개, `npm run lint`, TypeScript 검사와 `npm run build`가 통과했다.
+- 차단 조건:
+  - 현재 환경에 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`이 없고 private bucket이 준비되지 않아 실제 업로드·다운로드 브라우저 검증은 수행할 수 없다.
+  - `20260824000000_add_research_post_attachments` Production 적용과 bucket의 20MiB·허용 MIME 설정은 별도 승인 후 수행해야 한다.
 
 ## 의사결정 또는 승인이 필요한 일
 
@@ -823,6 +832,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-12 | READY-14 | DONE | Hero 아래에 C 구조·A 색상/질감의 React·SVG 생애사 그래프를 추가함. CSV 133건, 연도 18개, 일 단위 위치, 충돌 lane, 툴팁, 클릭·Enter 상세 패널, 연대순 목록을 구현함. 1280px·390px 브라우저와 오류 로그를 확인하고 타임라인 테스트 4개, lint/build 통과. | 연도 클러스터·월별 상세는 READY-16에서 우선 구현. 기간 데이터가 생길 때만 막대 검토 |
 | 2026-08-12 | READY-15 | DONE | 상세 날짜 열을 넓히고 줄바꿈을 방지했으며 사건별 세로 연결선을 제거함. 1280px·390px에서 날짜 한 줄, 축·눈금·점·선택 동작, 모바일 내부 스크롤과 문서 폭을 확인하고 타임라인 테스트 4개, lint/build 통과. | 점 밀도 피드백에 따라 READY-16에서 클러스터링 우선 구현 |
 | 2026-08-13 | READY-16 | DONE | 133건을 연도별 클러스터 18개로 묶어 수치를 표시하고, 선택 연도의 12개월 축과 개별 사건 점으로 확대하는 두 단계 보기를 구현함. 클릭·Enter·범위 선택, 1280px·390px 내부 스크롤과 문서 폭을 확인하고 타임라인 테스트 6개, lint/build 통과. | 드롭다운 제거와 복귀·인접 연도 동선은 READY-17에서 개선. 전체 데이터 적용 후 추가 클러스터 단계 재검토 |
+| 2026-08-24 | READY-18 | BLOCKED | 전통형 연구 목록, 반응형 상세, private Storage signed upload 기반 PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 검증을 구현함. Prisma validate·generate, 테스트 21개, lint·TypeScript·build와 1280px·390px 화면 점검 통과. | Supabase Storage 환경 변수·private bucket 설정, Production migration 승인·적용과 실제 업로드·다운로드 smoke test 필요 |
 
 ## 사용자 결정 기록
 

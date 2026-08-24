@@ -19,11 +19,11 @@ export default async function ResearchPage() {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 lg:px-8 lg:py-14">
       <div className="flex flex-col gap-6 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-primary">연구 게시판</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
+          <h1 className="mt-4 text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl lg:text-4xl">
             회원 연구 글
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
@@ -40,10 +40,11 @@ export default async function ResearchPage() {
         ) : null}
       </div>
 
-      <section className="mt-8 border-y border-border bg-surface">
-        <div className="hidden grid-cols-[100px_1fr_140px_120px] border-b border-border px-5 py-3 text-xs font-semibold text-muted sm:grid">
-          <span>번호</span>
+      <section className="mt-8 border-y border-border bg-surface" aria-label="연구 글 목록">
+        <div className="hidden grid-cols-[72px_minmax(0,1fr)_72px_120px_110px] border-b border-border bg-background px-4 py-3 text-xs font-semibold text-muted md:grid">
+          <span className="text-center">번호</span>
           <span>제목</span>
+          <span className="text-center">첨부</span>
           <span>작성자</span>
           <span>작성일</span>
         </div>
@@ -52,28 +53,39 @@ export default async function ResearchPage() {
             {posts.map((post, index) => (
               <article
                 key={post.id}
-                className="grid gap-2 px-5 py-5 sm:grid-cols-[100px_1fr_140px_120px] sm:items-center"
+                className="group grid gap-2 px-4 py-4 transition-colors hover:bg-secondary/35 md:min-h-14 md:grid-cols-[72px_minmax(0,1fr)_72px_120px_110px] md:items-center md:gap-0 md:py-3"
               >
-                <span className="hidden text-sm text-muted sm:block">
+                <span className="hidden text-center text-sm text-muted md:block">
                   {posts.length - index}
                 </span>
-                <div>
+                <div className="min-w-0">
                   <Link
                     href={`/research/${post.slug}`}
-                    className="font-semibold text-foreground hover:text-primary hover:underline"
+                    className="block truncate font-semibold text-foreground underline-offset-4 group-hover:text-primary-dark group-hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {post.title}
                   </Link>
-                  {post.summary ? (
-                    <p className="mt-2 line-clamp-1 text-sm text-muted">
-                      {post.summary}
-                    </p>
-                  ) : null}
                 </div>
-                <span className="text-sm text-muted">
+                <span className="hidden text-center text-xs text-muted md:block">
+                  {post.attachmentCount > 0 ? post.attachmentCount : "-"}
+                </span>
+                <span className="hidden truncate text-sm text-muted md:block">
                   {post.authorName ?? "탈퇴한 회원"}
                 </span>
-                <time className="text-sm text-muted">{post.publishedAt}</time>
+                <time className="hidden text-sm text-muted md:block">
+                  {post.publishedAt}
+                </time>
+                <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted md:hidden">
+                  <span>{post.authorName ?? "탈퇴한 회원"}</span>
+                  <span aria-hidden="true">·</span>
+                  <time>{post.publishedAt}</time>
+                  {post.attachmentCount > 0 ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>첨부 {post.attachmentCount}</span>
+                    </>
+                  ) : null}
+                </div>
               </article>
             ))}
           </div>
