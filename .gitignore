@@ -54,3 +54,5 @@ docker-data
 
 # Documents
 
+# codex output
+/outputs/

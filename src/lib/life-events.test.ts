@@ -106,18 +106,18 @@ test("선택한 연도만 월별 상세 위치와 lane으로 배치한다", () =
   assert.ok(timeline.events[1].position < 0.51);
 });
 
-test("제공된 생애사 표본 133건을 모두 읽는다", () => {
+test("O 표시로 선별한 생애사 299건을 모두 읽는다", () => {
   const csv = readFileSync("src/lib/sample life events.csv", "utf8");
   const events = parseLifeEventsCsv(csv);
   const groups = groupLifeEventsByYear(events);
 
-  assert.equal(events.length, 133);
-  assert.equal(events[0].date, "1977/1/1");
-  assert.equal(events.at(-1)?.date, "1994/7/26");
-  assert.equal(events.filter((event) => event.content).length, 59);
-  assert.equal(groups.length, 18);
+  assert.equal(events.length, 299);
+  assert.equal(events[0].date, "1920/02/25");
+  assert.equal(events.at(-1)?.date, "1994/07/26");
+  assert.equal(events.filter((event) => event.content).length, 111);
+  assert.equal(groups.length, 48);
   assert.equal(
     groups.reduce((total, group) => total + group.events.length, 0),
-    133,
+    299,
   );
 });
