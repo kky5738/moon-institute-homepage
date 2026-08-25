@@ -490,7 +490,7 @@ type LifeEvent = {
 
 ### READY-18. 연구 게시판 전통형 UI와 Supabase Storage 파일 업로드
 
-- 상태: `BLOCKED`
+- 상태: `DONE`
 - 우선순위: 높음
 - 목적: 연구 게시판을 데스크톱에서는 조밀한 전통형 목록과 문서형 상세 화면으로 제공하고, 현재 인증을 유지한 채 연구 글에 문서 첨부와 본문 이미지를 안전하게 추가한다.
 - 승인된 최소 범위:
@@ -552,9 +552,12 @@ type LifeEvent = {
   - 네이티브 파일 입력과 textarea 이미지 표식을 이용한 첨부·본문 이미지 삽입을 추가했으며 드래그앤드롭, 미리보기, 업로드 퍼센트와 범용 리치 텍스트는 제외했다.
   - `/research`를 데스크톱 한 줄 표와 모바일 두 줄 목록으로 바꾸고, 상세를 넓은 프레임·`78ch` 본문·첨부 다운로드·비율 유지 이미지로 정리했다. 1280px와 390px에서 문서 가로 넘침 없음, 데스크톱 열 정렬, 모바일 헤더 숨김, 제목·본문·이미지 폭과 브라우저 오류 없음을 확인했다.
   - Prisma validate·generate, 인증 테스트 7개, 게시글·파일 테스트 8개, 타임라인 테스트 6개, `npm run lint`, TypeScript 검사와 `npm run build`가 통과했다.
-- 차단 조건:
-  - 현재 환경에 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`이 없고 private bucket이 준비되지 않아 실제 업로드·다운로드 브라우저 검증은 수행할 수 없다.
-  - `20260824000000_add_research_post_attachments` Production 적용과 bucket의 20MiB·허용 MIME 설정은 별도 승인 후 수행해야 한다.
+- 실환경 검증 결과:
+  - 2026-08-25 기준 Production DB migration 6개가 모두 적용됐고, `research-files` bucket이 private, 파일당 20MiB, 승인된 문서·이미지 MIME 제한으로 설정된 것을 확인했다.
+  - 합성 PDF·PNG 업로드와 signed 다운로드 `200`, private object의 public URL `400`, 금지 MIME과 20MiB 초과 업로드 거부를 확인했다.
+  - 승인 연구자 화면에서 JPEG 본문 이미지와 PDF·HWP·DOCX를 함께 공개하고 PDF 다운로드를 실행했다. 첨부 제거 후 DB 관계는 soft delete되고 Storage object는 유지되는 것도 확인했다.
+  - 1280px 상세는 바깥 1152px·본문 694px·제목 36px, 목록 행 56px·열 머리글 표시였고, 390px에서는 문서 가로 넘침 없이 제목 24px·본문 이미지 350px·모바일 두 줄 목록과 첨부 수가 표시됐다.
+  - 검증용 Storage object 4개, 게시글과 계정을 삭제한 뒤 대상 DB 행과 두 Storage 경로가 비어 있음을 확인했다. 브라우저 오류는 없었으며, 파일별 Supabase client 생성 경고는 향후 Supabase Auth 도입 시 단일 client 재사용으로 정리한다.
 
 ## 의사결정 또는 승인이 필요한 일
 
@@ -833,6 +836,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-12 | READY-15 | DONE | 상세 날짜 열을 넓히고 줄바꿈을 방지했으며 사건별 세로 연결선을 제거함. 1280px·390px에서 날짜 한 줄, 축·눈금·점·선택 동작, 모바일 내부 스크롤과 문서 폭을 확인하고 타임라인 테스트 4개, lint/build 통과. | 점 밀도 피드백에 따라 READY-16에서 클러스터링 우선 구현 |
 | 2026-08-13 | READY-16 | DONE | 133건을 연도별 클러스터 18개로 묶어 수치를 표시하고, 선택 연도의 12개월 축과 개별 사건 점으로 확대하는 두 단계 보기를 구현함. 클릭·Enter·범위 선택, 1280px·390px 내부 스크롤과 문서 폭을 확인하고 타임라인 테스트 6개, lint/build 통과. | 드롭다운 제거와 복귀·인접 연도 동선은 READY-17에서 개선. 전체 데이터 적용 후 추가 클러스터 단계 재검토 |
 | 2026-08-24 | READY-18 | BLOCKED | 전통형 연구 목록, 반응형 상세, private Storage signed upload 기반 PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 검증을 구현함. Prisma validate·generate, 테스트 21개, lint·TypeScript·build와 1280px·390px 화면 점검 통과. | Supabase Storage 환경 변수·private bucket 설정, Production migration 승인·적용과 실제 업로드·다운로드 smoke test 필요 |
+| 2026-08-25 | READY-18 | DONE | Production migration과 private bucket 제한을 확인하고 실제 PDF/HWP/DOCX·JPEG 공개, signed 다운로드, 금지 MIME·20MiB 초과 거부, soft delete·object 보존, 1280px·390px 반응형 화면을 검증함. 테스트 21개, lint·TypeScript·build 통과 후 검증 데이터를 모두 정리함. | Supabase Auth 도입 시 업로드용 Supabase client 단일 재사용으로 비차단 SDK 경고 정리 |
 
 ## 사용자 결정 기록
 
