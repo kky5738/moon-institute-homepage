@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { PostType } from "@/generated/prisma/enums";
-import { getPublishedPostBySlug } from "@/lib/posts";
+import {
+  getPublishedPostBySlug,
+  getPublishedPostMetadataBySlug,
+} from "@/lib/posts";
 
 type NoticeDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -13,7 +16,7 @@ export async function generateMetadata({
   params,
 }: NoticeDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(PostType.NOTICE, slug);
+  const post = await getPublishedPostMetadataBySlug(PostType.NOTICE, slug);
 
   return {
     title: post?.title ?? "공지사항",
@@ -26,7 +29,7 @@ export default async function NoticeDetailPage({
 }: NoticeDetailPageProps) {
   await connection();
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(PostType.NOTICE, slug);
+  const post = await getPublishedPostBySlug(PostType.NOTICE, slug, false);
 
   if (!post) {
     notFound();

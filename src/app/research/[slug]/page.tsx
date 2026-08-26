@@ -6,7 +6,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { ResearchPostContent } from "@/components/research/ResearchPostContent";
 import { AttachmentKind, PostType } from "@/generated/prisma/enums";
 import { formatResearchFileSize } from "@/lib/research-files";
-import { getPublishedPostBySlug } from "@/lib/posts";
+import {
+  getPublishedPostBySlug,
+  getPublishedPostMetadataBySlug,
+} from "@/lib/posts";
 import { canEditResearchPost } from "@/lib/research-posts";
 import { getApprovedResearcher } from "@/lib/researcher-auth";
 
@@ -18,7 +21,7 @@ export async function generateMetadata({
   params,
 }: ResearchDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(PostType.RESEARCH, slug, false);
+  const post = await getPublishedPostMetadataBySlug(PostType.RESEARCH, slug);
 
   return {
     title: post?.title ?? "연구 게시판",

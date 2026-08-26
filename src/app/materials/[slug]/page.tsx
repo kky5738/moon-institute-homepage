@@ -8,7 +8,11 @@ import {
   getMaterialGuide,
   getRecommendedMaterialPosts,
 } from "@/lib/material-guides";
-import { getPublishedPostBySlug, getPublishedPosts } from "@/lib/posts";
+import {
+  getPublishedPostBySlug,
+  getPublishedPostMetadataBySlug,
+  getPublishedPosts,
+} from "@/lib/posts";
 
 type MaterialDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -18,7 +22,7 @@ export async function generateMetadata({
   params,
 }: MaterialDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(PostType.PROMOTION, slug);
+  const post = await getPublishedPostMetadataBySlug(PostType.PROMOTION, slug);
 
   return {
     title: post?.title ?? "홍보자료",
@@ -32,7 +36,7 @@ export default async function MaterialDetailPage({
   await connection();
   const { slug } = await params;
   const [post, materials] = await Promise.all([
-    getPublishedPostBySlug(PostType.PROMOTION, slug),
+    getPublishedPostBySlug(PostType.PROMOTION, slug, false),
     getPublishedPosts(PostType.PROMOTION),
   ]);
 

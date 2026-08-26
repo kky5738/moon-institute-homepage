@@ -5,6 +5,7 @@ import { getRequiredEnv } from "@/lib/env";
 import { hasValidImageSignature, MAX_RESEARCH_FILE_SIZE } from "@/lib/research-files";
 
 const SIGNED_URL_SECONDS = 60 * 60;
+const IMAGE_SIGNATURE_RANGE = "bytes=0-11";
 
 function getSettings() {
   return {
@@ -15,12 +16,19 @@ function getSettings() {
   };
 }
 
-function getAdminClient() {
+function getAdminClient(customFetch?: typeof fetch) {
   const { url, secretKey } = getSettings();
   return createClient(url, secretKey, {
     auth: { autoRefreshToken: false, persistSession: false },
+    ...(customFetch ? { global: { fetch: customFetch } } : {}),
   });
 }
+
+const imageSignatureFetch: typeof fetch = (input, init) => {
+  const headers = new Headers(init?.headers);
+  headers.set("Range", IMAGE_SIGNATURE_RANGE);
+  return fetch(input, { ...init, headers });
+};
 
 export async function createResearchUploadTicket(path: string) {
   const settings = getSettings();
@@ -61,7 +69,11 @@ export async function verifyResearchUpload(
   }
 
   if (expected.inlineImage) {
-    const { data: image, error: downloadError } = await storage.download(path);
+    const { data: image, error: downloadError } = await getAdminClient(
+      imageSignatureFetch,
+    )
+      .storage.from(getSettings().bucket)
+      .download(path);
     if (downloadError || !image) {
       throw new Error("본문 이미지를 확인할 수 없습니다.", { cause: downloadError });
     }
