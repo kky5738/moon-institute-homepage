@@ -556,6 +556,78 @@ type LifeEvent = {
   - 현재 환경에 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`이 없고 private bucket이 준비되지 않아 실제 업로드·다운로드 브라우저 검증은 수행할 수 없다.
   - `20260824000000_add_research_post_attachments` Production 적용과 bucket의 20MiB·허용 MIME 설정은 별도 승인 후 수행해야 한다.
 
+### READY-19. 1차 저위험 성능 개선
+
+- 상태: `DONE`
+- 우선순위: 높음
+- 목적: 공개 게시글 조회와 업로드 검증에서 불필요한 DB·Storage I/O를 줄인다.
+- 작업:
+  - 공개 목록 조회를 명시적 Prisma `select`와 첨부 개수 집계로 제한해 본문과 사용하지 않는 관계를 읽지 않는다.
+  - 상세 페이지와 `generateMetadata()`가 같은 게시글을 중복 조회하지 않도록 요청 단위로 조회 결과를 공유하고 metadata 반환값은 제목·요약으로 제한한다.
+  - 첨부를 표시하지 않는 공지·홍보자료 상세에서는 Storage signed URL을 만들지 않는다.
+  - 본문 이미지 형식 확인은 최대 20MiB 전체 파일 대신 파일 시그니처에 필요한 첫 12바이트만 Range 요청한다.
+- 완료 조건:
+  - 공개 목록 조회 결과와 게시판 표시가 기존 타입·정렬·첨부 개수를 유지한다.
+  - 공지·홍보자료 상세에서 파일별 signed URL 생성이 실행되지 않는다.
+  - 본문 이미지 검증 요청에 `Range: bytes=0-11`이 적용되고 기존 JPEG·PNG·WebP 시그니처 검사가 유지된다.
+  - 게시글 테스트, `npm run lint`, `npm run build`가 통과한다.
+- 구현 및 검증 결과:
+  - 공개 목록을 명시적 `select`와 `_count`로 변경하고 본문·전체 첨부 관계 조회를 제거했다.
+  - React `cache()`로 metadata와 상세의 동일 게시글 조회를 공유하고, 공지·홍보자료 상세는 파일 URL 생성을 건너뛰게 했다.
+  - 이미지 검증 다운로드에 `Range: bytes=0-11`을 적용했다.
+  - 게시글·자료·파일 테스트 8개, `npm run lint`, `npm run build`가 통과했다. 빌드 결과 App Router 25개 경로는 아직 모두 동적이며 다음 작업에서 개선한다.
+
+### READY-20. 공개 페이지 렌더링 개선
+
+- 상태: `READY`
+- 우선순위: 높음
+- 목적: 인증이나 최신 DB 연결이 필요 없는 공개 화면까지 매 요청 Vercel Function에서 렌더링되는 구조를 제거한다.
+- 작업:
+  - 관련 Next.js 16 정적 렌더링·캐시·동적 API 가이드를 먼저 확인한다.
+  - Root Layout의 `auth()`를 공개 공통 레이아웃에서 분리하되 비로그인·연구자·관리자별 내비게이션 동작과 접근성은 유지한다.
+  - 홈, 공지, 홍보자료 등 공개 페이지의 불필요한 `connection()`을 제거하고 데이터 최신성에 맞는 Next.js 내장 캐시·재검증을 적용한다.
+  - 연구 게시판의 작성·수정 버튼처럼 세션이 필요한 부분만 동적 경계로 분리한다.
+  - Redis와 새 캐시 의존성은 추가하지 않는다.
+- 완료 조건:
+  - 인증과 DB가 필요 없는 공개 경로가 빌드 결과에서 정적 또는 캐시 렌더링으로 확인된다.
+  - 공개 콘텐츠 갱신 후 정해진 재검증 경로로 새 내용이 반영된다.
+  - 인증 상태별 내비게이션과 연구 글 작성·수정 권한이 기존과 동일하게 동작한다.
+  - 관련 테스트, `npm run lint`, `npm run build`와 주요 공개 경로 브라우저 점검이 통과한다.
+
+### READY-21. 게시글 데이터 증가 대응
+
+- 상태: `READY`
+- 우선순위: 중간
+- 목적: 게시글 수가 늘어도 목록 요청의 DB I/O·응답 크기·관리 화면 사용성이 선형으로 악화되지 않게 한다.
+- 작업:
+  - 공개·관리자 게시글 목록에 기존 정렬을 유지하는 서버 pagination과 페이지 이동 UI를 추가한다.
+  - 관리자 목록도 화면에 필요한 필드만 명시적으로 조회한다.
+  - 홈 추천 자료와 주제별 자료 조회에서 애플리케이션 필터링 대신 Prisma `where`와 `take`를 사용한다.
+  - 게시글 변경 시 실제 `PostType`과 연결된 공개 경로만 재검증한다.
+  - 복합 인덱스는 운영 규모의 `EXPLAIN ANALYZE` 근거가 생길 때까지 추가하지 않는다.
+- 완료 조건:
+  - 한 요청이 읽는 목록 행 수에 상한이 있고 첫·중간·마지막 페이지에서 누락이나 중복이 없다.
+  - 추천·주제 조회가 필요한 유형·상태·개수 조건을 DB 쿼리에 포함한다.
+  - 공지 변경이 무관한 자료·연구 목록까지 재검증하지 않는다.
+  - pagination 경계 테스트, `npm run lint`, `npm run build`가 통과한다.
+
+### READY-22. 프론트엔드·파일 전송 개선
+
+- 상태: `READY`
+- 우선순위: 중간
+- 목적: 초기 hydration과 작성 화면 번들, 공개 본문 이미지 전송량을 줄인다.
+- 작업:
+  - 닫힌 생애사 전체 목록을 Server Component로 분리해 Client Component에는 그래프 상호작용에 필요한 데이터만 전달한다.
+  - 작성 화면의 Supabase 브라우저 클라이언트를 실제 업로드 시작 시 동적 import한다.
+  - private Storage 접근 경계를 유지하면서 본문 이미지를 저장된 크기에 맞는 반응형 최적화 이미지로 제공하고 안정적인 캐시 재사용 여부를 확인한다.
+  - 이미지 업로드의 20MiB 상한 변경이나 서버 이미지 가공 서비스 도입은 별도 근거 없이 수행하지 않는다.
+  - 다중 파일 동시 업로드는 실제 지연이 확인될 때만 동시성 2개로 제한해 추가한다.
+- 완료 조건:
+  - 초기 홈 응답의 Client Component props와 날짜 파싱 횟수가 기준선보다 감소한다.
+  - 파일을 선택하지 않은 작성 화면의 초기 chunk에 Supabase 브라우저 클라이언트가 포함되지 않는다.
+  - 공개 본문 이미지가 컨테이너 표시 크기에 맞는 응답을 사용하고 20MiB 원본 전송을 피한다.
+  - 관련 테스트, `npm run lint`, `npm run build`와 1280px·390px 화면 점검이 통과한다.
+
 ## 의사결정 또는 승인이 필요한 일
 
 ### WAITING-01. 공식 콘텐츠 반영
@@ -810,6 +882,30 @@ type LifeEvent = {
 - 결정 후 상태 변경:
   - SMTP 제공자, Supabase Auth Production 설정, 기존 사용자 전환 범위와 DB migration 승인이 확정되면 `READY`로 전환한다.
 
+### WAITING-13. Production 성능 운영 측정
+
+- 상태: `WAITING`
+- 우선순위: 중간
+- 목적: 코드 추측이 아니라 Production 지표로 다음 병목과 인프라 변경 필요성을 판단한다.
+- 현재 기준선:
+  - Next.js 16.2.6 production build는 성공하며 빌드 자체는 정상 범위다.
+  - 2026-08-26 기준 App Router 25개 경로가 모두 동적 렌더링된다.
+  - 로컬 `DATABASE_URL`은 Supabase Tokyo(`ap-northeast-1`) transaction pooler를 사용한다.
+  - Vercel Function 지역, p50/p95 TTFB·실행시간·호출량과 Supabase query latency·pool wait는 저장소만으로 확인할 수 없다.
+- 필요한 입력 및 승인:
+  1. Vercel Production 프로젝트의 Function region과 Observability 지표 조회 권한 또는 내보낸 측정값
+  2. Supabase Production의 query latency와 pool wait 지표 조회 권한 또는 내보낸 측정값
+  3. Production에 영향을 주지 않는 smoke 측정 경로와 시간대
+- 측정 및 판단:
+  - 대표 공개 경로의 p50/p95 TTFB, Function duration과 invocation을 개선 전후 같은 조건에서 비교한다.
+  - Vercel Function과 Supabase의 지역이 다르면 데이터 소스에 가까운 Function 배치를 우선 검토한다.
+  - 실제 느린 쿼리는 `EXPLAIN ANALYZE`로 확인한 뒤에만 복합 인덱스를 제안한다.
+  - Next.js 내장 캐시 적용 후에도 공유 캐시, 분산 rate limit 또는 queue 필요성이 측정될 때만 Redis를 검토한다.
+- 완료 조건:
+  - 대표 경로별 기준선과 개선 후 p50/p95가 날짜·환경과 함께 기록된다.
+  - Function 지역과 Supabase 지역의 일치 여부가 확인된다.
+  - 인덱스·region·Redis 변경 여부가 측정 근거와 함께 결정된다.
+
 ## Codex 작업 결과 기록
 
 Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
@@ -833,6 +929,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-12 | READY-15 | DONE | 상세 날짜 열을 넓히고 줄바꿈을 방지했으며 사건별 세로 연결선을 제거함. 1280px·390px에서 날짜 한 줄, 축·눈금·점·선택 동작, 모바일 내부 스크롤과 문서 폭을 확인하고 타임라인 테스트 4개, lint/build 통과. | 점 밀도 피드백에 따라 READY-16에서 클러스터링 우선 구현 |
 | 2026-08-13 | READY-16 | DONE | 133건을 연도별 클러스터 18개로 묶어 수치를 표시하고, 선택 연도의 12개월 축과 개별 사건 점으로 확대하는 두 단계 보기를 구현함. 클릭·Enter·범위 선택, 1280px·390px 내부 스크롤과 문서 폭을 확인하고 타임라인 테스트 6개, lint/build 통과. | 드롭다운 제거와 복귀·인접 연도 동선은 READY-17에서 개선. 전체 데이터 적용 후 추가 클러스터 단계 재검토 |
 | 2026-08-24 | READY-18 | BLOCKED | 전통형 연구 목록, 반응형 상세, private Storage signed upload 기반 PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 검증을 구현함. Prisma validate·generate, 테스트 21개, lint·TypeScript·build와 1280px·390px 화면 점검 통과. | Supabase Storage 환경 변수·private bucket 설정, Production migration 승인·적용과 실제 업로드·다운로드 smoke test 필요 |
+| 2026-08-26 | READY-19 | DONE | 공개 목록을 명시적 Prisma select·첨부 집계로 축소하고 상세와 metadata의 중복 조회, 공지·홍보자료 signed URL 생성, 이미지 검증의 최대 20MiB 전체 다운로드를 제거함. 게시글·자료·파일 테스트 8개, lint/build 통과. | 공개 렌더링·pagination·프론트/파일 개선은 READY-20~22, Production 지표 측정은 WAITING-13 |
 
 ## 사용자 결정 기록
 
