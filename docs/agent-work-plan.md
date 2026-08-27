@@ -579,7 +579,7 @@ type LifeEvent = {
 
 ### READY-20. 공개 페이지 렌더링 개선
 
-- 상태: `READY`
+- 상태: `DONE`
 - 우선순위: 높음
 - 목적: 인증이나 최신 DB 연결이 필요 없는 공개 화면까지 매 요청 Vercel Function에서 렌더링되는 구조를 제거한다.
 - 작업:
@@ -593,6 +593,12 @@ type LifeEvent = {
   - 공개 콘텐츠 갱신 후 정해진 재검증 경로로 새 내용이 반영된다.
   - 인증 상태별 내비게이션과 연구 글 작성·수정 권한이 기존과 동일하게 동작한다.
   - 관련 테스트, `npm run lint`, `npm run build`와 주요 공개 경로 브라우저 점검이 통과한다.
+- 구현 및 검증 결과:
+  - Next.js 16 Cache Components를 활성화하고 Root 인증 내비게이션, 보호 페이지, 연구 글 작성·수정 버튼만 `Suspense` 동적 경계로 분리했다.
+  - 공개 게시글 조회에 1시간 재검증·1일 만료 내장 캐시와 `published-posts` 태그를 적용하고 관리자·연구자 게시글 변경 및 회원 탈퇴 시 `updateTag()`로 즉시 만료한다.
+  - 연구 첨부 signed URL이 캐시보다 먼저 만료되지 않도록 상세 캐시는 30분 재검증·55분 만료로 제한했다.
+  - production build에서 홈·공지·홍보자료·연구·주제 등 공개 경로가 모두 Partial Prerender로 전환되고 인증 API만 동적 경로로 남았다.
+  - 익명·기존 연구자 세션의 내비게이션과 권한 버튼, 주요 공개 목록·상세 7개 경로를 확인했으며 인증 테스트 7개·게시글 테스트 8개, lint/build가 통과했다.
 
 ### READY-21. 게시글 데이터 증가 대응
 
@@ -930,6 +936,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-13 | READY-16 | DONE | 133건을 연도별 클러스터 18개로 묶어 수치를 표시하고, 선택 연도의 12개월 축과 개별 사건 점으로 확대하는 두 단계 보기를 구현함. 클릭·Enter·범위 선택, 1280px·390px 내부 스크롤과 문서 폭을 확인하고 타임라인 테스트 6개, lint/build 통과. | 드롭다운 제거와 복귀·인접 연도 동선은 READY-17에서 개선. 전체 데이터 적용 후 추가 클러스터 단계 재검토 |
 | 2026-08-24 | READY-18 | BLOCKED | 전통형 연구 목록, 반응형 상세, private Storage signed upload 기반 PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 검증을 구현함. Prisma validate·generate, 테스트 21개, lint·TypeScript·build와 1280px·390px 화면 점검 통과. | Supabase Storage 환경 변수·private bucket 설정, Production migration 승인·적용과 실제 업로드·다운로드 smoke test 필요 |
 | 2026-08-26 | READY-19 | DONE | 공개 목록을 명시적 Prisma select·첨부 집계로 축소하고 상세와 metadata의 중복 조회, 공지·홍보자료 signed URL 생성, 이미지 검증의 최대 20MiB 전체 다운로드를 제거함. 게시글·자료·파일 테스트 8개, lint/build 통과. | 공개 렌더링·pagination·프론트/파일 개선은 READY-20~22, Production 지표 측정은 WAITING-13 |
+| 2026-08-26 | READY-20 | DONE | Root 인증과 연구자 권한 UI를 동적 경계로 분리하고 공개 게시글 캐시·즉시 태그 무효화를 적용함. 기존 25개 전부 동적이던 빌드에서 공개 경로가 모두 Partial Prerender로 전환됨. 인증 7개·게시글 8개 테스트, lint/build와 주요 공개 경로 브라우저 점검 통과. | Production p50/p95·Function 호출량 비교는 WAITING-13에서 측정 |
 
 ## 사용자 결정 기록
 

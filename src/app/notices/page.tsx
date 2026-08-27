@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import { PostType } from "@/generated/prisma/enums";
 import { getPublishedPosts } from "@/lib/posts";
 
@@ -10,7 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default async function NoticesPage() {
-  await connection();
   const notices = await getPublishedPosts(PostType.NOTICE);
 
   return (

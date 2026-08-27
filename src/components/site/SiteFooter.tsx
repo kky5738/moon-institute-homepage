@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cacheLife } from "next/cache";
 
 const footerColumns = [
   {
@@ -27,7 +28,10 @@ const footerColumns = [
   },
 ];
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  "use cache";
+  cacheLife("days");
+
   return (
     <footer className="bg-primary-dark text-white/80">
       <div className="mx-auto w-full max-w-7xl px-5 py-14 sm:px-6 lg:px-10 lg:py-16">

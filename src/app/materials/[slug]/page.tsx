@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { RecommendedMaterialList } from "@/components/materials/RecommendedMaterialList";
 import { PostType } from "@/generated/prisma/enums";
 import {
@@ -33,7 +32,6 @@ export async function generateMetadata({
 export default async function MaterialDetailPage({
   params,
 }: MaterialDetailPageProps) {
-  await connection();
   const { slug } = await params;
   const [post, materials] = await Promise.all([
     getPublishedPostBySlug(PostType.PROMOTION, slug, false),

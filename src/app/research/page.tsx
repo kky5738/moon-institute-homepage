@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
+import { Suspense } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { PostType } from "@/generated/prisma/enums";
 import { getPublishedPosts } from "@/lib/posts";
@@ -12,11 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ResearchPage() {
-  await connection();
-  const [posts, user] = await Promise.all([
-    getPublishedPosts(PostType.RESEARCH),
-    getApprovedResearcher(),
-  ]);
+  const posts = await getPublishedPosts(PostType.RESEARCH);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -30,14 +26,9 @@ export default async function ResearchPage() {
             연구소의 승인된 회원들이 작성해 공개한 글을 최신순으로 확인합니다.
           </p>
         </div>
-        {user ? (
-          <Link
-            href="/account/posts/new"
-            className={buttonVariants({ className: "w-full sm:w-auto" })}
-          >
-            새 글 작성
-          </Link>
-        ) : null}
+        <Suspense fallback={null}>
+          <ResearchCreateLink />
+        </Suspense>
       </div>
 
       <section className="mt-8 border-y border-border bg-surface" aria-label="연구 글 목록">
@@ -97,4 +88,17 @@ export default async function ResearchPage() {
       </section>
     </div>
   );
+}
+
+async function ResearchCreateLink() {
+  const user = await getApprovedResearcher();
+
+  return user ? (
+    <Link
+      href="/account/posts/new"
+      className={buttonVariants({ className: "w-full sm:w-auto" })}
+    >
+      새 글 작성
+    </Link>
+  ) : null;
 }

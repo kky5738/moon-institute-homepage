@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteNavbar } from "@/components/site/SiteNavbar";
 import { auth } from "../../auth";
@@ -17,8 +18,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full bg-background text-foreground">
@@ -29,11 +28,20 @@ export default async function RootLayout({
           본문 바로가기
         </a>
         <div className="flex min-h-screen flex-col">
-          <SiteNavbar role={session?.user?.role ?? null} />
-          <main id="main-content" tabIndex={-1} className="flex-1">{children}</main>
+          <Suspense fallback={null}>
+            <AuthenticatedSiteNavbar />
+          </Suspense>
+          <main id="main-content" tabIndex={-1} className="flex-1">
+            <Suspense fallback={null}>{children}</Suspense>
+          </main>
           <SiteFooter />
         </div>
       </body>
     </html>
   );
+}
+
+async function AuthenticatedSiteNavbar() {
+  const session = await auth();
+  return <SiteNavbar role={session?.user?.role ?? null} />;
 }

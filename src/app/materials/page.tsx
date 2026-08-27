@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import { MaterialArchiveCard } from "@/components/materials/MaterialArchiveCard";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,7 +13,6 @@ export const metadata: Metadata = {
 };
 
 export default async function MaterialsPage() {
-  await connection();
   const materials = await getPublishedPosts(PostType.PROMOTION);
   const archiveItems = getMaterialArchiveItems(materials);
 

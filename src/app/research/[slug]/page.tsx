@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
+import { Suspense } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { ResearchPostContent } from "@/components/research/ResearchPostContent";
 import { AttachmentKind, PostType } from "@/generated/prisma/enums";
@@ -32,12 +32,8 @@ export async function generateMetadata({
 export default async function ResearchDetailPage({
   params,
 }: ResearchDetailPageProps) {
-  await connection();
   const { slug } = await params;
-  const [post, user] = await Promise.all([
-    getPublishedPostBySlug(PostType.RESEARCH, slug),
-    getApprovedResearcher(),
-  ]);
+  const post = await getPublishedPostBySlug(PostType.RESEARCH, slug);
 
   if (!post) {
     notFound();
@@ -56,14 +52,12 @@ export default async function ResearchDetailPage({
         >
           연구 게시판 목록
         </Link>
-        {canEditResearchPost(user?.id ?? null, post.authorId) ? (
-          <Link
-            href={`/account/posts/${post.id}/edit`}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            수정
-          </Link>
-        ) : null}
+        <Suspense fallback={null}>
+          <ResearchEditLink
+            postId={post.id}
+            authorId={post.authorId}
+          />
+        </Suspense>
       </div>
       <header className="mt-6 border-y border-border bg-surface px-4 py-6 sm:px-6 sm:py-8">
         <p className="text-sm font-semibold text-primary">연구 글</p>
@@ -121,4 +115,23 @@ export default async function ResearchDetailPage({
       </div>
     </article>
   );
+}
+
+async function ResearchEditLink({
+  postId,
+  authorId,
+}: {
+  postId: number;
+  authorId: number | null;
+}) {
+  const user = await getApprovedResearcher();
+
+  return canEditResearchPost(user?.id ?? null, authorId) ? (
+    <Link
+      href={`/account/posts/${postId}/edit`}
+      className={buttonVariants({ variant: "outline" })}
+    >
+      수정
+    </Link>
+  ) : null;
 }

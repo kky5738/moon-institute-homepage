@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { PostStatus } from "@/generated/prisma/enums";
 import { assertAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { publishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
 
 export async function createPost(formData: FormData) {
@@ -180,6 +181,7 @@ export async function archivePost(formData: FormData) {
 }
 
 function revalidatePostPaths() {
+  updateTag(publishedPostsCacheTag);
   revalidatePath("/");
   revalidatePath("/notices");
   revalidatePath("/materials");

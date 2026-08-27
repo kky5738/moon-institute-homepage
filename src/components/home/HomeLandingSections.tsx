@@ -9,10 +9,8 @@ import { PostType } from "@/generated/prisma/enums";
 import { getMaterialArchiveItems } from "@/lib/material-guides";
 import { parseLifeEventsCsv } from "@/lib/life-events";
 import { getPublishedPosts } from "@/lib/posts";
-import { connection } from "next/server";
 
 export async function HomeLandingSections() {
-  await connection();
   const materials = await getPublishedPosts(PostType.PROMOTION);
   const readingPath = getMaterialArchiveItems(materials).slice(0, 3);
   const lifeEvents = parseLifeEventsCsv(

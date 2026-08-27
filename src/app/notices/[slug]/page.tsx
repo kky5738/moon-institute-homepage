@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { PostType } from "@/generated/prisma/enums";
 import {
   getPublishedPostBySlug,
@@ -27,7 +26,6 @@ export async function generateMetadata({
 export default async function NoticeDetailPage({
   params,
 }: NoticeDetailPageProps) {
-  await connection();
   const { slug } = await params;
   const post = await getPublishedPostBySlug(PostType.NOTICE, slug, false);
 

@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { AttachmentKind, PostStatus, PostType } from "@/generated/prisma/enums";
 import { decodePostSlug } from "@/lib/post-slug";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +6,7 @@ import { isPrismaMissingTableError, logServerError } from "@/lib/server-log";
 import { createResearchFileUrls } from "@/lib/supabase-storage";
 
 const hiddenPublicPostSlugs = ["institute-introduction-material"];
+export const publishedPostsCacheTag = "published-posts";
 
 export type BoardPost = {
   id: number;
@@ -37,6 +38,10 @@ export type BoardPostDetail = BoardPost & {
 };
 
 export async function getPublishedPosts(type: PostType): Promise<BoardPost[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(publishedPostsCacheTag);
+
   try {
     const posts = await prisma.post.findMany({
       where: {
@@ -117,6 +122,10 @@ export async function getPublishedPostBySlug(
   slug: string,
   includeFileUrls = true,
 ): Promise<BoardPostDetail | null> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 1800, expire: 3300 });
+  cacheTag(publishedPostsCacheTag);
+
   const decodedSlug = decodePostSlug(slug);
 
   if (!decodedSlug || hiddenPublicPostSlugs.includes(decodedSlug)) {
@@ -169,6 +178,10 @@ export async function getPublishedPostBySlug(
 }
 
 export async function getPublishedPostMetadataBySlug(type: PostType, slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(publishedPostsCacheTag);
+
   const decodedSlug = decodePostSlug(slug);
 
   if (!decodedSlug || hiddenPublicPostSlugs.includes(decodedSlug)) {
@@ -185,10 +198,13 @@ export async function getPublishedPostMetadataBySlug(type: PostType, slug: strin
     : null;
 }
 
-const findPublishedPostBySlug = cache(
-  async (type: PostType, decodedSlug: string) => {
-    try {
-      return await prisma.post.findFirst({
+async function findPublishedPostBySlug(type: PostType, decodedSlug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(publishedPostsCacheTag);
+
+  try {
+    return await prisma.post.findFirst({
         where: {
           slug: decodedSlug,
           type,
@@ -233,24 +249,23 @@ const findPublishedPostBySlug = cache(
             },
           },
         },
-      });
-    } catch (error) {
-      logServerError("posts.findPublishedPostBySlug", error, {
-        type,
-        slug: decodedSlug,
-      });
+    });
+  } catch (error) {
+    logServerError("posts.findPublishedPostBySlug", error, {
+      type,
+      slug: decodedSlug,
+    });
 
-      if (isPrismaMissingTableError(error)) {
-        console.error(
-          "[server-error] posts table is missing. Run `npm run db:deploy` against the production database.",
-        );
-        return null;
-      }
-
-      throw error;
+    if (isPrismaMissingTableError(error)) {
+      console.error(
+        "[server-error] posts table is missing. Run `npm run db:deploy` against the production database.",
+      );
+      return null;
     }
-  },
-);
+
+    throw error;
+  }
+}
 
 export async function getPinnedNotice(): Promise<BoardPost | null> {
   const posts = await getPublishedPosts(PostType.NOTICE);

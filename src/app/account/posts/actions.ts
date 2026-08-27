@@ -1,9 +1,10 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { AttachmentKind, PostStatus, PostType } from "@/generated/prisma/enums";
 import { createPostSlug } from "@/lib/post-slug";
+import { publishedPostsCacheTag } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 import {
   createResearchObjectPath,
@@ -248,6 +249,7 @@ export async function saveResearchPost(
 }
 
 function revalidateResearchPaths() {
+  updateTag(publishedPostsCacheTag);
   revalidatePath("/research");
   revalidatePath("/account");
   revalidatePath("/account/posts");

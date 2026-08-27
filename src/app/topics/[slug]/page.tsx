@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { TopicPostList } from "@/components/topics/TopicPostList";
 import { getTopicRelatedPosts } from "@/lib/topic-posts";
 import {
@@ -32,7 +31,6 @@ export async function generateMetadata({
 export default async function TopicDetailPage({
   params,
 }: TopicDetailPageProps) {
-  await connection();
   const { slug } = await params;
   const topic = getResearchTopicBySlug(slug);
 

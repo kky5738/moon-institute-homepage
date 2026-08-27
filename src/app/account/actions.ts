@@ -1,10 +1,11 @@
 "use server";
 
 import { signOut } from "../../../auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { PostStatus } from "@/generated/prisma/enums";
 import { assertResearcher } from "@/lib/researcher-auth";
 import { prisma } from "@/lib/prisma";
+import { publishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
 
 export async function logout() {
@@ -33,6 +34,7 @@ export async function deleteAccount(formData: FormData) {
     throw error;
   }
 
+  updateTag(publishedPostsCacheTag);
   revalidatePath("/research");
   revalidatePath("/admin/posts");
   await signOut({ redirectTo: "/" });
