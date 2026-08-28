@@ -626,7 +626,7 @@ type LifeEvent = {
 
 ### READY-22. 프론트엔드·파일 전송 개선
 
-- 상태: `READY`
+- 상태: `DONE`
 - 우선순위: 중간
 - 목적: 초기 hydration과 작성 화면 번들, 공개 본문 이미지 전송량을 줄인다.
 - 작업:
@@ -640,6 +640,13 @@ type LifeEvent = {
   - 파일을 선택하지 않은 작성 화면의 초기 chunk에 Supabase 브라우저 클라이언트가 포함되지 않는다.
   - 공개 본문 이미지가 컨테이너 표시 크기에 맞는 응답을 사용하고 20MiB 원본 전송을 피한다.
   - 관련 테스트, `npm run lint`, `npm run build`와 1280px·390px 화면 점검이 통과한다.
+- 구현 및 검증 결과:
+  - 닫힌 생애사 299건 전체 목록을 Server Component로 분리해 그래프 Client Component가 목록 렌더링 결과를 prop으로 받지 않게 했고, 동일 날짜의 정규식·Date 해석 결과를 재사용한다.
+  - 홈 Client chunk에서 전체 목록 렌더러를 제거해 32,296B에서 31,518B로 줄였다.
+  - 작성 화면의 Supabase 브라우저 클라이언트를 실제 업로드 직전에 동적 import해 초기 entry chunk를 247,309B에서 11,496B로 줄이고 242,140B SDK chunk를 업로드 시점으로 분리했다.
+  - private Storage의 1시간 signed URL은 유지하고 `next/image`의 390px·78ch 반응형 `srcset`, WebP 변환과 기본 4시간 최적화 캐시를 사용한다. 허용 원본은 설정된 Supabase host와 private bucket signed-object 경로로 제한했다.
+  - 파일당 20MiB 상한과 순차 업로드는 유지했다. Pro 이상 전용인 Supabase Image Transformations와 별도 서버 이미지 가공 서비스는 추가하지 않았다.
+  - 타임라인·게시글 관련 테스트 15개, lint/build, 반응형 이미지 정적 렌더와 1280px·390px 홈·연구 상세 화면 점검이 통과했다.
 
 ## 의사결정 또는 승인이 필요한 일
 
@@ -945,6 +952,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-26 | READY-19 | DONE | 공개 목록을 명시적 Prisma select·첨부 집계로 축소하고 상세와 metadata의 중복 조회, 공지·홍보자료 signed URL 생성, 이미지 검증의 최대 20MiB 전체 다운로드를 제거함. 게시글·자료·파일 테스트 8개, lint/build 통과. | 공개 렌더링·pagination·프론트/파일 개선은 READY-20~22, Production 지표 측정은 WAITING-13 |
 | 2026-08-26 | READY-20 | DONE | Root 인증과 연구자 권한 UI를 동적 경계로 분리하고 공개 게시글 캐시·즉시 태그 무효화를 적용함. 기존 25개 전부 동적이던 빌드에서 공개 경로가 모두 Partial Prerender로 전환됨. 인증 7개·게시글 8개 테스트, lint/build와 주요 공개 경로 브라우저 점검 통과. | Production p50/p95·Function 호출량 비교는 WAITING-13에서 측정 |
 | 2026-08-27 | READY-21 | DONE | 공개·관리 게시글 목록에 서버 pagination과 10행 상한, 안정적인 정렬, 관리자 명시적 select를 적용함. 홈·주제 추천은 DB where/take 3으로 제한하고 PostType별 캐시·경로만 갱신함. pagination 경계 포함 게시글 테스트 9개, lint/build와 브라우저 점검 통과. | 복합 인덱스는 Production EXPLAIN ANALYZE 근거가 생길 때만 추가 |
+| 2026-08-28 | READY-22 | DONE | 생애사 전체 목록을 Server Component로 분리하고 날짜 해석을 재사용함. Supabase SDK를 업로드 시점의 별도 chunk로 분리해 작성 entry를 247,309B에서 11,496B로 축소하고, private signed URL 본문 이미지를 Next.js 반응형 최적화·캐시 경로로 제공함. 테스트 15개, lint/build와 1280px·390px 점검 통과. | 실제 본문 이미지 데이터가 생기면 Production에서 이미지 최적화 캐시·전송량 smoke test 수행 |
 
 ## 사용자 결정 기록
 
