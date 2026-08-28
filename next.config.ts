@@ -1,7 +1,27 @@
 import type { NextConfig } from "next";
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const storageBucket = process.env.SUPABASE_STORAGE_BUCKET || "research-files";
+const supabaseStorageUrl = supabaseUrl ? new URL(supabaseUrl) : null;
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  images: {
+    maximumRedirects: 0,
+    maximumResponseBody: 20 * 1024 * 1024,
+    remotePatterns: supabaseStorageUrl
+      ? [
+          {
+            protocol: supabaseStorageUrl.protocol.replace(":", "") as
+              | "http"
+              | "https",
+            hostname: supabaseStorageUrl.hostname,
+            port: supabaseStorageUrl.port,
+            pathname: `/storage/v1/object/sign/${storageBucket}/**`,
+          },
+        ]
+      : [],
+  },
   async headers() {
     return [
       {

@@ -119,12 +119,7 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
   }
 
   return (
-    <section
-      id="life-timeline"
-      aria-labelledby="life-timeline-title"
-      className="life-timeline-paper scroll-mt-16 border-b border-border py-12 sm:py-16"
-    >
-      <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-10">
+    <>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-purple">
@@ -442,22 +437,6 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
           ) : null}
         </div>
 
-        <details className="mt-4 rounded-lg border border-border bg-white/65 px-4 py-3 text-sm sm:px-5">
-          <summary className="cursor-pointer font-semibold text-primary-dark">
-            연대순 전체 목록 보기 ({fullTimeline.events.length}건)
-          </summary>
-          <ol className="mt-4 max-h-80 space-y-3 overflow-y-auto border-t border-border pt-4">
-            {fullTimeline.events.map((event) => (
-              <li key={event.id} className="grid gap-1 sm:grid-cols-[7rem_1fr]">
-                <time className="font-semibold text-accent-purple">
-                  {formatLifeEventDate(event.date)}
-                </time>
-                <span className="leading-6 text-foreground">{event.title}</span>
-              </li>
-            ))}
-          </ol>
-        </details>
-      </div>
-    </section>
+    </>
   );
 }

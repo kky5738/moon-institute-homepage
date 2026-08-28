@@ -1,4 +1,5 @@
 import { AttachmentKind } from "@/generated/prisma/enums";
+import Image from "next/image";
 import { splitResearchContent } from "@/lib/research-files";
 import type { BoardPostDetail } from "@/lib/posts";
 
@@ -24,7 +25,7 @@ export function ResearchPostContent({
         }
 
         const image = images.get(part.id);
-        if (!image?.url) {
+        if (!image?.url || !image.imageWidth || !image.imageHeight) {
           return (
             <p key={part.id} className="border border-border bg-background p-4 text-sm text-muted">
               본문 이미지를 불러올 수 없습니다.
@@ -34,14 +35,13 @@ export function ResearchPostContent({
 
         return (
           <figure key={part.id} className="space-y-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={image.url}
               alt={image.altText ?? ""}
-              width={image.imageWidth ?? undefined}
-              height={image.imageHeight ?? undefined}
+              width={image.imageWidth}
+              height={image.imageHeight}
+              sizes="(max-width: 640px) calc(100vw - 2.5rem), 78ch"
               loading="lazy"
-              decoding="async"
               className="h-auto max-h-[75vh] w-auto max-w-full border border-border object-contain"
             />
             {image.altText ? (

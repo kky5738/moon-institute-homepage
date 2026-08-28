@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
@@ -194,6 +193,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
         });
         if (!ticket.ok) throw new Error(ticket.message);
 
+        const { createClient } = await import("@supabase/supabase-js");
         const storage = createClient(ticket.supabaseUrl, ticket.publishableKey, {
           auth: { autoRefreshToken: false, persistSession: false },
         }).storage.from(ticket.bucket);

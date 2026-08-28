@@ -15,8 +15,20 @@ export type LifeEventYearGroup = {
   events: LifeEvent[];
 };
 
+const parsedDates = new Map<string, ReturnType<typeof parseLifeEventDateValue>>();
+
 export function parseLifeEventDate(value: string) {
-  const match = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(value.trim());
+  const normalized = value.trim();
+  const cached = parsedDates.get(normalized);
+  if (cached) return cached;
+
+  const parsed = parseLifeEventDateValue(normalized);
+  parsedDates.set(normalized, parsed);
+  return parsed;
+}
+
+function parseLifeEventDateValue(value: string) {
+  const match = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(value);
 
   if (!match) {
     throw new Error(`날짜 형식이 올바르지 않습니다: ${value}`);
