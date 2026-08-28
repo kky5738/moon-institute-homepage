@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath, updateTag } from "next/cache";
 import { AttachmentKind, PostStatus, PostType } from "@/generated/prisma/enums";
 import { createPostSlug } from "@/lib/post-slug";
-import { publishedPostsCacheTag } from "@/lib/posts";
+import { getPublishedPostsCacheTag } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 import {
   createResearchObjectPath,
@@ -249,7 +249,7 @@ export async function saveResearchPost(
 }
 
 function revalidateResearchPaths() {
-  updateTag(publishedPostsCacheTag);
+  updateTag(getPublishedPostsCacheTag(PostType.RESEARCH));
   revalidatePath("/research");
   revalidatePath("/account");
   revalidatePath("/account/posts");

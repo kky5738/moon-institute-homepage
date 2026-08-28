@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Pagination } from "@/components/site/Pagination";
 import { PostType } from "@/generated/prisma/enums";
-import { getPublishedPosts } from "@/lib/posts";
+import { parsePageParam } from "@/lib/pagination";
+import { getPublishedPostPage } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "공지사항",
   description: "문선명 연구소 공지사항 목록입니다.",
 };
 
-export default async function NoticesPage() {
-  const notices = await getPublishedPosts(PostType.NOTICE);
+export default async function NoticesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
+  const requestedPage = parsePageParam((await searchParams).page);
+  const { posts: notices, page, totalPages } = await getPublishedPostPage(
+    PostType.NOTICE,
+    requestedPage,
+  );
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
@@ -62,6 +72,7 @@ export default async function NoticesPage() {
           </div>
         )}
       </section>
+      <Pagination basePath="/notices" page={page} totalPages={totalPages} />
     </div>
   );
 }

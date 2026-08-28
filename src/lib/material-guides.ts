@@ -96,6 +96,8 @@ const materialGuides: MaterialGuide[] = [
   },
 ];
 
+export const materialGuideSlugs = materialGuides.map((guide) => guide.slug);
+
 export function getMaterialGuide(
   slug: string,
 ): MaterialGuide | null {

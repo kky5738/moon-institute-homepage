@@ -1,6 +1,6 @@
 import { PostType } from "@/generated/prisma/enums";
-import { getMaterialArchiveItems } from "@/lib/material-guides";
-import { getPublishedPosts, type BoardPost } from "@/lib/posts";
+import { materialGuideSlugs } from "@/lib/material-guides";
+import { getPublishedPostPreview, type BoardPost } from "@/lib/posts";
 import type { ResearchTopic } from "@/lib/topics";
 
 export type TopicRelatedPosts = {
@@ -14,32 +14,24 @@ export async function getTopicRelatedPosts(
   topic: ResearchTopic,
 ): Promise<TopicRelatedPosts> {
   const [notices, materials] = await Promise.all([
-    getPublishedPosts(PostType.NOTICE),
-    getPublishedPosts(PostType.PROMOTION),
+    getTopicPosts(topic, PostType.NOTICE),
+    getTopicPosts(topic, PostType.PROMOTION),
   ]);
 
-  return {
-    notices: filterByTopicCategory(notices, topic, PostType.NOTICE),
-    materials: filterByTopicCategory(
-      getMaterialArchiveItems(materials).map((item) => item.post),
-      topic,
-      PostType.PROMOTION,
-    ),
-  };
+  return { notices, materials };
 }
 
-function filterByTopicCategory(
-  posts: BoardPost[],
+function getTopicPosts(
   topic: ResearchTopic,
   type: PostType,
 ) {
   const categorySlugs = topic.categoryConnections[type] ?? [];
 
-  if (categorySlugs.length === 0) {
-    return [];
-  }
+  if (categorySlugs.length === 0) return [];
 
-  return posts
-    .filter((post) => categorySlugs.includes(post.categorySlug))
-    .slice(0, relatedPostLimit);
+  return getPublishedPostPreview(type, {
+    categorySlugs,
+    ...(type === PostType.PROMOTION ? { slugs: materialGuideSlugs } : {}),
+    take: relatedPostLimit,
+  });
 }

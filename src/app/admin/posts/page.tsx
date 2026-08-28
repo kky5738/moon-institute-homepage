@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { Pagination } from "@/components/site/Pagination";
 import { requireAdmin } from "@/lib/admin-auth";
+import {
+  getPostPageWindow,
+  parsePageParam,
+  POSTS_PER_PAGE,
+} from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { archivePost } from "./actions";
@@ -11,31 +17,15 @@ export const metadata: Metadata = {
   description: "공지사항과 홍보자료 게시글을 관리합니다.",
 };
 
-export default async function AdminPostsPage() {
+export default async function AdminPostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
   await connection();
   await requireAdmin();
-
-  let posts;
-
-  try {
-    posts = await prisma.post.findMany({
-      include: {
-        category: true,
-        author: {
-          select: {
-            name: true,
-          },
-        },
-      },
-      orderBy: [
-        { createdAt: "desc" },
-        { id: "desc" },
-      ],
-    });
-  } catch (error) {
-    logServerError("admin.posts.list", error);
-    throw error;
-  }
+  const requestedPage = parsePageParam((await searchParams).page);
+  const { posts, page, totalPages } = await getAdminPostPage(requestedPage);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
@@ -130,6 +120,45 @@ export default async function AdminPostsPage() {
           </div>
         )}
       </section>
+      <Pagination basePath="/admin/posts" page={page} totalPages={totalPages} />
     </div>
   );
+}
+
+async function getAdminPostPage(requestedPage: number) {
+  try {
+    const totalItems = await prisma.post.count();
+    const pagination = getPostPageWindow(requestedPage, totalItems);
+    const posts = await prisma.post.findMany({
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        title: true,
+        slug: true,
+        summary: true,
+        category: {
+          select: {
+            name: true,
+          },
+        },
+        author: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: [
+        { createdAt: "desc" },
+        { id: "desc" },
+      ],
+      skip: pagination.offset,
+      take: POSTS_PER_PAGE,
+    });
+
+    return { ...pagination, posts };
+  } catch (error) {
+    logServerError("admin.posts.list", error);
+    throw error;
+  }
 }

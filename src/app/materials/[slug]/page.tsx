@@ -10,7 +10,7 @@ import {
 import {
   getPublishedPostBySlug,
   getPublishedPostMetadataBySlug,
-  getPublishedPosts,
+  getPublishedPostPreview,
 } from "@/lib/posts";
 
 type MaterialDetailPageProps = {
@@ -33,10 +33,7 @@ export default async function MaterialDetailPage({
   params,
 }: MaterialDetailPageProps) {
   const { slug } = await params;
-  const [post, materials] = await Promise.all([
-    getPublishedPostBySlug(PostType.PROMOTION, slug, false),
-    getPublishedPosts(PostType.PROMOTION),
-  ]);
+  const post = await getPublishedPostBySlug(PostType.PROMOTION, slug, false);
 
   if (!post) {
     notFound();
@@ -48,6 +45,10 @@ export default async function MaterialDetailPage({
     notFound();
   }
 
+  const materials = await getPublishedPostPreview(PostType.PROMOTION, {
+    slugs: guide.recommendationSlugs,
+    take: 3,
+  });
   const recommendedMaterials = getRecommendedMaterialPosts(post.slug, materials);
 
   return (

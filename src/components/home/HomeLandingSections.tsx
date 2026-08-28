@@ -6,12 +6,18 @@ import { ParticipationCtaSection } from "@/components/home/ParticipationCtaSecti
 import { ResearchTopicHubSection } from "@/components/home/ResearchTopicHubSection";
 import { VideoContentSection } from "@/components/home/VideoContentSection";
 import { PostType } from "@/generated/prisma/enums";
-import { getMaterialArchiveItems } from "@/lib/material-guides";
+import {
+  getMaterialArchiveItems,
+  materialGuideSlugs,
+} from "@/lib/material-guides";
 import { parseLifeEventsCsv } from "@/lib/life-events";
-import { getPublishedPosts } from "@/lib/posts";
+import { getPublishedPostPreview } from "@/lib/posts";
 
 export async function HomeLandingSections() {
-  const materials = await getPublishedPosts(PostType.PROMOTION);
+  const materials = await getPublishedPostPreview(PostType.PROMOTION, {
+    slugs: materialGuideSlugs,
+    take: 3,
+  });
   const readingPath = getMaterialArchiveItems(materials).slice(0, 3);
   const lifeEvents = parseLifeEventsCsv(
     readFileSync("src/lib/sample life events.csv", "utf8"),

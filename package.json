@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:auth": "tsx --test src/lib/user-auth.test.ts",
-    "test:posts": "tsx --test src/lib/post-slug.test.ts src/lib/material-guides.test.ts src/lib/research-files.test.ts",
+    "test:posts": "tsx --test src/lib/post-slug.test.ts src/lib/material-guides.test.ts src/lib/pagination.test.ts src/lib/research-files.test.ts",
     "test:timeline": "tsx --test src/lib/life-events.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

@@ -2,14 +2,15 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { PostStatus } from "@/generated/prisma/enums";
+import { PostStatus, PostType } from "@/generated/prisma/enums";
 import { assertAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { publishedPostsCacheTag } from "@/lib/posts";
+import { getPublishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
 
 export async function createPost(formData: FormData) {
   await assertAdmin();
+  let affectedType: PostType;
 
   try {
     const title = getRequiredString(formData, "title");
@@ -47,6 +48,7 @@ export async function createPost(formData: FormData) {
       throw new Error("이미 사용 중인 슬러그입니다.");
     }
 
+    affectedType = category.postType;
     await prisma.post.create({
       data: {
         title,
@@ -64,13 +66,14 @@ export async function createPost(formData: FormData) {
     throw error;
   }
 
-  revalidatePostPaths();
+  revalidatePostPaths(affectedType);
 
   redirect("/admin/posts");
 }
 
 export async function updatePost(formData: FormData) {
   await assertAdmin();
+  let affectedTypes: PostType[];
 
   try {
     const id = Number(getRequiredString(formData, "id"));
@@ -94,6 +97,7 @@ export async function updatePost(formData: FormData) {
         where: { id },
         select: {
           id: true,
+          type: true,
           publishedAt: true,
         },
       }),
@@ -128,6 +132,7 @@ export async function updatePost(formData: FormData) {
       throw new Error("이미 사용 중인 슬러그입니다.");
     }
 
+    affectedTypes = [post.type, category.postType];
     await prisma.post.update({
       where: { id },
       data: {
@@ -149,13 +154,14 @@ export async function updatePost(formData: FormData) {
     throw error;
   }
 
-  revalidatePostPaths();
+  revalidatePostPaths(...affectedTypes);
 
   redirect("/admin/posts");
 }
 
 export async function archivePost(formData: FormData) {
   await assertAdmin();
+  let affectedType: PostType;
 
   try {
     const id = Number(getRequiredString(formData, "id"));
@@ -164,29 +170,42 @@ export async function archivePost(formData: FormData) {
       throw new Error("유효한 게시글 ID가 필요합니다.");
     }
 
-    await prisma.post.update({
+    const post = await prisma.post.update({
       where: { id },
       data: {
         status: PostStatus.ARCHIVED,
       },
+      select: { type: true },
     });
+    affectedType = post.type;
   } catch (error) {
     logServerError("admin.posts.archive", error);
     throw error;
   }
 
-  revalidatePostPaths();
+  revalidatePostPaths(affectedType);
 
   redirect("/admin/posts");
 }
 
-function revalidatePostPaths() {
-  updateTag(publishedPostsCacheTag);
-  revalidatePath("/");
-  revalidatePath("/notices");
-  revalidatePath("/materials");
-  revalidatePath("/research");
+function revalidatePostPaths(...types: PostType[]) {
+  for (const type of new Set(types)) {
+    updateTag(getPublishedPostsCacheTag(type));
+    revalidatePath(getPublicPostPath(type));
+
+    if (type === PostType.PROMOTION) revalidatePath("/");
+    if (type !== PostType.RESEARCH) {
+      revalidatePath("/topics/[slug]", "page");
+    }
+  }
+
   revalidatePath("/admin/posts");
+}
+
+function getPublicPostPath(type: PostType) {
+  if (type === PostType.NOTICE) return "/notices";
+  if (type === PostType.PROMOTION) return "/materials";
+  return "/research";
 }
 
 function getRequiredString(formData: FormData, key: string) {

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Pagination } from "@/components/site/Pagination";
 import { buttonVariants } from "@/components/ui/button";
 import { PostType } from "@/generated/prisma/enums";
-import { getPublishedPosts } from "@/lib/posts";
+import { parsePageParam } from "@/lib/pagination";
+import { getPublishedPostPage } from "@/lib/posts";
 import { getApprovedResearcher } from "@/lib/researcher-auth";
 
 export const metadata: Metadata = {
@@ -11,8 +13,14 @@ export const metadata: Metadata = {
   description: "연구소 회원들이 공개한 연구 글 목록입니다.",
 };
 
-export default async function ResearchPage() {
-  const posts = await getPublishedPosts(PostType.RESEARCH);
+export default async function ResearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
+  const requestedPage = parsePageParam((await searchParams).page);
+  const { posts, page, totalPages, totalItems, offset } =
+    await getPublishedPostPage(PostType.RESEARCH, requestedPage);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -47,7 +55,7 @@ export default async function ResearchPage() {
                 className="group grid gap-2 px-4 py-4 transition-colors hover:bg-secondary/35 md:min-h-14 md:grid-cols-[72px_minmax(0,1fr)_72px_120px_110px] md:items-center md:gap-0 md:py-3"
               >
                 <span className="hidden text-center text-sm text-muted md:block">
-                  {posts.length - index}
+                  {totalItems - offset - index}
                 </span>
                 <div className="min-w-0">
                   <Link
@@ -86,6 +94,7 @@ export default async function ResearchPage() {
           </div>
         )}
       </section>
+      <Pagination basePath="/research" page={page} totalPages={totalPages} />
     </div>
   );
 }

@@ -1,19 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MaterialArchiveCard } from "@/components/materials/MaterialArchiveCard";
+import { Pagination } from "@/components/site/Pagination";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PostType } from "@/generated/prisma/enums";
-import { getMaterialArchiveItems } from "@/lib/material-guides";
-import { getPublishedPosts } from "@/lib/posts";
+import {
+  getMaterialArchiveItems,
+  materialGuideSlugs,
+} from "@/lib/material-guides";
+import { parsePageParam } from "@/lib/pagination";
+import { getPublishedPostPage } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "홍보자료",
   description: "문선명 연구소 관련 홍보자료 목록입니다.",
 };
 
-export default async function MaterialsPage() {
-  const materials = await getPublishedPosts(PostType.PROMOTION);
+export default async function MaterialsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
+  const requestedPage = parsePageParam((await searchParams).page);
+  const {
+    posts: materials,
+    page,
+    totalPages,
+  } = await getPublishedPostPage(PostType.PROMOTION, requestedPage, {
+    slugs: materialGuideSlugs,
+  });
   const archiveItems = getMaterialArchiveItems(materials);
 
   return (
@@ -109,6 +125,7 @@ export default async function MaterialsPage() {
           </Card>
         )}
       </section>
+      <Pagination basePath="/materials" page={page} totalPages={totalPages} />
     </div>
   );
 }
