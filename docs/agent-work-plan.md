@@ -602,7 +602,7 @@ type LifeEvent = {
 
 ### READY-21. 게시글 데이터 증가 대응
 
-- 상태: `READY`
+- 상태: `DONE`
 - 우선순위: 중간
 - 목적: 게시글 수가 늘어도 목록 요청의 DB I/O·응답 크기·관리 화면 사용성이 선형으로 악화되지 않게 한다.
 - 작업:
@@ -616,6 +616,13 @@ type LifeEvent = {
   - 추천·주제 조회가 필요한 유형·상태·개수 조건을 DB 쿼리에 포함한다.
   - 공지 변경이 무관한 자료·연구 목록까지 재검증하지 않는다.
   - pagination 경계 테스트, `npm run lint`, `npm run build`가 통과한다.
+- 구현 및 검증 결과:
+  - 공개 공지·홍보자료·연구 목록과 관리자 게시글 목록에 안정적인 정렬의 서버 pagination을 적용하고 요청당 목록 조회를 10행으로 제한했다.
+  - 공용 이전·다음 페이지 UI와 잘못되거나 범위를 벗어난 `page` 값 보정을 추가했으며 연구 글 번호는 전체 공개 글 수 기준을 유지한다.
+  - 관리자 목록은 화면에서 사용하는 게시글·카테고리명·작성자명 필드만 명시적으로 조회한다.
+  - 홈 추천 자료와 주제별 공지·자료는 Prisma `where`에 slug·category 조건을 넣고 `take: 3`으로 제한했다.
+  - 공개 캐시 태그와 갱신 경로를 `PostType`별로 분리하고 유형 변경 시 이전·새 유형만 함께 갱신한다.
+  - 첫·중간·마지막 페이지 경계 테스트를 포함한 게시글 테스트 9개, lint/build와 공개 목록 경계·비로그인 관리자 보호 브라우저 점검이 통과했다.
 
 ### READY-22. 프론트엔드·파일 전송 개선
 
@@ -937,6 +944,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-24 | READY-18 | BLOCKED | 전통형 연구 목록, 반응형 상세, private Storage signed upload 기반 PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 검증을 구현함. Prisma validate·generate, 테스트 21개, lint·TypeScript·build와 1280px·390px 화면 점검 통과. | Supabase Storage 환경 변수·private bucket 설정, Production migration 승인·적용과 실제 업로드·다운로드 smoke test 필요 |
 | 2026-08-26 | READY-19 | DONE | 공개 목록을 명시적 Prisma select·첨부 집계로 축소하고 상세와 metadata의 중복 조회, 공지·홍보자료 signed URL 생성, 이미지 검증의 최대 20MiB 전체 다운로드를 제거함. 게시글·자료·파일 테스트 8개, lint/build 통과. | 공개 렌더링·pagination·프론트/파일 개선은 READY-20~22, Production 지표 측정은 WAITING-13 |
 | 2026-08-26 | READY-20 | DONE | Root 인증과 연구자 권한 UI를 동적 경계로 분리하고 공개 게시글 캐시·즉시 태그 무효화를 적용함. 기존 25개 전부 동적이던 빌드에서 공개 경로가 모두 Partial Prerender로 전환됨. 인증 7개·게시글 8개 테스트, lint/build와 주요 공개 경로 브라우저 점검 통과. | Production p50/p95·Function 호출량 비교는 WAITING-13에서 측정 |
+| 2026-08-27 | READY-21 | DONE | 공개·관리 게시글 목록에 서버 pagination과 10행 상한, 안정적인 정렬, 관리자 명시적 select를 적용함. 홈·주제 추천은 DB where/take 3으로 제한하고 PostType별 캐시·경로만 갱신함. pagination 경계 포함 게시글 테스트 9개, lint/build와 브라우저 점검 통과. | 복합 인덱스는 Production EXPLAIN ANALYZE 근거가 생길 때만 추가 |
 
 ## 사용자 결정 기록
 
