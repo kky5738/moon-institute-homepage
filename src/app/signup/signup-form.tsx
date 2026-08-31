@@ -41,11 +41,11 @@ export function SignupForm() {
         aria-live="polite"
         className="mt-6 border border-emerald-200 bg-emerald-50 p-5 text-emerald-950"
       >
-        <h2 className="text-xl font-semibold">관리자 승인 대기 중</h2>
+        <h2 className="text-xl font-semibold">이메일을 확인해주세요</h2>
         <p className="mt-3 text-sm leading-6">{state.message}</p>
         <p className="mt-2 text-sm leading-6">
-          승인 전에는 로그인할 수 없습니다. 승인이 완료된 뒤 가입한 이메일과
-          비밀번호로 로그인해주세요.
+          이메일 확인 전에는 승인 대상에 포함되지 않습니다. 확인 후 관리자
+          승인이 완료되면 가입한 이메일과 비밀번호로 로그인해주세요.
         </p>
         <Link href="/" className={buttonVariants({ className: "mt-5" })}>
           홈페이지로 돌아가기
@@ -136,8 +136,8 @@ export function SignupForm() {
 
       <div className="border border-border bg-background p-4 text-xs leading-5 text-muted">
         <p>
-          이름, 이메일, 비밀번호(해시 형태로 저장)를 가입 신청, 연구원 확인,
-          계정 및 접근권한 관리를 위해 처리합니다. 승인된 회원정보는 탈퇴
+          이름과 이메일을 가입 신청, 연구원 확인, 계정 및 접근권한 관리를 위해
+          처리하며 비밀번호는 Supabase Auth가 관리합니다. 승인된 회원정보는 탈퇴
           시까지, 승인되지 않은 신청정보는 신청일부터 30일간 보관한 뒤
           삭제합니다. 필수정보 수집에 동의하지 않으면 회원가입을 신청할 수
           없습니다.
@@ -161,8 +161,7 @@ export function SignupForm() {
       </div>
 
       <p className="text-xs leading-5 text-muted">
-        현재 이메일 인증과 비밀번호 재설정은 제공하지 않습니다. 계정 관련
-        도움이 필요하면 문의 페이지를 이용해주세요.
+        가입 후 이메일 확인을 완료해야 관리자 승인을 받을 수 있습니다.
       </p>
 
       {state.message ? (

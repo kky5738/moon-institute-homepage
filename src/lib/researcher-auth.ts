@@ -8,6 +8,7 @@ const userSelect = {
   id: true,
   name: true,
   email: true,
+  supabaseAuthId: true,
   role: true,
   status: true,
 } as const;
@@ -37,11 +38,15 @@ export async function getApprovedResearcher() {
   try {
     const session = await auth();
     const id = Number(session?.user?.id);
+    const sessionVersion = session?.user?.sessionVersion;
 
     if (
       session?.user?.role !== "RESEARCHER" ||
       !Number.isInteger(id) ||
-      id < 1
+      id < 1 ||
+      typeof sessionVersion !== "number" ||
+      !Number.isInteger(sessionVersion) ||
+      sessionVersion < 0
     ) {
       return null;
     }
@@ -51,6 +56,9 @@ export async function getApprovedResearcher() {
         id,
         role: UserRole.RESEARCHER,
         status: UserStatus.APPROVED,
+        sessionVersion,
+        emailVerifiedAt: { not: null },
+        supabaseAuthId: { not: null },
       },
       select: userSelect,
     });

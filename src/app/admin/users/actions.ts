@@ -17,10 +17,28 @@ export async function updateUserStatus(formData: FormData) {
   }
 
   try {
-    await prisma.user.update({
-      where: { id },
-      data: { status, statusChangedAt: new Date() },
-    });
+    if (status === UserStatus.APPROVED) {
+      const result = await prisma.user.updateMany({
+        where: {
+          id,
+          supabaseAuthId: { not: null },
+          emailVerifiedAt: { not: null },
+        },
+        data: { status, statusChangedAt: new Date() },
+      });
+      if (result.count !== 1) {
+        throw new Error("이메일 확인이 완료된 회원만 승인할 수 있습니다.");
+      }
+    } else {
+      await prisma.user.update({
+        where: { id },
+        data: {
+          status,
+          statusChangedAt: new Date(),
+          sessionVersion: { increment: 1 },
+        },
+      });
+    }
   } catch (error) {
     logServerError("admin.users.updateStatus", error);
     throw error;

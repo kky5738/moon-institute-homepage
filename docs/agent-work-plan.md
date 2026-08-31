@@ -648,6 +648,41 @@ type LifeEvent = {
   - 파일당 20MiB 상한과 순차 업로드는 유지했다. Pro 이상 전용인 Supabase Image Transformations와 별도 서버 이미지 가공 서비스는 추가하지 않았다.
   - 타임라인·게시글 관련 테스트 15개, lint/build, 반응형 이미지 정적 렌더와 1280px·390px 홈·연구 상세 화면 점검이 통과했다.
 
+### READY-23. Supabase Auth 이메일 확인·비밀번호 재설정 도입
+
+- 상태: `DONE`
+- 우선순위: 높음
+- 목적: 연구자 계정의 비밀번호 처리를 Supabase Auth로 이전하고 이메일 소유 확인을 관리자 승인보다 먼저 강제한다.
+- 확정된 범위:
+  - 초기 발송은 Supabase Auth에 등록된 Gmail Custom SMTP를 사용한다. 애플리케이션에 Gmail 전용 발송 코드나 SMTP 비밀값을 추가하지 않는다.
+  - 공식 도메인 구매 후 Supabase Auth의 SMTP·발신자와 Site URL·redirect URL 설정만 교체할 수 있게 한다.
+  - 연구자 이메일·비밀번호 인증만 이전하고 기존 환경변수 기반 관리자 로그인은 유지한다.
+  - Supabase Auth는 이메일 소유권과 비밀번호의 기준, 애플리케이션 `User.role`·`User.status`는 권한과 관리자 승인의 기준으로 사용한다.
+- 작업:
+  - `User`에 Supabase Auth 사용자 ID, 이메일 확인 시각, 세션 버전을 연결하고 기존 `passwordHash`를 단계적으로 제거할 수 있는 Prisma migration을 만든다.
+  - 회원가입을 Supabase Auth 가입·확인 메일 발송으로 변경하고, 확인 callback이 성공한 뒤에만 관리자 승인 대상이 되게 한다.
+  - 연구자 로그인은 Supabase Auth 비밀번호 검증 후 이메일 확인과 애플리케이션 승인 상태를 모두 검사한다.
+  - 로그인 화면에 비밀번호 재설정 요청 화면과 callback 기반 새 비밀번호 설정 화면을 추가한다.
+  - 등록 여부와 발송 성공 여부를 구분하지 않는 공통 응답, 비밀번호 15~128자 정책, Supabase Auth rate limit을 유지한다.
+  - 비밀번호 변경 시 세션 버전을 올려 기존 연구자 세션을 무효화하고 토큰·전체 링크·비밀번호를 로그에 남기지 않는다.
+  - Gmail SMTP 설정은 코드에서 읽거나 복제하지 않고 Supabase Dashboard 설정을 운영 기준으로 문서화한다.
+- 완료 조건:
+  - 이메일 확인 전 계정은 관리자 승인과 회원 전용 기능 접근 대상이 아니다.
+  - 확인 완료 후 관리자 승인을 받은 연구자만 로그인할 수 있다.
+  - 등록·미등록 이메일의 재설정 요청 응답이 같고 유효한 링크로 비밀번호를 한 번 변경할 수 있다.
+  - 새 비밀번호 설정 후 이전 비밀번호와 기존 연구자 세션을 사용할 수 없다.
+  - 애플리케이션 DB와 로그에 새 비밀번호 원문·Supabase 토큰·전체 재설정 링크가 남지 않는다.
+  - Prisma migration, 관련 인증 테스트, `npm run lint`, `npm run build`가 통과한다.
+- Production 적용 제한:
+  - 운영 DB migration, 기존 연구자 계정 전환 메일 발송, Supabase Auth Production redirect URL 변경과 배포는 `WAITING-12` 승인 전 수행하지 않는다.
+- 구현 및 검증 결과:
+  - 연구자 가입·로그인을 Supabase Auth에 연결하고 `supabaseAuthId`, `emailVerifiedAt`, `sessionVersion`, nullable `passwordHash` migration을 추가했다. 환경변수 관리자 로그인은 유지했다.
+  - 확인 토큰을 URL fragment에서 즉시 제거한 뒤 서버에서 검증하며, 확인된 계정만 관리자 승인 버튼과 승인 Server Action을 통과하게 했다.
+  - 등록 여부와 발송 결과를 구분하지 않는 재설정 요청 화면, 15~128자 새 비밀번호 화면, 1회용 recovery 토큰 검증을 구현했다.
+  - 비밀번호 변경과 계정 비활성화 때 세션 버전을 올려 기존 Auth.js 연구자 세션의 권한을 즉시 거부하게 했다. 새 비밀번호와 토큰은 애플리케이션 DB·로그에 저장하지 않는다.
+  - Gmail SMTP 비밀값은 코드에 추가하지 않았고 Supabase Dashboard의 Confirm Email, 정확한 redirect URL, fragment 기반 이메일 템플릿, 1,800초 만료와 rate limit 설정을 배포 점검표에 기록했다.
+  - Prisma validate/generate, 인증 7개·게시글 9개·타임라인 6개 테스트, lint/build가 통과했다. 로컬 브라우저에서 로그인·재설정 화면과 토큰 누락 안전 실패, URL fragment 제거, 콘솔 오류 없음을 확인했다.
+
 ## 의사결정 또는 승인이 필요한 일
 
 ### WAITING-01. 공식 콘텐츠 반영
@@ -774,17 +809,17 @@ type LifeEvent = {
 - 승인 후 작업:
   - Next.js metadata, sitemap, robots, Open Graph 정보를 실제 운영 값으로 구현한다.
 
-### WAITING-10. 이메일 소유권·회원가입 신청·승인 결과 알림 수단 결정
+### WAITING-10. 회원가입 신청·승인 결과 알림 수단 결정
 
 - 상태: `WAITING`
 - 우선순위: 높음
 - 보류 이유:
-  - Supabase Auth 사용은 승인되었으나 실제 수신자, 발신 이메일, SMTP 계정 및 비밀값 설정이 정해지지 않았다.
-  - 기존 `User`와 Supabase Auth 사용자를 연결하기 위한 데이터 모델 변경과 운영 DB migration 승인이 필요하다.
+  - 이메일 확인과 비밀번호 재설정용 Gmail Custom SMTP는 등록되었으나 관리자 알림 수신자와 승인 결과 문구가 정해지지 않았다.
   - 개인정보가 외부 메시지 서비스로 전달되지 않도록 알림 본문 범위를 먼저 확정해야 한다.
 - 확정된 방향:
   - 이메일·비밀번호 인증은 Supabase Auth로 통합한다.
   - 이메일 소유권 확인을 관리자 승인보다 먼저 완료한다.
+  - 이메일 확인과 비밀번호 재설정 구현은 관리자 알림과 분리해 `READY-23`에서 진행한다.
   - 이메일 확인과 관리자 승인이 모두 끝나기 전에는 회원 전용 기능에 접근할 수 없다.
   - 애플리케이션의 `User.role`과 `User.status`는 권한과 승인 상태의 기준으로 유지한다.
 - 현재 동작:
@@ -820,16 +855,13 @@ type LifeEvent = {
   - Supabase URL·공개 키와 서버 전용 키, SMTP 비밀값, 발신자 정보는 공개 범위에 맞춰 분리하고 서버 전용 비밀값은 Production 환경 변수로 관리한다.
   - 알림 이력 테이블, 재시도 큐, 여러 채널 동시 발송은 만들지 않는다.
 - 필요한 결정:
-  1. Supabase Auth와 승인 결과 알림에 사용할 SMTP 제공자
-  2. 이메일 확인 링크의 유효시간
-  3. 관리자 알림 수신 이메일과 신청자에게 표시할 발신자
-  4. 확인·승인·비활성화 결과 안내 문구
-  5. 서비스 계정 생성 및 비밀 키 등록 담당자
+  1. 관리자 알림 수신 이메일
+  2. 승인·비활성화 결과 안내 문구
+  3. 신청자에게 표시할 발신자 이름
 - 필요한 승인:
-  - `User`와 Supabase Auth 사용자 ID 연결 및 기존 자체 비밀번호 해시 제거를 위한 Prisma 모델과 migration
-  - Supabase Auth 활성화, 이메일 확인 설정, redirect URL 허용 목록, SMTP와 Production 비밀값 등록
+  - 관리자 알림과 승인 결과 메일 발송을 Production에서 활성화
 - 결정 후 상태 변경:
-  - 위 다섯 항목이 정해지고 데이터 모델 변경과 Supabase Auth Production 설정이 승인되면 `READY`로 전환한다.
+  - 위 세 항목과 Production 발송이 승인되면 별도 `READY` 작업으로 전환한다.
 
 ### WAITING-11. 개인정보처리방침 동의 시점과 재동의 방식 결정
 
@@ -853,10 +885,13 @@ type LifeEvent = {
 - 결정 후 상태 변경:
   - 동의 시점과 재동의 정책, 개인정보처리방침 필수 정보가 확정되면 `READY`로 전환한다.
 
-### WAITING-12. Supabase Auth 비밀번호 재설정 통합
+### WAITING-12. Supabase Auth Production 전환 승인
 
 - 상태: `WAITING`
 - 우선순위: 높음
+- 현재 구분:
+  - Gmail Custom SMTP를 사용하는 코드 구현은 `READY-23`으로 전환했다.
+  - 이 항목은 운영 DB migration, 기존 사용자 전환 메일, Production redirect URL과 배포 승인만 추적한다.
 - 확정된 방향:
   - 현재 자체 이메일·비밀번호 인증을 Supabase Auth로 교체한다.
   - 이메일 확인과 비밀번호 재설정은 Supabase Auth의 동일한 인증 사용자와 메일 설정을 사용한다.
@@ -887,11 +922,10 @@ type LifeEvent = {
   - 재발송 대기시간: 계정별 최소 60초와 Supabase Auth rate limit 적용
   - 응답: 계정 존재 여부와 발송 성공 여부를 구분하지 않는 공통 문구
 - 필요한 입력 및 승인:
-  1. 사용할 SMTP 제공자와 Supabase Auth에서의 사용 가능 여부
-  2. Supabase Auth의 Site URL, redirect URL, 이메일 템플릿, SMTP 설정 담당자
-  3. `User`와 Supabase Auth 사용자 연결 및 기존 사용자 전환 migration의 Production DB 적용 승인
-  4. 기존 사용자는 비밀번호 해시를 이전하지 않고 초대 또는 재설정 메일로 새 비밀번호를 설정한다는 운영 승인
-  5. Supabase Auth의 기존 세션 무효화 방식과 관리자 계정 전환 범위 확정
+  1. Production Site URL과 redirect URL 허용 목록
+  2. `User`와 Supabase Auth 사용자 연결 및 기존 사용자 전환 migration의 Production DB 적용 승인
+  3. 기존 사용자는 비밀번호 해시를 이전하지 않고 재설정 메일로 새 비밀번호를 설정한다는 운영 승인
+  4. 기존 사용자 전환 메일 발송 시점
 - 완료 조건:
   - 등록 이메일과 미등록 이메일 요청이 화면과 응답 시간에서 계정 존재 여부를 드러내지 않는다.
   - 유효한 링크로 한 번만 비밀번호를 변경할 수 있고 만료·재사용·변조 토큰은 거부된다.
@@ -900,7 +934,7 @@ type LifeEvent = {
   - 이메일 미확인 계정은 관리자 승인과 회원 전용 기능 접근 대상이 되지 않는다.
   - 관련 인증 테스트, `npm run lint`, `npm run build`가 통과한다.
 - 결정 후 상태 변경:
-  - SMTP 제공자, Supabase Auth Production 설정, 기존 사용자 전환 범위와 DB migration 승인이 확정되면 `READY`로 전환한다.
+  - 구현은 `READY-23`에서 진행하고, 위 네 항목이 확정되면 Production 전환 작업을 별도 `READY`로 만든다.
 
 ### WAITING-13. Production 성능 운영 측정
 
@@ -974,3 +1008,4 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-18 | WAITING-12 | 초기 운영에서는 개인 이메일 계정의 SMTP로 비밀번호 초기화 링크를 발송하고, 공식 도메인 구매 후 환경변수와 DNS 설정으로 발신 계정을 전환 | 비밀번호 초기화 화면·토큰 모델·메일 발송, Vercel Production 환경변수와 향후 공식 도메인 전환 |
 | 2026-08-18 | WAITING-10, WAITING-12 | 기존 자체 인증·재설정 토큰 구현 결정을 철회하고 Supabase Auth를 도입하며, 이메일 소유 확인을 관리자 승인보다 먼저 완료하고 비밀번호 재설정도 Supabase Auth로 통합 | Supabase Auth 사용자와 애플리케이션 `User` 연결, 확인 후 승인 흐름, 재설정, 기존 사용자 전환, SMTP·redirect URL·Production 설정 |
 | 2026-08-24 | READY-18 | Supabase Auth를 기다리지 않고 현재 인증의 서버 권한 검사와 Supabase Storage signed URL을 사용해 연구 글 파일 업로드를 먼저 구현 | 전통형 연구 목록, 반응형 상세, PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 제한; 드래그앤드롭·미리보기·진행률·범용 리치 텍스트 제외 |
+| 2026-08-31 | WAITING-10, WAITING-12 | 공식 도메인 구매 전에는 Supabase Auth에 등록한 Gmail Custom SMTP로 이메일 확인과 비밀번호 재설정을 구현하고, 공식 도메인 구매 후 SMTP·발신자·Site URL·redirect URL 설정을 교체 | 코드 구현은 `READY-23`; 관리자 승인 결과 알림과 Production migration·기존 사용자 전환은 기존 WAITING 항목 유지 |

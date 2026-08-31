@@ -17,8 +17,8 @@ export default function SignupPage() {
           회원가입
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted">
-          가입 신청은 연구자 권한의 승인 대기 상태로 등록됩니다. 관리자 승인
-          후 로그인할 수 있습니다.
+          이메일 소유 확인을 마치면 관리자 승인 대상으로 등록됩니다. 승인 후
+          로그인할 수 있습니다.
         </p>
 
         <SignupForm />

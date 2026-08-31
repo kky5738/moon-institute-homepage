@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { UserRole, UserStatus } from "@/generated/prisma/enums";
-import { hashPassword, verifyPassword } from "@/lib/password";
 import {
   canResearcherSignIn,
   getAuthNavigation,
   getPostLoginPath,
   isLoginPassword,
+  isValidAuthTokenHash,
+  parseNewPasswordInput,
   parseSignupInput,
 } from "@/lib/user-auth";
 
@@ -39,9 +40,18 @@ test("signup applies researcher and pending defaults", () => {
 });
 
 test("only approved researchers can sign in", () => {
-  assert.equal(canResearcherSignIn(UserStatus.PENDING), false);
-  assert.equal(canResearcherSignIn(UserStatus.APPROVED), true);
-  assert.equal(canResearcherSignIn(UserStatus.DISABLED), false);
+  const verified = {
+    status: UserStatus.APPROVED,
+    supabaseAuthId: "11111111-1111-1111-1111-111111111111",
+    emailVerifiedAt: new Date(),
+  };
+  assert.equal(canResearcherSignIn(verified), true);
+  assert.equal(
+    canResearcherSignIn({ ...verified, status: UserStatus.PENDING }),
+    false,
+  );
+  assert.equal(canResearcherSignIn({ ...verified, emailVerifiedAt: null }), false);
+  assert.equal(canResearcherSignIn({ ...verified, supabaseAuthId: null }), false);
 });
 
 test("password length boundaries allow any character composition", () => {
@@ -91,14 +101,11 @@ test("password mismatch identifies only the confirmation field", () => {
   });
 });
 
-test("passwords use salted one-way hashes", async () => {
-  const password = "safe-password-1234";
-  const first = await hashPassword(password);
-  const second = await hashPassword(password);
-
-  assert.notEqual(first, second);
-  assert.equal(first.includes(password), false);
-  assert.equal(await verifyPassword(password, first), true);
-  assert.equal(await verifyPassword("wrong-password-1234", first), false);
-  assert.equal(await verifyPassword(password, "malformed"), false);
+test("password reset validates password and token boundaries", () => {
+  assert.equal(parseNewPasswordInput("x".repeat(15), "x".repeat(15)).ok, true);
+  assert.equal(parseNewPasswordInput("x".repeat(14), "x".repeat(14)).ok, false);
+  assert.equal(parseNewPasswordInput("x".repeat(15), "y".repeat(15)).ok, false);
+  assert.equal(isValidAuthTokenHash("a".repeat(20)), true);
+  assert.equal(isValidAuthTokenHash("a".repeat(19)), false);
+  assert.equal(isValidAuthTokenHash(`a${"b".repeat(20)} c`), false);
 });

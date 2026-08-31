@@ -1,15 +1,26 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
+import {
+  getAuthRedirectUrl,
+  getSupabaseAuthAdminClient,
+  getSupabaseAuthClient,
+} from "@/lib/supabase-auth";
 import { parseSignupInput, type SignupField } from "@/lib/user-auth";
 
 export type SignupFormState = {
   status: "idle" | "success" | "error";
   field: SignupField | null;
   message: string;
+};
+
+const signupSuccess: SignupFormState = {
+  status: "success",
+  field: null,
+  message:
+    "확인 메일을 보냈습니다. 이메일 확인을 마치면 관리자 승인 대상으로 등록됩니다.",
 };
 
 export async function createUser(
@@ -32,14 +43,38 @@ export async function createUser(
     };
   }
 
+  let supabaseAuthId: string | null = null;
+
   try {
-    const passwordHash = await hashPassword(parsed.data.password);
+    const existingUser = await prisma.user.findUnique({
+      where: { email: parsed.data.email },
+      select: { id: true },
+    });
+    if (existingUser) return signupSuccess;
+
+    const { data, error } = await getSupabaseAuthClient().auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: {
+        data: { name: parsed.data.name },
+        emailRedirectTo: getAuthRedirectUrl("/auth/confirm"),
+      },
+    });
+
+    if (error || !data.user) {
+      throw new Error("Supabase Auth signup failed.", { cause: error });
+    }
+
+    supabaseAuthId = data.user.id;
+    if (data.session || data.user.email_confirmed_at) {
+      throw new Error("Supabase Auth email confirmation is disabled.");
+    }
 
     await prisma.user.create({
       data: {
         name: parsed.data.name,
         email: parsed.data.email,
-        passwordHash,
+        supabaseAuthId,
         role: parsed.data.role,
         status: parsed.data.status,
       },
@@ -47,12 +82,13 @@ export async function createUser(
 
     revalidatePath("/admin/users");
 
-    return {
-      status: "success",
-      field: null,
-      message: "가입 신청이 접수되었습니다. 관리자 승인 후 로그인할 수 있습니다.",
-    };
+    return signupSuccess;
   } catch (error) {
+    if (supabaseAuthId) {
+      const { error: rollbackError } =
+        await getSupabaseAuthAdminClient().auth.admin.deleteUser(supabaseAuthId);
+      if (rollbackError) logServerError("users.signup.rollback", rollbackError);
+    }
     logServerError("users.signup", error);
 
     return {

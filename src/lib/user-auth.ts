@@ -38,24 +38,8 @@ export function parseSignupInput(input: SignupInput) {
     };
   }
 
-  if (
-    password.length < minimumPasswordLength ||
-    password.length > maximumPasswordLength
-  ) {
-    return {
-      ok: false as const,
-      field: "password" as const,
-      message: "비밀번호는 15~128자로 입력해주세요.",
-    };
-  }
-
-  if (password !== passwordConfirmation) {
-    return {
-      ok: false as const,
-      field: "passwordConfirmation" as const,
-      message: "비밀번호 확인이 일치하지 않습니다.",
-    };
-  }
+  const parsedPassword = parseNewPasswordInput(password, passwordConfirmation);
+  if (!parsedPassword.ok) return parsedPassword;
 
   if (input.privacyConsent !== true) {
     return {
@@ -77,6 +61,45 @@ export function parseSignupInput(input: SignupInput) {
   };
 }
 
+export function parseNewPasswordInput(
+  passwordValue: unknown,
+  confirmationValue: unknown,
+) {
+  const password = typeof passwordValue === "string" ? passwordValue : "";
+  const passwordConfirmation =
+    typeof confirmationValue === "string" ? confirmationValue : "";
+
+  if (
+    password.length < minimumPasswordLength ||
+    password.length > maximumPasswordLength
+  ) {
+    return {
+      ok: false as const,
+      field: "password" as const,
+      message: "비밀번호는 15~128자로 입력해주세요.",
+    };
+  }
+
+  if (password !== passwordConfirmation) {
+    return {
+      ok: false as const,
+      field: "passwordConfirmation" as const,
+      message: "비밀번호 확인이 일치하지 않습니다.",
+    };
+  }
+
+  return { ok: true as const, password };
+}
+
+export function isValidAuthTokenHash(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length >= 20 &&
+    value.length <= 512 &&
+    !/\s/.test(value)
+  );
+}
+
 export function normalizeEmail(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
@@ -85,8 +108,16 @@ export function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-export function canResearcherSignIn(status: UserStatus) {
-  return status === UserStatus.APPROVED;
+export function canResearcherSignIn(user: {
+  status: UserStatus;
+  supabaseAuthId: string | null;
+  emailVerifiedAt: Date | null;
+}) {
+  return (
+    user.status === UserStatus.APPROVED &&
+    Boolean(user.supabaseAuthId) &&
+    Boolean(user.emailVerifiedAt)
+  );
 }
 
 export function isLoginPassword(value: unknown): value is string {

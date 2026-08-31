@@ -23,6 +23,7 @@ export default async function AdminUsersPage() {
         id: true,
         name: true,
         email: true,
+        emailVerifiedAt: true,
         status: true,
         statusChangedAt: true,
         createdAt: true,
@@ -42,8 +43,8 @@ export default async function AdminUsersPage() {
           회원 관리
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
-          가입 신청은 승인 전까지 로그인할 수 없습니다. 비활성화하면 기존
-          연구자도 계정 화면과 로그인을 이용할 수 없습니다.
+          이메일 확인이 끝난 신청만 승인할 수 있습니다. 비활성화하면 기존
+          연구자 세션과 로그인을 이용할 수 없습니다.
         </p>
       </div>
 
@@ -70,16 +71,27 @@ export default async function AdminUsersPage() {
                   <dd className="inline">{formatDate(user.createdAt)}</dd>
                 </div>
                 <div>
+                  <dt className="inline font-semibold">이메일 확인: </dt>
+                  <dd className="inline">
+                    {user.emailVerifiedAt ? formatDate(user.emailVerifiedAt) : "미확인"}
+                  </dd>
+                </div>
+                <div>
                   <dt className="inline font-semibold">상태 변경: </dt>
                   <dd className="inline">{formatDate(user.statusChangedAt)}</dd>
                 </div>
               </dl>
 
               <div className="flex flex-wrap items-start gap-2 md:justify-end">
-                {user.status !== UserStatus.APPROVED ? (
+                {user.status !== UserStatus.APPROVED && user.emailVerifiedAt ? (
                   <StatusButton id={user.id} status={UserStatus.APPROVED}>
                     승인
                   </StatusButton>
+                ) : null}
+                {user.status !== UserStatus.APPROVED && !user.emailVerifiedAt ? (
+                  <span className="px-3 py-1.5 text-xs font-semibold text-muted">
+                    이메일 확인 대기
+                  </span>
                 ) : null}
                 {user.status !== UserStatus.DISABLED ? (
                   <StatusButton id={user.id} status={UserStatus.DISABLED}>

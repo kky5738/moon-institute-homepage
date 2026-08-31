@@ -49,7 +49,7 @@ export default async function AccountPage() {
       <Card className="mt-6 rounded-none border-red-200 bg-red-50 p-6">
         <h2 className="text-lg font-semibold text-red-900">회원 탈퇴</h2>
         <p className="mt-3 text-sm leading-6 text-red-800">
-          탈퇴하면 이름, 이메일, 비밀번호 해시와 계정 상태가 즉시 삭제되며
+          탈퇴하면 이름, 이메일, Supabase Auth 인증정보와 계정 상태가 즉시 삭제되며
           복구할 수 없습니다. 임시저장 글은 삭제되고 공개한 글은 작성자
           개인정보 없이 보존됩니다.
         </p>

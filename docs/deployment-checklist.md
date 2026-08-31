@@ -123,21 +123,34 @@ Current production rendering notes:
 
 ## 6. Auth
 
-- Admin login uses Auth.js credentials with a single account.
-- `/admin` routes require an authenticated session.
-- Server Actions that mutate posts also check the session server-side.
-- Auth environment variables are validated at runtime startup. Missing `AUTH_SECRET`, `ADMIN_USERNAME`, or `ADMIN_PASSWORD` should appear in Vercel Runtime Logs as `[server-error] env.missing-required`.
-- If neither `AUTH_URL` nor `NEXTAUTH_URL` is set outside Vercel, the app logs `[env-warning]` so host inference can be checked.
-- Rotate `AUTH_SECRET` only with care because it invalidates existing sessions.
-- Change `ADMIN_PASSWORD` before exposing the deployment.
-- Credentials are read from environment variables. No administrator secret should be committed.
-- The current MVP intentionally avoids OAuth and database-backed user accounts to keep one-person operation simple.
+Application boundary:
+
+- The single administrator still uses Auth.js and `ADMIN_USERNAME`/`ADMIN_PASSWORD`; researcher email ownership and passwords use Supabase Auth.
+- A researcher needs both a confirmed Supabase email and application `User.status = APPROVED`. The administrator cannot approve an unconfirmed email.
+- Password reset increments `User.sessionVersion`, so existing Auth.js researcher sessions stop authorizing on their next request.
+- `/admin`, researcher mutations, and resource ownership checks remain enforced server-side.
+- Keep `SUPABASE_SECRET_KEY`, SMTP credentials, Auth tokens, passwords, and complete confirmation/reset links out of browser code and logs.
+
+Supabase Dashboard setup before an environment is enabled:
+
+1. In Authentication > Providers > Email, enable email/password sign-up and turn **Confirm email** on. Keep the application and Dashboard minimum password length at 15 or stricter.
+2. In Authentication > URL Configuration, set Site URL to the exact current deployment origin. Add only the exact `/auth/confirm` and `/reset-password` URLs for that origin; do not use a Production wildcard. Add exact localhost URLs only to a development project.
+3. In Authentication > Email Templates, set the confirmation link to `<a href="{{ .RedirectTo }}#token_hash={{ .TokenHash }}&amp;type=email">이메일 확인</a>` and the recovery link to `<a href="{{ .RedirectTo }}#token_hash={{ .TokenHash }}&amp;type=recovery">비밀번호 재설정</a>`.
+4. In Authentication > SMTP Settings, keep the temporary Gmail Custom SMTP sender configured only in Supabase. After buying the domain, replace the SMTP sender and Site/redirect URLs there; application code and environment variables do not change.
+5. In Authentication settings, set email OTP/link expiry to 1,800 seconds. In Authentication > Rate Limits, verify the 60-second per-user signup and password recovery limits and choose a project-wide email limit that fits the Gmail quota. Enable CAPTCHA before public traffic if signup/reset abuse appears.
+
+Release order:
+
+- Apply `20260831000000_add_supabase_auth` only after the Dashboard settings above are complete.
+- Convert existing researchers to Supabase Auth and populate `supabaseAuthId`/`emailVerifiedAt` before deploying code that removes legacy password login. Do not send conversion mail or apply the Production migration before `WAITING-12` approval.
+- Set `AUTH_URL` to the exact temporary Vercel origin now, then replace it and the Supabase Site/redirect URLs together when the official domain is ready.
+- Rotate `AUTH_SECRET` only with care because it invalidates all Auth.js sessions. Change `ADMIN_PASSWORD` before exposing the deployment.
 
 ## 7. Server and Client Component Check
 
-- The current app does not define broad Client Component boundaries with `"use client"`.
+- Client Component boundaries are limited to interactive forms, the auth fragment consumers, uploads, and timeline interaction.
 - Database access stays in Server Components, Server Actions, or server-only helpers.
-- Forms use Server Actions, so they work with progressive enhancement and do not require client state for submission.
+- Most forms use Server Actions with progressive enhancement. Email confirmation and password change require JavaScript because one-time tokens are read from URL fragments so access logs do not receive them.
 - No browser-only APIs such as `window`, `document`, or `localStorage` are used in Server Components.
 - Hydration risk is low because the rendered UI does not depend on client-only time, random values, or browser state.
 - Dates displayed from posts are formatted on the server from persisted database timestamps.
@@ -188,6 +201,10 @@ After deployment, check:
 - `/materials` lists promotion materials.
 - `/contact` loads and can submit a minimal inquiry.
 - `/login` loads.
+- `/signup` sends a confirmation email and an unconfirmed account cannot be approved.
+- A confirmed, approved researcher can log in; pending or disabled researchers cannot.
+- `/forgot-password` returns the same message for registered and unregistered addresses.
+- A valid recovery link changes the password once and invalidates an existing researcher session.
 - Unauthenticated `/admin` redirects to `/login`.
 - Admin login succeeds with Vercel environment credentials.
 - `/admin/posts/new` can create a draft post.

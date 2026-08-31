@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; verified?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, verified } = await searchParams;
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-5 py-14">
@@ -32,6 +32,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {error ? (
           <p id="login-error" role="alert" className="mt-5 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             아이디 또는 이메일과 비밀번호를 확인해주세요.
+          </p>
+        ) : null}
+
+        {verified === "1" ? (
+          <p role="status" className="mt-5 border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+            이메일 확인이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.
           </p>
         ) : null}
 
@@ -75,6 +81,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             로그인
           </Button>
         </form>
+
+        <p className="mt-4 text-center text-sm">
+          <Link href="/forgot-password" className="font-semibold text-primary hover:underline">
+            비밀번호를 잊으셨나요?
+          </Link>
+        </p>
 
         <p className="mt-5 text-center text-sm text-muted">
           아직 계정이 없나요?{" "}

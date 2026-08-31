@@ -1,9 +1,9 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { validateAuthEnvironment } from "@/lib/env";
-import { verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
+import { getSupabaseAuthClient } from "@/lib/supabase-auth";
 import {
   canResearcherSignIn,
   isValidEmail,
@@ -30,6 +30,7 @@ export const {
       if (user) {
         token.userId = user.id;
         token.role = user.role;
+        token.sessionVersion = user.sessionVersion ?? 0;
       }
 
       return token;
@@ -38,6 +39,8 @@ export const {
       if (session.user) {
         session.user.id = typeof token.userId === "string" ? token.userId : "";
         session.user.role = token.role === "ADMIN" ? "ADMIN" : "RESEARCHER";
+        session.user.sessionVersion =
+          typeof token.sessionVersion === "number" ? token.sessionVersion : 0;
       }
 
       return session;
@@ -72,6 +75,7 @@ export const {
             id: "admin",
             name: "관리자",
             role: "ADMIN",
+            sessionVersion: 0,
           };
         }
 
@@ -82,31 +86,51 @@ export const {
         }
 
         try {
+          const { data, error } = await getSupabaseAuthClient().auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error || !data.user?.email_confirmed_at) {
+            return null;
+          }
+
           const user = await prisma.user.findUnique({
-            where: { email },
+            where: { supabaseAuthId: data.user.id },
             select: {
               id: true,
               name: true,
               email: true,
-              passwordHash: true,
+              supabaseAuthId: true,
+              emailVerifiedAt: true,
+              sessionVersion: true,
               role: true,
               status: true,
             },
           });
 
-          if (
-            !user ||
-            !canResearcherSignIn(user.status) ||
-            !(await verifyPassword(password, user.passwordHash))
-          ) {
+          if (!user || user.email !== email) {
             return null;
           }
+
+          const emailVerifiedAt =
+            user.emailVerifiedAt ?? new Date(data.user.email_confirmed_at);
+
+          if (!user.emailVerifiedAt) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { emailVerifiedAt },
+            });
+          }
+
+          if (!canResearcherSignIn({ ...user, emailVerifiedAt })) return null;
 
           return {
             id: String(user.id),
             name: user.name,
             email: user.email,
             role: user.role,
+            sessionVersion: user.sessionVersion,
           };
         } catch (error) {
           logServerError("auth.researcher.authorize", error);
