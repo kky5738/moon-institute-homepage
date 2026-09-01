@@ -58,30 +58,6 @@ export const heroSlides = [
   },
 ];
 
-export const videoContentItems = [
-  {
-    title: "연구소 소개",
-    description:
-      "연구소의 취지, 운영 방향, 향후 공개 일정을 차분하게 안내하는 소개 영상 영역입니다.",
-    meta: "기획",
-    length: "03:00",
-  },
-  {
-    title: "자료 해설",
-    description:
-      "공개 자료의 배경과 읽는 순서를 짧게 설명해 처음 방문한 사람도 맥락을 잡을 수 있게 합니다.",
-    meta: "준비",
-    length: "05:00",
-  },
-  {
-    title: "활동 기록",
-    description:
-      "강연, 모임, 자료 소개 등 출범 전후 활동을 기록형 콘텐츠로 축적할 예정입니다.",
-    meta: "예정",
-    length: "기록",
-  },
-];
-
 export const participationItems = [
   "문의 접수",
   "참여 신청",

@@ -1,11 +1,6 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { videoContentItems } from "@/lib/site-content";
-
-const featuredVideo = videoContentItems[0];
-const subVideos = videoContentItems.slice(1);
 
 export function VideoContentSection() {
   return (
@@ -36,82 +31,16 @@ export function VideoContentSection() {
           </Link>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-          <Card className="group overflow-hidden transition-shadow hover:shadow-[var(--shadow-elegant)] lg:col-span-2">
-            <div className="relative aspect-video bg-gradient-to-br from-primary-dark via-primary to-accent-purple lg:aspect-[3/1]">
-              <div className="absolute inset-0 bg-black/10" />
-              <div className="absolute inset-0 grid place-items-center">
-                <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 shadow-xl transition-transform group-hover:scale-105 sm:h-20 sm:w-20">
-                  <span
-                    className="ml-1 h-0 w-0 border-y-[12px] border-l-[18px] border-y-transparent border-l-primary-dark"
-                    aria-hidden="true"
-                  />
-                </span>
-              </div>
-              <Badge variant="gold" className="absolute left-4 top-4 bg-gold/90 text-primary-dark">
-                {featuredVideo.meta}
-              </Badge>
-              <span className="absolute bottom-4 right-4 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur">
-                {featuredVideo.length}
-              </span>
-            </div>
-            <div className="p-5 sm:p-6 lg:p-5">
-              <h3 className="text-xl font-semibold text-foreground sm:text-2xl">
-                {featuredVideo.title}
-              </h3>
-              <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-                {featuredVideo.description}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link
-                  href="/materials"
-                  className={buttonVariants()}
-                >
-                  자료 해설 보기
-                </Link>
-                <Link
-                  href="/topics"
-                  className={buttonVariants({ variant: "ghost" })}
-                >
-                  주제와 함께 보기
-                </Link>
-              </div>
-            </div>
-          </Card>
-
-          <div className="grid auto-cols-[minmax(15rem,78vw)] grid-flow-col gap-4 overflow-x-auto pb-1 lg:grid-flow-row lg:auto-cols-auto lg:overflow-visible lg:pb-0">
-            {subVideos.map((video) => (
-              <Link
-                key={video.title}
-                href="/materials"
-                className="group flex gap-4 rounded-lg border border-border bg-card p-4 transition-all hover:border-accent-purple/50 hover:shadow-[var(--shadow-soft)]"
-              >
-                <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary to-accent-purple sm:w-32">
-                  <div className="absolute inset-0 grid place-items-center">
-                    <span
-                      className="ml-1 h-0 w-0 border-y-[8px] border-l-[12px] border-y-transparent border-l-white"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                    {video.length}
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-purple">
-                    {video.meta}
-                  </span>
-                  <h3 className="mt-1 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
-                    {video.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                    {video.description}
-                  </p>
-                </div>
-              </Link>
-            ))}
+        <Card className="grid min-h-56 place-items-center p-6 text-center">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">
+              현재 등록된 영상 자료가 없습니다.
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              영상이 공개되면 이곳에서 안내해 드리겠습니다.
+            </p>
           </div>
-        </div>
+        </Card>
       </div>
     </section>
   );
