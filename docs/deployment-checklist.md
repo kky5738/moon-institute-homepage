@@ -126,6 +126,8 @@ Current production rendering notes:
 Application boundary:
 
 - The single administrator still uses Auth.js and `ADMIN_USERNAME`/`ADMIN_PASSWORD`; researcher email ownership and passwords use Supabase Auth.
+- Administrator sessions expire after one hour and are rejected immediately after `ADMIN_USERNAME` or `ADMIN_PASSWORD` changes.
+- Login attempts require the `20260902000000_add_login_throttles` migration. The application limits accounts to 5 attempts and Vercel client IPs to 20 attempts per 15 minutes, then locks them for 15 minutes.
 - A researcher needs both a confirmed Supabase email and application `User.status = APPROVED`. The administrator cannot approve an unconfirmed email.
 - Password reset increments `User.sessionVersion`, so existing Auth.js researcher sessions stop authorizing on their next request.
 - `/admin`, researcher mutations, and resource ownership checks remain enforced server-side.
@@ -142,6 +144,7 @@ Supabase Dashboard setup before an environment is enabled:
 Release order:
 
 - Apply `20260831000000_add_supabase_auth` only after the Dashboard settings above are complete.
+- Apply `20260902000000_add_login_throttles` before deploying the login-throttling code. Until it exists, administrator login fails closed rather than bypassing the limiter.
 - Convert existing researchers to Supabase Auth and populate `supabaseAuthId`/`emailVerifiedAt` before deploying code that removes legacy password login. Do not send conversion mail or apply the Production migration before `WAITING-12` approval.
 - Set `AUTH_URL` to the exact temporary Vercel origin now, then replace it and the Supabase Site/redirect URLs together when the official domain is ready.
 - Rotate `AUTH_SECRET` only with care because it invalidates all Auth.js sessions. Change `ADMIN_PASSWORD` before exposing the deployment.

@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Pagination } from "@/components/site/Pagination";
 import { UserStatus } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
+import {
+  getPostPageWindow,
+  parsePageParam,
+  POSTS_PER_PAGE,
+} from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { updateUserStatus } from "./actions";
@@ -11,29 +17,15 @@ export const metadata: Metadata = {
   description: "연구자 가입 신청과 계정 상태를 관리합니다.",
 };
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
   await connection();
   await requireAdmin();
-
-  let users;
-
-  try {
-    users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        emailVerifiedAt: true,
-        status: true,
-        statusChangedAt: true,
-        createdAt: true,
-      },
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    });
-  } catch (error) {
-    logServerError("admin.users.list", error);
-    throw error;
-  }
+  const requestedPage = parsePageParam((await searchParams).page);
+  const { users, page, totalPages } = await getAdminUserPage(requestedPage);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
@@ -107,8 +99,35 @@ export default async function AdminUsersPage() {
           </div>
         )}
       </section>
+      <Pagination basePath="/admin/users" page={page} totalPages={totalPages} />
     </div>
   );
+}
+
+async function getAdminUserPage(requestedPage: number) {
+  try {
+    const totalItems = await prisma.user.count();
+    const pagination = getPostPageWindow(requestedPage, totalItems);
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailVerifiedAt: true,
+        status: true,
+        statusChangedAt: true,
+        createdAt: true,
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip: pagination.offset,
+      take: POSTS_PER_PAGE,
+    });
+
+    return { ...pagination, users };
+  } catch (error) {
+    logServerError("admin.users.list", error);
+    throw error;
+  }
 }
 
 function StatusButton({

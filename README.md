@@ -31,7 +31,7 @@ npm run dev
 
 - 공개: `/`, `/topics`, `/materials`, `/notices`, `/contact`, `/signup`, `/login`
 - 연구자 인증 필요: `/account`
-- 관리자 인증 필요: `/admin`, `/admin/posts`, `/admin/inquiries`, `/admin/users`
+- 관리자 인증 필요: `/admin`, `/admin/posts`, `/admin/inquiries`, `/admin/inquiries/[id]`, `/admin/users`
 
 관리자는 환경 변수의 단일 계정이며, 연구자는 이메일과 비밀번호로 가입한 뒤 관리자 승인을 받아 로그인한다. 소셜 로그인은 구현되어 있지 않다. 연구자 사용자 migration의 Production 적용은 별도 승인을 받아야 한다.
 

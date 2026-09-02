@@ -704,7 +704,7 @@ type LifeEvent = {
 
 ### READY-25. 관리자 로그인 방어와 개인정보 조회 범위 축소
 
-- 상태: `READY`
+- 상태: `DONE`
 - 우선순위: 긴급
 - 목적: 관리자 credentials 대입 공격을 애플리케이션에서 제한하고, 세션 탈취나 로그인 성공 한 번으로 조회할 수 있는 개인정보 범위를 줄이며, 관리자 비밀번호 변경 즉시 기존 세션을 거부한다.
 - 현재 확인 결과:
@@ -715,7 +715,7 @@ type LifeEvent = {
 - 로그인 제한:
   - 두 로그인 진입점이 공유하는 `Credentials.authorize(credentials, request)`의 시작과 종료에 단일 로그인 제한기를 적용한다. Server Action과 callback 라우트에 중복 구현하지 않는다.
   - Prisma에 로그인 제한 레코드를 추가하고 계정과 IP 기준을 각각 검사한다. 계정 식별자와 Vercel의 `x-vercel-forwarded-for`는 `AUTH_SECRET` 기반 HMAC으로 저장해 원문 아이디·이메일·IP를 DB와 로그에 남기지 않는다.
-  - 초기 정책은 계정별 15분 내 실패 5회, IP별 15분 내 실패 20회에서 15분 잠금으로 한다. 성공 시 해당 계정 실패 상태를 지우고 오래된 제한 레코드는 로그인 처리 중 제한된 수만 정리한다.
+  - 초기 정책은 계정별 15분 내 로그인 시도 5회, IP별 15분 내 로그인 시도 20회를 허용하고 초과 시 15분 잠금으로 한다. 성공 시 해당 계정 시도 상태를 지우고 24시간 지난 제한 레코드를 로그인 처리 중 정리한다.
   - 차단 여부·계정 존재·관리자 여부를 구분하지 않는 동일한 로그인 오류를 반환한다. 제한 저장소 오류 시 관리자 로그인은 우회하지 않고 실패 처리하며 비밀값 없는 원인만 기록한다.
   - 관리자 비밀번호는 Node `crypto.timingSafeEqual()`로 비교하고, 입력 형식 오류·관리자 실패·연구자 실패가 계정 존재 여부를 드러내지 않게 한다. 인위적인 장시간 `sleep`은 서버리스 자원만 점유하므로 추가하지 않는다.
 - 관리자 세션 무효화:
@@ -738,6 +738,12 @@ type LifeEvent = {
   - 반복 실패가 계정·IP 기준으로 제한되고 두 credentials 진입점을 우회할 수 없다.
   - 관리자 비밀번호 변경 또는 1시간 만료 후 기존 관리자 JWT로 페이지와 Server Action을 사용할 수 없다.
   - 관리자 목록 한 요청이 최대 10행만 읽고 문의 본문·연락처는 한 건 상세 요청에서만 조회된다.
+- 구현 및 검증 결과:
+  - 공용 `Credentials.authorize()`에서 계정 5회·Vercel IP 20회의 15분 시도 한도를 적용했다. 식별자는 `AUTH_SECRET` 기반 HMAC으로만 저장하고 관리자 비밀번호는 constant-time 비교하며 제한 저장소 오류 시 관리자 로그인을 fail-closed한다.
+  - 관리자 자격 증명 HMAC과 1시간 만료를 암호화된 JWT 내부에만 저장하고, 세션 생성 때 현재 환경 값과 다시 대조한 유효 플래그를 `requireAdmin()`·`assertAdmin()`에서 검사한다. 관리자 아이디·비밀번호 변경과 만료 즉시 기존 세션을 거부한다.
+  - 문의·회원 목록을 기존 pagination으로 10행 제한했다. 문의 목록 쿼리에서 이메일·전화·본문을 제거하고 `/admin/inquiries/[id]`에서 한 건만 조회한다.
+  - `LoginThrottle` 모델과 `20260902000000_add_login_throttles` migration을 추가했으며 Production DB에는 적용하지 않았다. 직접 callback과 로그인 Server Action이 설치된 Auth.js의 같은 `authorize()`를 호출하는 경로를 확인했다.
+  - Prisma validate/generate, 보안·인증·pagination을 포함한 전체 테스트 25개, TypeScript, lint와 production build가 통과했다. Production 대입·부하 시험과 WAF·MFA는 수행하지 않았다.
 
 ## 의사결정 또는 승인이 필요한 일
 
@@ -1070,6 +1076,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-27 | READY-21 | DONE | 공개·관리 게시글 목록에 서버 pagination과 10행 상한, 안정적인 정렬, 관리자 명시적 select를 적용함. 홈·주제 추천은 DB where/take 3으로 제한하고 PostType별 캐시·경로만 갱신함. pagination 경계 포함 게시글 테스트 9개, lint/build와 브라우저 점검 통과. | 복합 인덱스는 Production EXPLAIN ANALYZE 근거가 생길 때만 추가 |
 | 2026-08-28 | READY-22 | DONE | 생애사 전체 목록을 Server Component로 분리하고 날짜 해석을 재사용함. Supabase SDK를 업로드 시점의 별도 chunk로 분리해 작성 entry를 247,309B에서 11,496B로 축소하고, private signed URL 본문 이미지를 Next.js 반응형 최적화·캐시 경로로 제공함. 테스트 15개, lint/build와 1280px·390px 점검 통과. | 실제 본문 이미지 데이터가 생기면 Production에서 이미지 최적화 캐시·전송량 smoke test 수행 |
 | 2026-09-02 | READY-24 | DONE | 공개 프론트와 seed의 출범 전·준비 단계 문구를 정식 운영형 문장으로 교체하고 미사용 준비 단계 데이터를 삭제함. lint/build 통과. | 기존 운영 DB의 seed 게시글은 관리자 화면 또는 승인된 데이터 변경으로 별도 수정 필요 |
+| 2026-09-02 | READY-25 | DONE | 공용 credentials 로그인에 HMAC 계정·IP 제한, constant-time 관리자 비교, 자격 증명 변경 즉시 무효화되는 1시간 관리자 세션을 적용함. 문의·회원 목록을 10행으로 제한하고 문의 연락처·본문을 한 건 상세로 분리함. Prisma 검증, 테스트 25개, TypeScript, lint/build 통과. | `20260902000000_add_login_throttles` Production 적용 필요; WAF·MFA는 WAITING-14 |
 
 ## 사용자 결정 기록
 

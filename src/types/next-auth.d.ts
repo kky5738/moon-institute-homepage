@@ -8,12 +8,15 @@ declare module "next-auth" {
       id: string;
       role: AuthRole;
       sessionVersion: number;
+      adminSessionValid?: boolean;
     };
   }
 
   interface User {
     role: AuthRole;
     sessionVersion?: number;
+    adminCredentialVersion?: string;
+    adminExpiresAt?: number;
   }
 }
 
@@ -22,5 +25,7 @@ declare module "next-auth/jwt" {
     userId?: string;
     role?: AuthRole;
     sessionVersion?: number;
+    adminCredentialVersion?: string;
+    adminExpiresAt?: number;
   }
 }

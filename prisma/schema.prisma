@@ -135,6 +135,17 @@ model Inquiry {
   @@map("inquiries")
 }
 
+model LoginThrottle {
+  keyHash         String    @id
+  attemptCount    Int       @default(0)
+  windowStartedAt DateTime  @default(now())
+  blockedUntil    DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@index([updatedAt])
+  @@map("login_throttles")
+}
+
 model User {
   id                Int        @id @default(autoincrement())
   name              String

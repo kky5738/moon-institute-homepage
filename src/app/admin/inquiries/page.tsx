@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
+import { Pagination } from "@/components/site/Pagination";
 import { InquiryStatus, InquiryType } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
+import {
+  getPostPageWindow,
+  parsePageParam,
+  POSTS_PER_PAGE,
+} from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { updateInquiryStatus } from "./actions";
@@ -11,35 +18,16 @@ export const metadata: Metadata = {
   description: "문의, 참여 신청, 후원 관심 접수 목록을 확인합니다.",
 };
 
-export default async function AdminInquiriesPage() {
+export default async function AdminInquiriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
   await connection();
   await requireAdmin();
-
-  let inquiries;
-
-  try {
-    inquiries = await prisma.inquiry.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        type: true,
-        status: true,
-        subject: true,
-        message: true,
-        createdAt: true,
-      },
-      orderBy: [
-        { status: "asc" },
-        { createdAt: "desc" },
-        { id: "desc" },
-      ],
-    });
-  } catch (error) {
-    logServerError("admin.inquiries.list", error);
-    throw error;
-  }
+  const requestedPage = parsePageParam((await searchParams).page);
+  const { inquiries, page, totalPages } =
+    await getAdminInquiryPage(requestedPage);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
@@ -59,14 +47,13 @@ export default async function AdminInquiriesPage() {
           inquiries.map((inquiry) => (
             <article
               key={inquiry.id}
-              className="grid gap-5 px-5 py-5 md:grid-cols-[150px_1fr_210px] md:px-6"
+              className="grid gap-5 px-5 py-5 md:grid-cols-[150px_1fr_260px] md:px-6"
             >
               <div className="space-y-2 text-sm text-muted">
                 <p className="font-semibold text-foreground">
                   {getInquiryTypeLabel(inquiry.type)}
                 </p>
                 <p>{formatDate(inquiry.createdAt)}</p>
-                <ContactDetails email={inquiry.email} phone={inquiry.phone} />
               </div>
 
               <div>
@@ -81,12 +68,15 @@ export default async function AdminInquiriesPage() {
                 <p className="mt-2 text-sm text-muted">
                   접수자: {inquiry.name}
                 </p>
-                <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted">
-                  {inquiry.message}
-                </p>
               </div>
 
               <div className="flex flex-wrap items-start gap-2 md:justify-end">
+                <Link
+                  href={`/admin/inquiries/${inquiry.id}`}
+                  className="inline-flex min-h-8 items-center border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
+                >
+                  상세 보기
+                </Link>
                 {inquiry.status !== InquiryStatus.REVIEWED ? (
                   <StatusButton id={inquiry.id} status={InquiryStatus.REVIEWED}>
                     검토 완료
@@ -111,8 +101,42 @@ export default async function AdminInquiriesPage() {
           </div>
         )}
       </section>
+      <Pagination
+        basePath="/admin/inquiries"
+        page={page}
+        totalPages={totalPages}
+      />
     </div>
   );
+}
+
+async function getAdminInquiryPage(requestedPage: number) {
+  try {
+    const totalItems = await prisma.inquiry.count();
+    const pagination = getPostPageWindow(requestedPage, totalItems);
+    const inquiries = await prisma.inquiry.findMany({
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        status: true,
+        subject: true,
+        createdAt: true,
+      },
+      orderBy: [
+        { status: "asc" },
+        { createdAt: "desc" },
+        { id: "desc" },
+      ],
+      skip: pagination.offset,
+      take: POSTS_PER_PAGE,
+    });
+
+    return { ...pagination, inquiries };
+  } catch (error) {
+    logServerError("admin.inquiries.list", error);
+    throw error;
+  }
 }
 
 function StatusButton({
@@ -160,43 +184,6 @@ function getStatusLabel(status: InquiryStatus) {
   }
 
   return "보관";
-}
-
-function ContactDetails({
-  email,
-  phone,
-}: {
-  email: string | null;
-  phone: string | null;
-}) {
-  if (!email && !phone) {
-    return <p>연락처 없음</p>;
-  }
-
-  return (
-    <dl className="space-y-1">
-      {email ? (
-        <div>
-          <dt className="sr-only">이메일</dt>
-          <dd>
-            <a className="break-all hover:text-foreground" href={`mailto:${email}`}>
-              {email}
-            </a>
-          </dd>
-        </div>
-      ) : null}
-      {phone ? (
-        <div>
-          <dt className="sr-only">연락처</dt>
-          <dd>
-            <a className="break-all hover:text-foreground" href={`tel:${phone}`}>
-              {phone}
-            </a>
-          </dd>
-        </div>
-      ) : null}
-    </dl>
-  );
 }
 
 function formatDate(date: Date) {
