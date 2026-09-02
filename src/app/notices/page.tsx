@@ -31,8 +31,7 @@ export default async function NoticesPage({
           </h1>
         </div>
         <p className="max-w-md text-sm leading-6 text-muted">
-          출범 준비 과정의 주요 안내와 운영 소식을 공개된 순서대로
-          정리합니다.
+          연구소의 주요 안내와 운영 소식을 공개된 순서대로 정리합니다.
         </p>
       </div>
 

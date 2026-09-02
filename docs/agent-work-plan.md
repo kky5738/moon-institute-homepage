@@ -683,6 +683,25 @@ type LifeEvent = {
   - Gmail SMTP 비밀값은 코드에 추가하지 않았고 Supabase Dashboard의 Confirm Email, 정확한 redirect URL, fragment 기반 이메일 템플릿, 1,800초 만료와 rate limit 설정을 배포 점검표에 기록했다.
   - Prisma validate/generate, 인증 7개·게시글 9개·타임라인 6개 테스트, lint/build가 통과했다. 로컬 브라우저에서 로그인·재설정 화면과 토큰 누락 안전 실패, URL fragment 제거, 콘솔 오류 없음을 확인했다.
 
+### READY-24. 공개 문구를 정식 운영 기준으로 정리
+
+- 상태: `DONE`
+- 우선순위: 높음
+- 목적: 공개 화면의 출범 전·준비 단계 표현을 제거하고 현재 운영 중인 공식 홈페이지의 문장으로 정리한다.
+- 확정된 범위:
+  - footer에서는 장기 보존 표현을 사용하지 않는다.
+  - 실제 기능 상태인 `임시저장`과 정상적인 빈 자료 안내는 유지한다.
+  - 공식 연구 내용을 새로 작성하지 않고 서비스 이용 방법만 현재형으로 표현한다.
+  - 기존 운영 DB 게시글은 자동 변경하지 않는다.
+- 완료 조건:
+  - 공개 프론트와 seed 기본 콘텐츠에 출범 전·준비 단계 표현이 남지 않는다.
+  - 사용하지 않는 준비 단계 정적 데이터는 제거한다.
+  - `npm run lint`와 `npm run build`가 통과한다.
+- 구현 및 검증 결과:
+  - footer, 공지, 연구 주제, 영상 안내, 자료 아카이브와 참여 문구를 현재 운영형 문장으로 교체하고 footer의 장기 보존 표현을 제외했다.
+  - 사용하지 않는 `featuredNewsItems`를 삭제하고 새 환경의 seed 공지·자료 문구를 같은 기준으로 정리했다. 기존 운영 DB는 변경하지 않았다.
+  - 전체 검색에서 남은 `준비기간` 한 건은 1960년 생애사 원문으로 확인해 보존했으며 `npm run lint`, `npm run build`가 통과했다.
+
 ## 의사결정 또는 승인이 필요한 일
 
 ### WAITING-01. 공식 콘텐츠 반영
@@ -987,6 +1006,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-26 | READY-20 | DONE | Root 인증과 연구자 권한 UI를 동적 경계로 분리하고 공개 게시글 캐시·즉시 태그 무효화를 적용함. 기존 25개 전부 동적이던 빌드에서 공개 경로가 모두 Partial Prerender로 전환됨. 인증 7개·게시글 8개 테스트, lint/build와 주요 공개 경로 브라우저 점검 통과. | Production p50/p95·Function 호출량 비교는 WAITING-13에서 측정 |
 | 2026-08-27 | READY-21 | DONE | 공개·관리 게시글 목록에 서버 pagination과 10행 상한, 안정적인 정렬, 관리자 명시적 select를 적용함. 홈·주제 추천은 DB where/take 3으로 제한하고 PostType별 캐시·경로만 갱신함. pagination 경계 포함 게시글 테스트 9개, lint/build와 브라우저 점검 통과. | 복합 인덱스는 Production EXPLAIN ANALYZE 근거가 생길 때만 추가 |
 | 2026-08-28 | READY-22 | DONE | 생애사 전체 목록을 Server Component로 분리하고 날짜 해석을 재사용함. Supabase SDK를 업로드 시점의 별도 chunk로 분리해 작성 entry를 247,309B에서 11,496B로 축소하고, private signed URL 본문 이미지를 Next.js 반응형 최적화·캐시 경로로 제공함. 테스트 15개, lint/build와 1280px·390px 점검 통과. | 실제 본문 이미지 데이터가 생기면 Production에서 이미지 최적화 캐시·전송량 smoke test 수행 |
+| 2026-09-02 | READY-24 | DONE | 공개 프론트와 seed의 출범 전·준비 단계 문구를 정식 운영형 문장으로 교체하고 미사용 준비 단계 데이터를 삭제함. lint/build 통과. | 기존 운영 DB의 seed 게시글은 관리자 화면 또는 승인된 데이터 변경으로 별도 수정 필요 |
 
 ## 사용자 결정 기록
 
@@ -1009,3 +1029,4 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-18 | WAITING-10, WAITING-12 | 기존 자체 인증·재설정 토큰 구현 결정을 철회하고 Supabase Auth를 도입하며, 이메일 소유 확인을 관리자 승인보다 먼저 완료하고 비밀번호 재설정도 Supabase Auth로 통합 | Supabase Auth 사용자와 애플리케이션 `User` 연결, 확인 후 승인 흐름, 재설정, 기존 사용자 전환, SMTP·redirect URL·Production 설정 |
 | 2026-08-24 | READY-18 | Supabase Auth를 기다리지 않고 현재 인증의 서버 권한 검사와 Supabase Storage signed URL을 사용해 연구 글 파일 업로드를 먼저 구현 | 전통형 연구 목록, 반응형 상세, PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 제한; 드래그앤드롭·미리보기·진행률·범용 리치 텍스트 제외 |
 | 2026-08-31 | WAITING-10, WAITING-12 | 공식 도메인 구매 전에는 Supabase Auth에 등록한 Gmail Custom SMTP로 이메일 확인과 비밀번호 재설정을 구현하고, 공식 도메인 구매 후 SMTP·발신자·Site URL·redirect URL 설정을 교체 | 코드 구현은 `READY-23`; 관리자 승인 결과 알림과 Production migration·기존 사용자 전환은 기존 WAITING 항목 유지 |
+| 2026-09-02 | READY-24 | 공개 화면의 출범 전·준비 단계 표현을 정식 운영 문구로 교체하고 footer에서는 장기 보존 표현을 제외 | 공개 프론트 정적 문구와 seed 기본 콘텐츠; 운영 DB 게시글 변경 제외 |

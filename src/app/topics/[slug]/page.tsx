@@ -123,7 +123,7 @@ export default async function TopicDetailPage({
                 영상 콘텐츠
               </span>
               <span className="text-xl font-semibold text-foreground">
-                준비 중인 영상 영역 보기
+                영상 자료 안내 보기
               </span>
             </Link>
           </div>

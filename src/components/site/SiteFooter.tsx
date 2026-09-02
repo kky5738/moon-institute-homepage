@@ -47,8 +47,8 @@ export async function SiteFooter() {
               </div>
             </div>
             <p className="mt-5 max-w-sm text-sm leading-6 text-white/65">
-              출범 전 홍보 운영부터 공식 홈페이지 전환까지 공지, 자료,
-              문의 기록을 장기 보존하는 공개 창구로 준비합니다.
+              공지, 연구 자료와 문의 기록을 한곳에서 확인할 수 있는 문선명
+              연구소 공식 홈페이지입니다.
             </p>
           </div>
 

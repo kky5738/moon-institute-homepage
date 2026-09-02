@@ -12,11 +12,10 @@ export function VideoContentSection() {
               Video Archive
             </span>
             <h2 className="mt-3 max-w-3xl text-2xl font-semibold leading-tight text-foreground [word-break:keep-all] sm:text-4xl lg:text-4xl">
-              소개와 해설을 영상 콘텐츠로 확장합니다
+              소개와 해설을 영상으로 살펴봅니다
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-              영상 공개 전에는 준비 상태를 명확히 보여주고, 공개 후에는 소개
-              영상과 자료 해설을 빠르게 찾을 수 있도록 구성합니다.
+              소개 영상과 자료 해설을 한곳에서 확인할 수 있습니다.
             </p>
           </div>
           <Link

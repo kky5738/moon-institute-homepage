@@ -78,11 +78,11 @@ export function MaterialReadingPathSection({
         ) : (
           <div className="border border-dashed border-border bg-card px-5 py-10 sm:px-8 sm:py-12">
             <h3 className="text-xl font-semibold text-foreground">
-              처음 읽을 공개 자료를 준비하고 있습니다
+              등록된 입문 자료가 없습니다
             </h3>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              자료가 공개되기 전에는 연구 주제에서 관심 영역을 살펴볼 수
-              있습니다. 공개 자료가 등록되면 이곳에 읽기 순서가 표시됩니다.
+              연구 주제에서 관심 영역을 살펴보거나 필요한 자료를 문의할 수
+              있습니다.
             </p>
             <Link
               href="/topics"
