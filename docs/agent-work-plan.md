@@ -702,6 +702,43 @@ type LifeEvent = {
   - 사용하지 않는 `featuredNewsItems`를 삭제하고 새 환경의 seed 공지·자료 문구를 같은 기준으로 정리했다. 기존 운영 DB는 변경하지 않았다.
   - 전체 검색에서 남은 `준비기간` 한 건은 1960년 생애사 원문으로 확인해 보존했으며 `npm run lint`, `npm run build`가 통과했다.
 
+### READY-25. 관리자 로그인 방어와 개인정보 조회 범위 축소
+
+- 상태: `READY`
+- 우선순위: 긴급
+- 목적: 관리자 credentials 대입 공격을 애플리케이션에서 제한하고, 세션 탈취나 로그인 성공 한 번으로 조회할 수 있는 개인정보 범위를 줄이며, 관리자 비밀번호 변경 즉시 기존 세션을 거부한다.
+- 현재 확인 결과:
+  - `auth.ts`의 공용 `Credentials.authorize()`에는 IP·계정별 실패 제한과 잠금이 없고 관리자 비밀번호를 일반 문자열 비교로 확인한다. 로그인 Server Action과 `/api/auth/callback/credentials` 직접 요청은 모두 이 경계를 통과한다.
+  - 관리자 JWT에는 고정된 `sessionVersion: 0`만 들어가며 `admin-auth.ts`는 현재 환경의 관리자 자격 증명이나 세션 만료를 재검사하지 않는다. Auth.js 기본 세션 만료 외에 관리자 전용 짧은 수명이 없다.
+  - 문의 목록은 페이지네이션 없이 모든 행의 이름·이메일·전화·제목·본문을 조회한다. 회원 목록은 필드를 명시적으로 제한하고 있지만 이름·이메일·상태를 모든 행에서 한 번에 조회한다.
+  - 연구자 세션은 DB의 `sessionVersion`, 승인·이메일 확인 상태를 요청마다 대조하므로 이번 관리자 JWT 문제와 동일하지 않다.
+- 로그인 제한:
+  - 두 로그인 진입점이 공유하는 `Credentials.authorize(credentials, request)`의 시작과 종료에 단일 로그인 제한기를 적용한다. Server Action과 callback 라우트에 중복 구현하지 않는다.
+  - Prisma에 로그인 제한 레코드를 추가하고 계정과 IP 기준을 각각 검사한다. 계정 식별자와 Vercel의 `x-vercel-forwarded-for`는 `AUTH_SECRET` 기반 HMAC으로 저장해 원문 아이디·이메일·IP를 DB와 로그에 남기지 않는다.
+  - 초기 정책은 계정별 15분 내 실패 5회, IP별 15분 내 실패 20회에서 15분 잠금으로 한다. 성공 시 해당 계정 실패 상태를 지우고 오래된 제한 레코드는 로그인 처리 중 제한된 수만 정리한다.
+  - 차단 여부·계정 존재·관리자 여부를 구분하지 않는 동일한 로그인 오류를 반환한다. 제한 저장소 오류 시 관리자 로그인은 우회하지 않고 실패 처리하며 비밀값 없는 원인만 기록한다.
+  - 관리자 비밀번호는 Node `crypto.timingSafeEqual()`로 비교하고, 입력 형식 오류·관리자 실패·연구자 실패가 계정 존재 여부를 드러내지 않게 한다. 인위적인 장시간 `sleep`은 서버리스 자원만 점유하므로 추가하지 않는다.
+- 관리자 세션 무효화:
+  - 로그인 성공 시 `AUTH_SECRET`으로 관리자 아이디·비밀번호를 HMAC한 자격 증명 버전과 1시간 절대 만료 시각을 JWT에 넣는다. 관리자 비밀번호 원문이나 재사용 가능한 해시는 토큰에 넣지 않는다.
+  - `requireAdmin()`과 `assertAdmin()`이 역할뿐 아니라 현재 환경에서 다시 계산한 자격 증명 버전과 관리자 만료 시각을 매 요청 검사한다. `ADMIN_PASSWORD` 또는 `ADMIN_USERNAME` 변경 직후 기존 관리자 JWT는 거부한다.
+  - 연구자 세션의 기존 DB `sessionVersion` 검사는 유지하고 관리자 전용 필드를 NextAuth 타입에 명시한다.
+- 개인정보 조회 범위:
+  - 기존 `Pagination`, `parsePageParam()`, `getPostPageWindow()`를 재사용해 관리자 문의·회원 목록을 요청당 10행으로 제한하고 안정적인 정렬을 유지한다.
+  - 문의 목록에서는 `message`, `email`, `phone`을 조회하지 않고 접수 유형·상태·제목·이름·접수 시각만 표시한다. 전체 연락처와 본문은 관리자 검사를 거친 `/admin/inquiries/[id]` 상세에서 한 건만 조회한다.
+  - 회원 목록은 현재 명시적 `select`를 유지하되 10행 pagination을 적용한다. 비밀번호·Supabase Auth ID·게시글 관계는 계속 조회하지 않는다.
+- 검증:
+  - 계정·IP 한도 직전과 초과, 잠금 만료, 성공 후 초기화, 제한 저장소 실패 시 관리자 fail-closed를 작은 단위 테스트로 검증한다.
+  - 관리자 비밀번호 변경 전 발급 JWT, 1시간 만료 JWT, 역할만 위조한 세션이 `requireAdmin()`과 `assertAdmin()`에서 거부되는지 검증한다.
+  - 문의·회원 첫·중간·마지막 페이지의 중복·누락과 문의 목록 응답에 본문·연락처가 포함되지 않는지 확인한다.
+  - 직접 callback POST와 로그인 Server Action이 같은 제한기를 통과하는지 확인하고 `npm run lint`, 관련 테스트, `npm run build`를 실행한다. Production 대입·부하 시험은 하지 않는다.
+- Production 적용 제한:
+  - 로그인 제한용 migration은 저장소에만 추가하고 운영 DB에는 별도 승인 전 적용하지 않는다.
+  - Vercel WAF 설정과 관리자 MFA는 외부 설정·계정 결정이 필요한 `WAITING-14`에서 진행한다.
+- 완료 조건:
+  - 반복 실패가 계정·IP 기준으로 제한되고 두 credentials 진입점을 우회할 수 없다.
+  - 관리자 비밀번호 변경 또는 1시간 만료 후 기존 관리자 JWT로 페이지와 Server Action을 사용할 수 없다.
+  - 관리자 목록 한 요청이 최대 10행만 읽고 문의 본문·연락처는 한 건 상세 요청에서만 조회된다.
+
 ## 의사결정 또는 승인이 필요한 일
 
 ### WAITING-01. 공식 콘텐츠 반영
@@ -791,9 +828,9 @@ type LifeEvent = {
 ### WAITING-07. 보안 종합 작업
 
 - 상태: `WAITING`
+- 현재 관리자 대입 공격·JWT 무효화·민감정보 일괄 조회 문제는 2026-09-02 코드 점검을 마쳤으며, 로컬 구현 가능한 범위는 `READY-25`, Production 경계 제한과 MFA는 `WAITING-14`로 분리했다.
 - 필요한 입력 및 승인:
   - 별도 보안 점검 요청과 허용 범위
-  - 로그인·문의 요청 제한 정책
   - 운영 로그와 개인정보 취급 기준
   - Production 환경 검사 권한
   - 일반적이거나 유출된 비밀번호 차단에 사용할 로컬 목록 또는 외부 조회 방식
@@ -978,6 +1015,32 @@ type LifeEvent = {
   - 대표 경로별 기준선과 개선 후 p50/p95가 날짜·환경과 함께 기록된다.
   - Function 지역과 Supabase 지역의 일치 여부가 확인된다.
   - 인덱스·region·Redis 변경 여부가 측정 근거와 함께 결정된다.
+
+### WAITING-14. 관리자 MFA와 Vercel 로그인 경계 제한
+
+- 상태: `WAITING`
+- 우선순위: 높음
+- 보류 이유:
+  - `READY-25`의 애플리케이션 제한과 세션 자격 증명 재검사는 즉시 구현할 수 있지만 MFA를 제공하지는 않는다.
+  - Vercel WAF 규칙은 Production 프로젝트 권한과 운영 트래픽 기준이 필요하며 저장소 코드만으로 활성화할 수 없다.
+- 권장 방향:
+  - 환경변수 단일 관리자를 전용 Supabase Auth 사용자와 애플리케이션 `ADMIN` 역할로 이전하고 TOTP MFA의 AAL2 세션만 관리자 권한으로 인정한다. MFA를 우회하는 상시 `ADMIN_PASSWORD` 경로는 전환 완료 후 제거한다.
+  - 복구 코드는 오프라인으로 보관하고, 비상 관리자 접근은 평소 비활성화된 별도 절차로 운영한다. 복구 정책 없이 새 인증 제공자나 별도 MFA 라이브러리를 추가하지 않는다.
+  - Vercel WAF에서 `/api/auth/callback/credentials` POST와 로그인 Server Action을 먼저 `Log`로 관찰한 뒤 IP 기준 rate limit과 429 또는 challenge를 적용한다. Vercel은 Request Path와 Server Action Name 조건을 지원한다.
+- 필요한 결정 및 승인:
+  1. 관리자 계정에 사용할 이메일과 TOTP 등록 담당자
+  2. 복구 코드 보관자와 분실 시 계정 복구 절차
+  3. 환경변수 관리자 제거 시점과 비상 접근 정책
+  4. Vercel Production Firewall 설정 권한, 관찰 기간, IP별 한도와 차단 시간
+  5. `UserRole.ADMIN` 및 관리자 계정 연결 migration의 Production 적용 승인
+- 완료 조건:
+  - 비밀번호만으로 관리자 세션을 발급할 수 없고 AAL2가 아닌 세션은 모든 관리자 페이지·Server Action에서 거부된다.
+  - WAF가 두 로그인 진입점의 반복 요청을 Function 실행 전에 제한하고 정상 로그인 오탐 여부를 관찰 기록으로 확인한다.
+  - 환경변수 관리자 우회 경로가 제거되거나 평소 비활성화된 복구 절차로만 남는다.
+- 운영 근거:
+  - [Vercel WAF Custom Rules](https://vercel.com/docs/vercel-firewall/vercel-waf/custom-rules)
+  - [Vercel WAF Rule Configuration](https://vercel.com/docs/vercel-firewall/vercel-waf/rule-configuration)
+  - [Vercel Request Headers](https://vercel.com/docs/headers/request-headers)
 
 ## Codex 작업 결과 기록
 
