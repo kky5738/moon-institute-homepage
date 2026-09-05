@@ -88,6 +88,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </Link>
         </p>
 
+        <p className="mt-3 text-center text-sm">
+          <Link href="/resend-confirmation" className="font-semibold text-primary hover:underline">
+            인증 메일 다시 보내기
+          </Link>
+        </p>
+
         <p className="mt-5 text-center text-sm text-muted">
           아직 계정이 없나요?{" "}
           <Link href="/signup" className="font-semibold text-primary hover:underline">

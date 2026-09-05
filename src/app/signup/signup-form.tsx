@@ -47,9 +47,15 @@ export function SignupForm() {
           이메일 확인 전에는 승인 대상에 포함되지 않습니다. 확인 후 관리자
           승인이 완료되면 가입한 이메일과 비밀번호로 로그인해주세요.
         </p>
-        <Link href="/" className={buttonVariants({ className: "mt-5" })}>
-          홈페이지로 돌아가기
-        </Link>
+        <p className="mt-3 text-sm leading-6">메일이 보이지 않으면 스팸함도 확인해주세요.</p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href="/resend-confirmation" className={buttonVariants({ variant: "outline" })}>
+            인증 메일 다시 보내기
+          </Link>
+          <Link href="/" className={buttonVariants({})}>
+            홈페이지로 돌아가기
+          </Link>
+        </div>
       </section>
     );
   }
