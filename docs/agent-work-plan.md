@@ -58,6 +58,30 @@
 
 ## 바로 작업 가능한 일
 
+### READY-26. 공식 도메인 Resend 인증 메일 연결
+
+- 상태: `DONE`
+- 사용자 승인 (2026-09-05): 구입 후 Vercel에 등록한 도메인의 Resend 인증 이메일 설정 완료 요청.
+- 범위: `문선명연구소.com` (`xn--2e0bj2wlpa62qrpaw4s.com`)의 Resend DNS·Supabase SMTP 연결 확인, 공식 Site URL·인증 redirect URL·메일 템플릿·Vercel `AUTH_URL` 정합성 점검 및 필요한 설정 수정.
+- 기존 Supabase Auth 발송 흐름을 유지한다. 운영 DB migration, 기존 사용자 일괄 전환, 관리자 승인 결과 알림은 이 작업에 포함하지 않는다.
+- 완료 조건: 설정 저장 상태와 발송 기록을 확인하고, 실제 수신·인증 완료 검증 여부를 구분해 기록한다.
+- 확인 결과 (2026-09-05): Resend 도메인 `Verified`, Supabase 연동 `Ready to send`, SMTP `smtp.resend.com:465` / 사용자 `resend`를 확인했다. 공식 도메인 HTTPS는 Vercel에서 200을 반환한다.
+- Supabase Site URL을 `https://xn--2e0bj2wlpa62qrpaw4s.com`으로 저장하고 동일 origin의 `/auth/confirm`, `/reset-password` 두 redirect URL을 추가했다. 기존 주소는 전환 중 호환성을 위해 보존했다. 가입 확인 템플릿의 fragment 기반 `TokenHash` 형식은 코드와 일치한다.
+- Vercel Production `AUTH_URL`은 기존 `https://moon-institute-homepage.vercel.app`으로 확인됐다. 브라우저 조작 대상 창 오류로 수정 저장을 확인하지 못해 사용자에게 직접 입력을 요청했다. Resend 발송 기록에는 기존 `Hello World` 테스트 1건만 있으며 인증 메일 실발송 검증은 아직 완료하지 않았다.
+- 읽기 검증: Supabase Auth settings 응답 200, 이메일 제공자 활성화·가입 허용·이메일 확인 필수 상태를 확인했다. 운영 `/api/auth/providers` 응답의 로그인·callback URL은 아직 기존 Vercel 주소를 가리킨다. 기존 인증 테스트 10개가 통과했다. 애플리케이션 소스 변경은 없다.
+- 후속 진행 (2026-09-05): 사용자가 Vercel Save 완료를 알렸고, Production `AUTH_URL = https://xn--2e0bj2wlpa62qrpaw4s.com` 저장값을 직접 확인했다. 설정 적용을 위해 현재 Production 배포와 동일한 소스 코드의 재배포를 요청했다.
+- 완료 (2026-09-05): 재배포 후 운영 `/api/auth/providers`의 로그인·callback 주소가 공식 도메인을 반환한다. 사용자가 실제 이메일을 정상적으로 확인했다고 알렸다.
+
+### READY-27. 가입 인증 메일 재발송
+
+- 상태: `DONE` — 로컬 구현 및 검증 완료, 새 코드 Production 배포 전.
+- 사용자 요청 (2026-09-05): 인증 메일을 받지 못한 경우 다시 보내는 기능 추가.
+- 범위: 가입 완료·로그인에서 접근 가능한 재발송 화면, Supabase `auth.resend` 재사용, 이메일 입력 검증, 가입 여부를 노출하지 않는 안내, 60초 대기 및 Supabase 발송 제한, 스팸함 안내.
+- 완료 조건: 재발송·오류 경로 테스트, lint/build 통과 및 화면 검증. 운영 코드 배포 여부는 별도 기록한다.
+- 결과: `/resend-confirmation`에 이메일 입력·재발송 화면을 추가하고 가입 완료·로그인 화면에 연결했다. Supabase 기존 인증 메일 경로를 재사용하며 별도 발송 SDK·토큰·DB 모델은 추가하지 않았다.
+- 검증: 인증 테스트 11개(입력 검증, 재발송 옵션, 계정 존재·인증 여부 비노출, 제한·서버·네트워크 오류, 로그 비밀값 제외), lint/build 통과. 로컬 브라우저에서 화면 렌더링·빈 이메일 제출 차단을 확인했다. 실제 재발송 메일은 추가로 보내지 않았다.
+- 운영 설정: Supabase SMTP `Minimum interval per user`를 1초에서 60초로 저장했다. 새 UI는 로컬에만 있으며 Production에는 도메인 설정을 적용한 기존 코드가 배포돼 있다.
+
 ### READY-01. 문서 정합성 점검
 
 - 상태: `DONE`
