@@ -1064,9 +1064,9 @@ type LifeEvent = {
   - Function 지역과 Supabase 지역의 일치 여부가 확인된다.
   - 인덱스·region·Redis 변경 여부가 측정 근거와 함께 결정된다.
 
-### WAITING-15. 로그인 병목 측정·최적화 및 제출 버튼 피드백
+### READY-30. 로그인 병목 측정·최적화 및 제출 버튼 피드백 (이전 WAITING-15)
 
-- 상태: `WAITING` — 2026-09-07 점검·계획 작성 완료. 사용자는 앱 코드 수정 없이 이 문서에 계획만 작성하도록 요청했다. 구현·계측 코드 추가·배포는 별도 승인 후 `READY`로 전환한다.
+- 상태: `BLOCKED` — 2026-09-08 사용자 실행 승인으로 WAITING-15를 READY-30으로 전환했다. 로컬 UI·선택형 계측 구현은 완료했다. 운영 병목 실측과 최적화 필요 여부 판정은 배포·계측 활성화·테스트 계정 사용 승인이 필요해 대기한다. 전체 성능 개선을 완료한 것으로 표시하지 않는다.
 - 목표: 로그인 실제 처리 지연과 클릭 후 무반응으로 느끼는 UI 문제를 따로 개선한다. 관련 운영 성능 측정은 `WAITING-13`과 연계한다.
 - 이번 범위: 코드 경로 분석과 읽기 전용 DB 점검만 수행했다. 실제 회원 로그인 요청·메일 발송·운영 설정 변경은 하지 않았다. 기존 회원 전환 기록은 보존한다.
 
@@ -1110,7 +1110,29 @@ type LifeEvent = {
 - 최소 회귀 검사: 기존 `npm run test:auth`에 제한 처리의 만료·동시 증가·임계값/차단 보존 검증을 보완한다. 현재 테스트는 주로 순수 보안 helper를 검사하므로 DB 원자성을 보장한다고 간주하지 않는다. 실제 비밀번호나 회원 로그인으로 반복 부하를 만들지 말고 승인된 테스트 환경을 사용한다.
 - UI 검증: 느린 네트워크에서 클릭/Enter/더블클릭, 정상 로그인, 잘못된 비밀번호, 서버·네트워크 오류, hydration 전 제출, 모바일 Safari·데스크톱, 키보드·스크린리더·reduced-motion을 확인한다. 액션 진행과 목적지 이동 사이의 pending 해제 시점 및 오류 후 입력/포커스 복구도 확인한다.
 - 완료 기준: 즉시 처리 중 표시, 중복 제출 방지, 실패 후 재시도, 기존 목적지·권한·보안 정책 보존. 성능은 전후 수치와 미측정 항목을 기록한다. 특정 초 단위 로그인 속도는 기준선 없이 보장하지 않는다. 코드 구현 후 `npm run test:auth`, `npm run lint`, `npm run build` 및 UI 검증을 통과해야 한다.
-- 이번 산출물은 **점검 및 계획 문서뿐**이다. UI 개선이나 서버 병목 수정이 적용된 상태가 아니며, 사용자 구현 승인 전에는 시작하지 않는다.
+- 최초 산출물은 점검·계획 문서였으며, 아래 실행 결과는 2026-09-08 구현 승인 후 추가했다.
+
+#### 실행 결과 (2026-09-08)
+
+1. **UI 구현 완료:** `src/app/login/login-submit.tsx`를 추가해 서버 폼 하위에서 `useFormStatus`를 사용한다. 즉시 `로그인 중…`, disabled/aria-busy, live 상태 안내, 5초 지연 문구, 일정한 버튼 크기, reduced-motion 대응을 제공한다. pending 메시지 컴포넌트가 해제될 때 타이머를 정리하고 다음 요청에 새로 시작한다. 기존 서버 액션·오류 redirect·입력 이름·로그인 목적지는 유지했다. 공통 Button이나 폼 전체는 클라이언트로 바꾸지 않았다.
+2. **계측 구현 완료:** `src/lib/login-timing.ts`와 auth/throttle 호출 지점에 `LOGIN_TIMING=1`일 때만 켜지는 요청별 계측을 추가했다. AsyncLocalStorage로 동시 요청을 분리하고 임의 requestId·고정 구간명·밀리초만 기록한다. 기본값은 꺼짐이며 `.env.example`에 설명만 추가했다. 구간은 throttle 전체/cleanup/account/ip, Supabase, 회원 조회·최초 인증 반영, 성공 후 제한 삭제, authorize 전체다. 전체/하위 구간은 중첩되므로 합산하지 않는다. throttle 전체와 내부 구간 차이는 풀 대기·트랜잭션·기타 오버헤드를 포함하며 이를 순수 풀 대기 시간이라고 단정하지 않는다. 상세 SQL 횟수·브라우저 redirect 시간·운영 콜드 스타트는 아직 미측정이다.
+3. **검증:** 인증 테스트 12개 통과(기존 11개 + 계측 opt-in/오류 전파/동시 요청 분리/비밀값 비기록), lint 통과. Chrome에서 운영 연결을 끊은 localhost:3100 빌드를 테스트했다. 모바일 390×844에서 제출→pending 표시 25.9ms(단일 표본), 5.5초 인위적 네트워크 지연 중 안내, Enter 추가 입력에도 POST 1회, reduced-motion 회전 없음, 버튼 폭·높이 유지, 실패 redirect 후 버튼 재활성화·지연 문구 해제를 확인했다. 데스크톱 오류 화면도 캡처했다. 실제 로그인 처리 속도의 개선 수치가 아니라 UI 피드백 실측이다.
+4. **의도적으로 미변경:** 제한 횟수/기간·트랜잭션·삭제 정책·회원 승인/인증 검사·세션 정책·Supabase 인증·중간 redirect·홈 캐시·배포 지역은 보존했다. 병목이 운영에서 확인되지 않아 원자적 upsert 재작성이나 쿼리 삭제를 적용하지 않았다. Ponytail의 최소 변경 원칙과 Emil의 즉각 피드백 원칙을 적용했다. 새 런타임 의존성은 없다.
+5. **남은 검증 및 승인:** 실제 관리자/연구자 성공 로그인·인증 미완료·비활성 회원의 end-to-end 회귀, Safari 실기기·스크린리더·hydration 전 제출, 운영 단계별 전후 성능·동시 DB 잠금 테스트는 미수행이다. 실제 성공 로그인과 성능 실측에는 승인된 테스트 계정 및 배포/LOGIN_TIMING 활성화 승인이 필요하다. 그 결과로 병목 최적화 여부를 정한 후 READY-30을 DONE으로 전환한다. 현재 Production에는 적용하지 않았다.
+
+- 최종 빌드 검증: 변경 후 `npm run build`가 TypeScript 검사와 34개 페이지 생성을 포함해 통과했다. `git diff --check`도 통과했다. 테스트용 3100 서버는 종료했고 기존 3000 개발 서버는 변경하지 않았다.
+
+재현 방법: 기존 개발 서버와 충돌하지 않도록 빌드 후 별도 포트에서 실행한다. 실제 자격 증명을 쓰지 않도록 아래 임시 로컬 환경변수를 반드시 함께 지정한다. 브라우저 테스트의 5.5초 지연은 테스트 스크립트에만 있으며 제품 코드에는 없다.
+
+```sh
+npm run test:auth
+npm run lint
+npm run build
+DATABASE_URL=postgresql://test:test@127.0.0.1:1/test SUPABASE_URL=http://127.0.0.1:1 SUPABASE_PUBLISHABLE_KEY=local-test SUPABASE_SECRET_KEY=local-test ADMIN_USERNAME=local-admin ADMIN_PASSWORD=local-test-password AUTH_SECRET=local-test-only-secret-for-ui-check AUTH_URL=http://localhost:3100 AUTH_TRUST_HOST=true LOGIN_TIMING=1 npm run start -- --port 3100
+# 다른 터미널에서 실행. 설치된 Chrome 및 Playwright가 필요하다.
+# Codex 번들 사용 시 PLAYWRIGHT_MODULE에 번들의 playwright 절대 경로를 지정한다.
+node scripts/check-login-ui.mjs
+```
 
 ### WAITING-14. 관리자 MFA와 Vercel 로그인 경계 제한
 

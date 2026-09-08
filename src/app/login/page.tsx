@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "./actions";
+import { LoginSubmit } from "./login-submit";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -73,13 +73,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full bg-primary-dark hover:bg-primary"
-            size="lg"
-          >
-            로그인
-          </Button>
+          <LoginSubmit />
         </form>
 
         <p className="mt-4 text-center text-sm">

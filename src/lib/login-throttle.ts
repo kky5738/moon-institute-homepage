@@ -9,6 +9,7 @@ import {
   LOGIN_WINDOW_MS,
 } from "@/lib/login-security";
 import { prisma } from "@/lib/prisma";
+import { measureLoginStage } from "@/lib/login-timing";
 
 const RETENTION_MS = 24 * 60 * 60 * 1000;
 
@@ -27,20 +28,20 @@ export async function consumeLoginAttempt(
     : null;
 
   return prisma.$transaction(async (transaction) => {
-    await transaction.loginThrottle.deleteMany({
+    await measureLoginStage("throttle.cleanup", () => transaction.loginThrottle.deleteMany({
       where: { updatedAt: { lt: new Date(now.getTime() - RETENTION_MS) } },
-    });
+    }));
 
-    const accountAllowed = await consumeThrottle(
+    const accountAllowed = await measureLoginStage("throttle.account", () => consumeThrottle(
       transaction,
       accountKey,
       ACCOUNT_ATTEMPT_LIMIT,
       now,
-    );
+    ));
 
     if (!accountAllowed || !ipKey) return accountAllowed;
 
-    return consumeThrottle(transaction, ipKey, IP_ATTEMPT_LIMIT, now);
+    return measureLoginStage("throttle.ip", () => consumeThrottle(transaction, ipKey, IP_ATTEMPT_LIMIT, now));
   });
 }
 

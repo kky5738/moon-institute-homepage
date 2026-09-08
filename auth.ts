@@ -9,6 +9,7 @@ import {
   isValidAdminSession,
 } from "@/lib/admin-credentials";
 import { validateAuthEnvironment } from "@/lib/env";
+import { measureLoginStage, withLoginTiming } from "@/lib/login-timing";
 import {
   clearLoginAccountThrottle,
   consumeLoginAttempt,
@@ -83,138 +84,140 @@ export const {
         password: { label: "비밀번호", type: "password" },
       },
       async authorize(credentials, request) {
-        const username = credentials?.username;
-        const password = credentials?.password;
+        return withLoginTiming(async () => {
+          const username = credentials?.username;
+          const password = credentials?.password;
 
-        if (
-          typeof username !== "string" ||
-          username.length < 1 ||
-          username.length > 320
-        ) {
-          return null;
-        }
-
-        const adminUsername = process.env.ADMIN_USERNAME;
-        const adminPassword = process.env.ADMIN_PASSWORD;
-
-        if (!adminUsername || !adminPassword) {
-          console.error(
-            "[auth-error] ADMIN_USERNAME or ADMIN_PASSWORD is missing during credentials authorize.",
-          );
-          return null;
-        }
-
-        const adminLogin = isAdminUsername(username, adminUsername);
-
-        try {
-          if (!(await consumeLoginAttempt(username, request))) return null;
-        } catch (error) {
-          logServerError("auth.login-throttle.consume", error);
-          if (adminLogin) return null;
-        }
-
-        if (!isLoginPassword(password)) return null;
-
-        if (adminLogin) {
           if (
-            !areAdminCredentialsValid(
-              username,
-              password,
-              adminUsername,
-              adminPassword,
-            )
+            typeof username !== "string" ||
+            username.length < 1 ||
+            username.length > 320
           ) {
             return null;
           }
 
-          try {
-            await clearLoginAccountThrottle(username);
-          } catch (error) {
-            logServerError("auth.login-throttle.clear-admin", error);
+          const adminUsername = process.env.ADMIN_USERNAME;
+          const adminPassword = process.env.ADMIN_PASSWORD;
+
+          if (!adminUsername || !adminPassword) {
+            console.error(
+              "[auth-error] ADMIN_USERNAME or ADMIN_PASSWORD is missing during credentials authorize.",
+            );
             return null;
           }
 
-          const secret = process.env.AUTH_SECRET;
-          if (!secret) return null;
+          const adminLogin = isAdminUsername(username, adminUsername);
 
-          return {
-            id: "admin",
-            name: "관리자",
-            role: "ADMIN",
-            sessionVersion: 0,
-            adminCredentialVersion: getAdminCredentialVersion(
-              adminUsername,
-              adminPassword,
-              secret,
-            ),
-            adminExpiresAt: Date.now() + ADMIN_SESSION_MAX_AGE_MS,
-          };
-        }
+          try {
+            if (!(await measureLoginStage("throttle", () => consumeLoginAttempt(username, request)))) return null;
+          } catch (error) {
+            logServerError("auth.login-throttle.consume", error);
+            if (adminLogin) return null;
+          }
 
-        const email = normalizeEmail(username);
+          if (!isLoginPassword(password)) return null;
 
-        if (!isValidEmail(email) || email.length > 120) {
+          if (adminLogin) {
+            if (
+              !areAdminCredentialsValid(
+                username,
+                password,
+                adminUsername,
+                adminPassword,
+              )
+            ) {
+              return null;
+            }
+
+            try {
+              await measureLoginStage("throttle.clear", () => clearLoginAccountThrottle(username));
+            } catch (error) {
+              logServerError("auth.login-throttle.clear-admin", error);
+              return null;
+            }
+
+            const secret = process.env.AUTH_SECRET;
+            if (!secret) return null;
+
+            return {
+              id: "admin",
+              name: "관리자",
+              role: "ADMIN",
+              sessionVersion: 0,
+              adminCredentialVersion: getAdminCredentialVersion(
+                adminUsername,
+                adminPassword,
+                secret,
+              ),
+              adminExpiresAt: Date.now() + ADMIN_SESSION_MAX_AGE_MS,
+            };
+          }
+
+          const email = normalizeEmail(username);
+
+          if (!isValidEmail(email) || email.length > 120) {
+            return null;
+          }
+
+          try {
+            const { data, error } = await measureLoginStage("supabase", () => getSupabaseAuthClient().auth.signInWithPassword({
+              email,
+              password,
+            }));
+
+            if (error || !data.user?.email_confirmed_at) {
+              return null;
+            }
+
+            const user = await measureLoginStage("member.lookup", () => prisma.user.findUnique({
+              where: { supabaseAuthId: data.user.id },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                supabaseAuthId: true,
+                emailVerifiedAt: true,
+                sessionVersion: true,
+                role: true,
+                status: true,
+              },
+            }));
+
+            if (!user || user.email !== email) {
+              return null;
+            }
+
+            const emailVerifiedAt =
+              user.emailVerifiedAt ?? new Date(data.user.email_confirmed_at);
+
+            if (!user.emailVerifiedAt) {
+              await measureLoginStage("member.verify", () => prisma.user.update({
+                where: { id: user.id },
+                data: { emailVerifiedAt },
+              }));
+            }
+
+            if (!canResearcherSignIn({ ...user, emailVerifiedAt })) return null;
+
+            try {
+              await measureLoginStage("throttle.clear", () => clearLoginAccountThrottle(username));
+            } catch (error) {
+              logServerError("auth.login-throttle.clear-researcher", error);
+            }
+
+            return {
+              id: String(user.id),
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              sessionVersion: user.sessionVersion,
+            };
+          } catch (error) {
+            logServerError("auth.researcher.authorize", error);
+          }
+
           return null;
-        }
-
-        try {
-          const { data, error } = await getSupabaseAuthClient().auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (error || !data.user?.email_confirmed_at) {
-            return null;
-          }
-
-          const user = await prisma.user.findUnique({
-            where: { supabaseAuthId: data.user.id },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              supabaseAuthId: true,
-              emailVerifiedAt: true,
-              sessionVersion: true,
-              role: true,
-              status: true,
-            },
-          });
-
-          if (!user || user.email !== email) {
-            return null;
-          }
-
-          const emailVerifiedAt =
-            user.emailVerifiedAt ?? new Date(data.user.email_confirmed_at);
-
-          if (!user.emailVerifiedAt) {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { emailVerifiedAt },
-            });
-          }
-
-          if (!canResearcherSignIn({ ...user, emailVerifiedAt })) return null;
-
-          try {
-            await clearLoginAccountThrottle(username);
-          } catch (error) {
-            logServerError("auth.login-throttle.clear-researcher", error);
-          }
-
-          return {
-            id: String(user.id),
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            sessionVersion: user.sessionVersion,
-          };
-        } catch (error) {
-          logServerError("auth.researcher.authorize", error);
-        }
-
-        return null;
+        });
       },
     }),
   ],
