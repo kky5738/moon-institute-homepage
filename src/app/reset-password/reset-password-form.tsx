@@ -108,7 +108,13 @@ export function ResetPasswordForm() {
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={!tokenHash || pending} size="lg" className="w-full">
+      <Button
+        type="submit"
+        disabled={!tokenHash || pending}
+        aria-busy={pending}
+        size="lg"
+        className="w-full"
+      >
         {pending ? "변경 중" : "비밀번호 변경"}
       </Button>
       {state.status === "error" && !tokenHash ? (

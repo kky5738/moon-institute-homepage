@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { PendingButton } from "@/components/ui/pending-button";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
@@ -134,24 +135,24 @@ export default async function NewPostPage() {
           >
             취소
           </Link>
-          <button
-            type="submit"
+          <PendingButton
             name="intent"
             value="draft"
             disabled={!hasCategories}
-            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-primary-dark hover:border-primary disabled:cursor-not-allowed"
+            pendingLabel="저장 중…"
+            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-primary-dark hover:border-primary disabled:hover:border-border"
           >
             임시저장
-          </button>
-          <button
-            type="submit"
+          </PendingButton>
+          <PendingButton
             name="intent"
             value="publish"
             disabled={!hasCategories}
-            className="inline-flex h-11 items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary"
+            pendingLabel="공개 중…"
+            className="inline-flex h-11 items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary disabled:hover:bg-primary-dark"
           >
             공개하기
-          </button>
+          </PendingButton>
         </div>
       </form>
     </div>

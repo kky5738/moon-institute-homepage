@@ -72,6 +72,14 @@ a {
   text-underline-offset: 4px;
 }
 
+button:enabled {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 .life-timeline-paper {
   background-color: #f8f4ea;
   background-image:

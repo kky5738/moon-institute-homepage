@@ -46,7 +46,12 @@ export function ResendConfirmationForm() {
         </p>
       </div>
       <p role="status" aria-live="polite" className="text-sm leading-6">{message}</p>
-      <Button type="submit" disabled={pending || remaining > 0} className="w-full">
+      <Button
+        type="submit"
+        disabled={pending || remaining > 0}
+        aria-busy={pending}
+        className="w-full"
+      >
         {pending ? "요청 중" : remaining > 0 ? `${remaining}초 후 다시 보내기` : "인증 메일 다시 보내기"}
       </Button>
     </form>

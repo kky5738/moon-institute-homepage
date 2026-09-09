@@ -14,7 +14,7 @@ export function LoginSubmit() {
         disabled={pending}
         aria-busy={pending}
         size="lg"
-        className="w-full gap-2 bg-primary-dark hover:bg-primary active:bg-primary transition-[background-color,transform] duration-150 ease-out motion-safe:[&:active:not(:focus-visible)]:scale-[0.97]"
+        className="w-full gap-2 bg-primary-dark hover:bg-primary active:bg-primary disabled:hover:bg-primary-dark disabled:active:bg-primary-dark transition-[background-color,transform] duration-150 ease-out motion-safe:[&:active:not(:focus-visible)]:scale-[0.97]"
       >
         <span
           aria-hidden="true"

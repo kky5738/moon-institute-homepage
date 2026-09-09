@@ -1167,6 +1167,82 @@ node scripts/check-login-ui.mjs
   - [Vercel WAF Rule Configuration](https://vercel.com/docs/vercel-firewall/vercel-waf/rule-configuration)
   - [Vercel Request Headers](https://vercel.com/docs/headers/request-headers)
 
+### READY-31. 공개·회원·관리자 클릭 요소의 액션 피드백 통일 (이전 WAITING-16)
+
+- 상태: `DONE` — 2026-09-09 사용자 승인으로 `WAITING-16`을 `READY-31`로 전환해 로컬 구현과 검증을 완료했다. 배포하지 않았다. READY-30의 로그인 성능 최적화와 분리한다.
+- 범위: `src/app`·`src/components`의 Button/button, Link/a, summary, 폼 제출 및 파일 선택 요소와 공통 CSS를 확인했다. 관리자 회원·문의·게시글·로그아웃도 포함한다. 아래는 정적 코드 근거이며 브라우저 computed style, 실제 관리자 제출, 터치·스크린리더 회귀를 완료한 결과가 아니다. 운영 데이터 변경·메일 발송·로그인 대행은 하지 않았다.
+- 핵심 원인: `src/components/ui/button.tsx:44`의 공통 클래스에 `cursor-pointer`가 없고 `globals.css`에도 활성 버튼 커서 규칙이 없다. 설치된 Tailwind preflight는 버튼 appearance를 정리하지만 포인터 커서를 지정하지 않는다. 따라서 `<a href>`의 기본 손 모양 커서와 `<button>`의 커서가 다르게 보일 수 있다. 버튼 기능 고장이나 모든 링크의 커서 누락으로 해석하지 않는다.
+
+#### 수정 필요 위치와 계획
+
+| 대상·우선순위 | Before | After | Why |
+| --- | --- | --- | --- |
+| **P1 공통 Button** — `src/components/ui/button.tsx:44`, `src/app/globals.css` | hover 색상·focus ring·disabled opacity는 있으나 활성 커서와 공통 눌림 피드백이 없다. `disabled:pointer-events-none` 때문에 같은 버튼의 금지 커서만 추가해도 보이지 않을 수 있다. | 활성 native button에 적용할 한 곳의 커서 규칙을 우선 검토하고 공통 Button의 enabled active 색상을 정리한다. disabled/pending 커서 정책은 pointer-events와 함께 결정한다. | 로그인뿐 아니라 가입·문의·비밀번호 찾기/변경·인증 재발송·모바일 메뉴·연구 글쓰기까지 같은 원인. 개별 화면에 동일 클래스를 반복하지 않는다. |
+| **P1 로그인** — `src/app/login/login-submit.tsx:12` | `로그인 중…`, disabled, aria-busy, live 안내, 5초 지연 문구와 포인터 누름 scale은 이미 있다. 커서만 공통 Button의 누락을 상속한다. | 기존 상태 표시를 유지하고 공통 커서 수정만 반영한다. | 로그인 pending을 다시 만들거나 중복 scale을 적용할 필요가 없다. |
+| **P1 관리자 회원·문의 상태 변경** — `src/app/admin/users/page.tsx:146`, `src/app/admin/inquiries/page.tsx:155` | 승인/비활성화, 검토 완료/보관/새 문의로 버튼은 hover만 있고 cursor·active·pending·제출 중 disabled가 없다. | 커서/누름 상태를 통일하고 폼 하위 제출 컴포넌트에서 처리 중 문구·aria-busy·live 안내·중복 제출 방지를 제공한다. 같은 항목의 다른 상태 변경 버튼과 경쟁 제출도 검증한다. | 관리자가 클릭 수신을 알기 어렵다. UI 잠금은 서버 권한·원자성 검사를 대체하지 않는다. |
+| **P1 관리자 게시글 작성·수정·보관** — `src/app/admin/posts/new/page.tsx:137`, `src/app/admin/posts/[id]/edit/page.tsx:170`, `src/app/admin/posts/page.tsx:105` | 새 글 임시저장/공개는 활성 커서가 없다. 수정·보관은 cursor-pointer가 이미 있으나 pending/active가 없다. 카테고리가 없을 때만 저장을 disable하며 새 글 공개 버튼은 비활성 시각 구분도 부족하다. | 활성/비활성 스타일을 통일하고 저장/공개/보관 요청 중 상태 표시·재제출 방지를 추가한다. 클릭한 submitter의 `name="intent"`/value를 보존한다. | 수정 화면에 있는 cursor를 중복 추가하는 대신 누락된 상태를 채운다. 임시저장과 공개 의도가 바뀌지 않아야 한다. |
+| **P1 회원 탈퇴·로그아웃** — `src/app/account/page.tsx:42,67`, `src/app/admin/layout.tsx:34` | 회원 쪽은 공통 Button, 관리자 로그아웃은 별도 button이며 처리 중 표시가 없다. | 탈퇴 중/로그아웃 중 상태·중복 제출 방지를 적용하고 관리자 버튼 커서도 통일한다. | 탈퇴 동의·인증·삭제 정책은 그대로 보존하며 운영 계정으로 실제 탈퇴 테스트하지 않는다. |
+| **P2 기존 공개 폼·연구 글쓰기** — signup/signup-form, contact/contact-form, forgot-password/forgot-password-form, reset-password/reset-password-form, resend-confirmation/resend-confirmation-form, account/posts/ResearchPostForm | 가입/문의/비밀번호/재발송과 연구 글 저장에는 pending 또는 busy 문구·disabled가 이미 있다. 연구 글 파일 제거(`ResearchPostForm.tsx:404`)는 별도 button으로 cursor/active가 없다. 파일 선택 버튼도 별도 스타일이다. | 기존 상태 로직을 재사용하고 커서/누름 상태·pending 접근성 안내만 보완한다. 파일 선택은 `::file-selector-button`을 따로 확인한다. | 완성된 제출 상태를 다시 구현하지 않는다. 파일 제거·이미지 삽입의 실제 결과 표시는 유지한다. |
+| **P2 홈·모바일 메뉴** — `HomeHeroSection.tsx:119`, `LifeTimelineSection.tsx:156,180,188`, `SiteNavbar.tsx:94` | Hero 자동 전환 버튼과 전체/이전/다음 연도는 활성 커서가 없다. Hero 점·연대기 점은 이미 cursor-pointer. 연도 이동에는 active 색상, 모바일 메뉴에는 aria-expanded가 있다. | 누락 커서와 필요한 누름 색상을 보완하고 기존 선택/열림 상태는 유지한다. 연대기 점의 active scale은 키보드·reduced-motion에서 움직임을 제거할지 확인한다. | 전역 reduced-motion의 duration 축소만으로 transform 자체가 제거되는 것은 아니다. 이미 동작하는 선택 피드백을 통째로 교체하지 않는다. |
+| **P2 오류 복구 버튼** — `src/app/error.tsx:32`, `src/app/admin/error.tsx:32`, `src/app/global-error.tsx:38` | 앱/관리자 다시 시도는 hover만 있고 활성 cursor/active가 없다. global-error는 공통 스타일 없이 기본 button이다. | 복구 버튼의 커서·focus·누름 상태를 맞춘다. 재시도 진행 표시는 실제 retry 수명주기로 검증 후 추가한다. global-error는 공통 CSS 미로딩 상황도 확인한다. | 가짜 타이머로 성공 표시하거나 오류 경계에 복잡한 의존성을 추가하지 않는다. |
+| **P2 링크·카드의 실제 클릭 영역** — `MaterialArchiveCard.tsx:11,28`, 공개 주제/자료/연구/공지 링크, 관리자 홈·상단 메뉴·페이지네이션 | 일반 href 링크는 기본 포인터가 있고 다수는 hover 색상/밑줄이 있다. 자료 카드는 비클릭 여백까지 hover 테두리·제목 색상이 바뀐다. 관리자 홈 카드는 링크가 카드 영역을 채우며 hover 테두리도 있어 커서 누락 대상으로 볼 수 없다. | 자료 카드처럼 표시와 클릭 영역이 다른 곳만 링크 hover/focus 중심으로 정리한다. 실제 링크에 명확한 focus/active를 확인하고 일반 텍스트 링크는 밑줄·색상 위주로 유지한다. | 모든 Card에 cursor-pointer/onClick을 붙이거나 모든 링크에 scale·spinner를 넣지 않는다. 내부 링크가 여러 개인 카드를 통째로 링크로 감싸지 않는다. |
+
+#### 구현 원칙과 승인 후 순서
+
+1. **커서 원인부터 공통 수정:** native button과 Button을 함께 덮는 최소 규칙을 선택한다. 활성 버튼만 pointer로 표시하고 disabled는 default 또는 not-allowed 중 일관된 정책으로 분리한다. a[href]의 기본 동작은 보존하고 텍스트 입력은 text 커서를 유지한다. select·checkbox·label·summary·파일 선택은 실제 클릭 부위별로 검증하며 모든 요소에 pointer를 강제하지 않는다.
+2. **누름과 처리 중 상태 분리:** 커서는 클릭 가능성, active는 클릭 수신, pending은 서버 처리 상태다. 공통 버튼은 색상 중심으로 보완하고 미세 scale이 필요하면 포인터 입력·motion-safe에 한정한다. 입력·키보드 동작을 애니메이션 때문에 늦추지 않는다. disabled:hover/active가 활성처럼 보이지 않게 한다.
+3. **서버 폼만 필요한 pending 추가:** 설치된 Next.js forms 가이드를 구현 전에 읽고 기존 LoginSubmit의 폼 하위 useFormStatus 패턴을 재사용한다. 공통화는 실제 중복 제출 버튼 범위까지만 한다. 폼 전체를 클라이언트로 바꾸지 않고, 여러 제출 의도·formNoValidate·hidden 입력·서버 권한 및 검증을 보존한다. 기존 useActionState/busy 폼은 유지한다.
+4. **링크는 탐색 의미 유지:** 링크 자체의 hover/focus/active와 클릭 영역을 점검한다. 실제 느린 탐색이 확인될 때만 해당 경로의 이동 중 표시를 검토한다. 전역 로딩 상태 관리자·새 UI 라이브러리·모든 링크의 spinner는 추가하지 않는다. Emil의 상태별 즉시 피드백과 Ponytail의 기존 공통 요소 재사용 원칙을 적용한다.
+5. **완료 검증:** 공개/회원/관리자에서 활성·disabled·pending의 computed cursor, hover/active/focus, 모바일 메뉴, Hero/연대기, 키보드 Enter/Space, reduced-motion을 확인한다. 로컬 격리/모의 응답으로 지연·실패·이중 클릭·상태 변경 경합·submit intent 보존을 검사하고 실패 후 재시도·성공 후 상태 반영을 확인한다. 실제 회원 승인/탈퇴/메일/게시글 변경은 별도 승인 없이 실행하지 않는다. 코드 구현 시 lint/build 및 최소 회귀 검사를 수행한다.
+
+- 완료 조건: 클릭 가능 요소와 불가능 요소의 커서가 일관되고, 주요 쓰기 작업은 즉시 처리 중 상태를 알리며 기존 성공/오류·키보드·접근성 동작을 보존한다. 이번 문서 작성만으로 구현 완료로 표시하지 않는다.
+
+- 구현 및 검증 결과:
+  - 공통 `Button`에 활성 포인터·눌림 색상·`motion-safe` 눌림 축소와 비활성 금지 커서를 추가하고, 일반 native button에도 같은 커서 정책을 적용했다. 링크의 탐색 의미와 입력 요소의 기본 커서는 바꾸지 않았다.
+  - 관리자 회원·문의 상태 변경, 게시글 저장·공개·보관, 회원/관리자 로그아웃과 회원 탈퇴는 기존 Server Action을 유지한 채 제출 중 버튼 비활성화·진행 문구·`aria-busy`를 적용했다. 여러 submit intent의 `name`/`value`와 연구 글의 기존 busy 흐름은 보존했다.
+  - 공개 폼의 기존 pending 상태에 `aria-busy`를 보완하고, 연구 글 파일 선택·제거 및 Hero/연대기/오류 복구 버튼의 커서·누름 피드백을 정리했다. 연대기 눌림 transform은 reduced-motion에서 발생하지 않게 했다.
+  - `npm run lint`, `npm run build` 통과. 로컬 390px에서 모바일 메뉴 열림과 연도 클러스터 Enter 확대·이전/다음 이동을 확인했고 브라우저 오류·경고는 없었다. 인증·운영 데이터 변경을 유발하는 관리자 제출 및 탈퇴는 실행하지 않았다.
+
+#### 리뷰 후 보완 사항 (2026-09-09)
+
+- 후속 보완 상태: `DONE` — 2026-09-09 사용자 요청으로 아래 3건을 로컬 코드에 반영했다. 배포하지 않았다. 위 `DONE` 및 구현 결과는 최초 구현 기록으로 보존한다.
+- 점검 근거: git diff와 `src/components/ui/pending-button.tsx`, 관련 호출 폼·서버 액션을 대조했다. `npm exec tsx -- --test src/components/ui/pending-button.test.ts`, `npm run lint`, `npm run build`, `git diff --check`가 통과했다. 실제 관리자 제출은 운영 데이터 변경을 피하기 위해 미수행했다.
+
+| 우선순위·위치 | Before: 확인된 문제 | After: 보완 방향 | 완료 검증 |
+| --- | --- | --- | --- |
+| **P2 비활성 버튼 효과** — `src/components/ui/button.tsx:17,48` 및 개별 hover/active 재정의 | `disabled:pointer-events-none`을 제거했지만 hover/active 색상·scale은 활성 상태로 제한하지 않았다. disabled 버튼도 hover 색상이 바뀌어 클릭 가능한 상태처럼 보일 수 있다. | 금지 커서를 유지하면서 비활성 버튼에는 hover/누름 효과가 적용되지 않도록 제한한다. `buttonVariants`를 쓰는 정상 링크의 hover/active는 보존하고, 로그인 등 호출부의 별도 클래스도 확인한다. | 활성·disabled·pending 상태의 computed style을 비교한다. disabled/pending에서는 hover 색상·눌림 transform이 변하지 않고, 정상 버튼·링크는 피드백을 유지해야 한다. |
+| **P2 선택하지 않은 제출 의도 표시** — `src/components/ui/pending-button.tsx:21,31`, 관리자 게시글 new/edit 폼 | 같은 폼의 모든 PendingButton이 같은 pending 값을 읽는다. 임시저장만 눌러도 옆 공개 버튼이 `공개 중…`으로 바뀌어 실행 중인 작업을 잘못 알린다. | 제출된 `intent`와 버튼의 name/value를 대조해 선택한 작업에만 진행 문구를 표시한다. 나머지 제출 버튼은 기존 문구를 유지한 채 비활성화한다. 단일 제출 버튼은 기존 방식 유지. | 임시저장·공개 각각에서 실제 FormData intent와 진행 문구가 일치하는지 모의 지연 요청으로 확인한다. Enter 제출·실패 후 복구도 확인하고 공개하지 않은 작업을 공개 중으로 안내하지 않아야 한다. |
+| **P2 동일 항목의 상충 작업 잠금** — `src/app/admin/users/page.tsx:144`, `src/app/admin/inquiries/page.tsx:153`의 StatusButton | 각 상태 버튼이 별도 폼이라 pending이 공유되지 않는다. 승인 처리 중 같은 회원의 비활성화, 문의 상태 변경 중 다른 상태 변경을 추가로 제출할 수 있다. 현재 구현의 중복 제출 방지는 누른 버튼의 폼 범위에만 적용된다. | 동일 회원/문의 항목의 상태 변경 버튼만 pending을 공유하도록 최소 범위로 묶는다. 다른 항목의 작업까지 전역으로 잠그지 않고, 기존 서버 권한·입력 검증·상태 변경 정책은 유지한다. | 모의 지연 중 동일 항목의 상충 버튼이 모두 비활성화되는지, 다른 항목은 사용 가능한지, 실패 시 재시도 가능한지 확인한다. UI 잠금만으로 여러 탭·사용자 간 서버 동시성을 보장한다고 간주하지 않는다. |
+
+- 구현 및 검증 결과:
+  - 공통 Button과 개별 재정의에 disabled hover/active 원래 색상을 명시해 비활성·pending 버튼의 색상·눌림 변화를 막고, 활성 Button·Link의 기존 피드백은 유지했다.
+  - `PendingButton`이 `useFormStatus().data`의 실제 name/value를 비교하도록 해 다중 submit 폼에서 선택한 intent만 진행 문구·`aria-busy`를 표시하고 나머지는 기존 문구를 유지한 채 비활성화한다. 단일 제출 버튼은 기존처럼 진행 문구를 표시한다.
+  - 회원·문의 행의 상태 변경 버튼을 행별 단일 native form으로 합쳐 같은 항목의 상충 상태 변경은 함께 잠근다. 다른 행과 서버의 권한·입력 검증·상태 정책은 바꾸지 않았다.
+  - `PendingButton`의 제출 intent 판별 단위 테스트 1건, lint와 build를 통과했다. 실제 회원 상태 변경·게시글 공개·운영 배포는 별도 승인 범위로 남긴다.
+
+#### 2차 리뷰: 후속 확인 사항 (2026-09-09)
+
+- 판정: 사용자 요청으로 키보드 눌림 효과 보완을 구현했다. 제출 intent별 진행 문구, 회원/문의 행별 단일 form 공유 잠금, disabled 색상 복원은 기존 완료 기록을 유지한다. 배포하지 않았다.
+
+| 우선순위·위치 | Before: 남은 사항 | After: 필요한 보완·검증 |
+| --- | --- | --- |
+| **P3 키보드 눌림 효과 회귀** — `src/components/ui/button.tsx:50`, `src/app/login/login-submit.tsx:17` | 공통 `motion-safe:active:scale-[0.98]`에는 포인터/키보드 구분이 없다. 로그인 자체의 `:active:not(:focus-visible)` 예외와 별개로 공통 scale이 적용되므로, 모션 허용 환경에서 키보드 Space로 누를 때도 버튼이 축소될 수 있다. motion-safe는 입력 방식 구분이 아니다. | 공통 눌림 transform을 포인터 입력에 한정하거나 공통 scale을 제거하고 색상 피드백만 유지한다. 로그인·모바일 메뉴 버튼을 Tab으로 선택한 뒤 Space를 누르는 동안 scale이 변하지 않고 포인터 피드백·focus ring·reduced-motion은 유지되는지 확인한다. |
+| **검증 보완** — `src/components/ui/pending-button.test.ts`, READY-31 완료 검증 | 새 테스트는 FormData를 직접 구성한 intent 판별 함수만 검사한다. 실제 submitter 값 전달, React pending 중 같은 행 잠금/다른 행 유지, 실패 후 복구, disabled computed style은 이 테스트로 검증되지 않는다. 운영 제출을 생략한 것과 격리된 통합 검증을 완료한 것은 다르다. | 운영 데이터와 연결하지 않은 로컬/모의 지연 폼에서 임시저장·공개·Enter 제출, 동일 행 상충 작업 차단, 다른 행 독립성, 실패 후 재시도를 검증한다. 일반 Button뿐 아니라 로그인/탈퇴의 개별 클래스 재정의를 포함해 disabled hover/active computed style도 비교하고 결과를 기록한다. 실제 운영 회원 변경은 불필요하다. |
+
+- 구현 및 검증 결과:
+  - 공통 Button의 `motion-safe:active:scale-[0.98]`을 제거해 입력 방식과 무관한 공통 축소를 없앴다. 로그인에 이미 있던 `:active:not(:focus-visible)` 포인터 전용 축소와 활성 색상·focus ring은 유지했다.
+  - 단위 테스트를 2건으로 확장해 선택한 제출 intent만 진행 상태가 되는지와 공통 Button이 색상 피드백은 유지하되 `active:scale`을 포함하지 않는지 확인했다.
+  - 로컬 로그인 버튼에서 키보드 Space 이후 computed transform이 `none`인 것을 확인했다. `node --import tsx --test src/components/ui/pending-button.test.ts`, `npm run lint`, `npm run build`, `git diff --check`가 통과했다.
+  - 실제 상태 변경을 피하기 위해 관리자 행의 지연 제출·실패 복구는 실행하지 않았다. 운영 데이터와 연결되지 않은 전용 UI 통합 테스트 환경이 필요할 때만 추가한다.
+
+#### 배포 전 격리 통합 검증 (2026-09-09)
+
+- 판정: 완료. 개발 전용 mock 폼만 사용했으며 운영 DB·이메일·게시글·회원 상태는 변경하지 않았다.
+- 범위: `/pending-button-test`에서 실제 `PendingButton`과 동일한 `buttonVariants`를 사용했다. 페이지는 `NODE_ENV !== "development"`일 때 `notFound()`를 반환하며, Production 실행 모드에서 브라우저 404를 확인했다.
+- 결과: 임시저장·공개·Enter 제출에서 선택한 버튼만 진행 문구가 바뀌고 같은 폼의 나머지 버튼은 원래 문구로 잠겼다. 실패 후 재시도, 같은 회원 행의 상충 작업 잠금, 다른 회원 행의 독립성도 확인했다.
+- 상태 피드백: pending 버튼은 `cursor: not-allowed`, `transform: none`, 다른 행의 활성 버튼은 `cursor: pointer`로 브라우저에서 확인했다. 브라우저 오류 로그는 없었다.
+- 재검증: `node --import tsx --test src/components/ui/pending-button.test.ts` 2건, `npm run lint`, `npm run build`, `git diff --check`를 통과했다. commit·배포는 사용자 진행 범위다.
+
 ## Codex 작업 결과 기록
 
 Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
@@ -1196,6 +1272,7 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-28 | READY-22 | DONE | 생애사 전체 목록을 Server Component로 분리하고 날짜 해석을 재사용함. Supabase SDK를 업로드 시점의 별도 chunk로 분리해 작성 entry를 247,309B에서 11,496B로 축소하고, private signed URL 본문 이미지를 Next.js 반응형 최적화·캐시 경로로 제공함. 테스트 15개, lint/build와 1280px·390px 점검 통과. | 실제 본문 이미지 데이터가 생기면 Production에서 이미지 최적화 캐시·전송량 smoke test 수행 |
 | 2026-09-02 | READY-24 | DONE | 공개 프론트와 seed의 출범 전·준비 단계 문구를 정식 운영형 문장으로 교체하고 미사용 준비 단계 데이터를 삭제함. lint/build 통과. | 기존 운영 DB의 seed 게시글은 관리자 화면 또는 승인된 데이터 변경으로 별도 수정 필요 |
 | 2026-09-02 | READY-25 | DONE | 공용 credentials 로그인에 HMAC 계정·IP 제한, constant-time 관리자 비교, 자격 증명 변경 즉시 무효화되는 1시간 관리자 세션을 적용함. 문의·회원 목록을 10행으로 제한하고 문의 연락처·본문을 한 건 상세로 분리함. Prisma 검증, 테스트 25개, TypeScript, lint/build 통과. | `20260902000000_add_login_throttles` Production 적용 필요; WAF·MFA는 WAITING-14 |
+| 2026-09-09 | READY-31 | DONE | 공통 버튼·원시 버튼의 활성/비활성 커서와 눌림 피드백을 통일하고, 관리자 상태 변경·게시글 작업·로그아웃·탈퇴에 진행 문구·중복 제출 방지·`aria-busy`를 적용함. 후속으로 disabled hover/active 차단, 다중 submit intent별 진행 문구, 행별 상태 변경 공유 잠금, 키보드 공통 눌림 축소 제거를 보완함. 개발 전용 mock 폼에서 intent·Enter·실패 복구·행별 잠금과 disabled computed style을 통합 검증함. | 배포하지 않음. 실제 운영 데이터 변경을 동반한 관리자 제출·탈퇴 smoke test는 별도 승인 필요 |
 
 ## 사용자 결정 기록
 
@@ -1219,3 +1296,6 @@ Codex는 작업을 마칠 때 아래 표에 한 줄을 추가한다.
 | 2026-08-24 | READY-18 | Supabase Auth를 기다리지 않고 현재 인증의 서버 권한 검사와 Supabase Storage signed URL을 사용해 연구 글 파일 업로드를 먼저 구현 | 전통형 연구 목록, 반응형 상세, PDF/HWP/DOCX 첨부와 본문 이미지, 파일당 20MiB 제한; 드래그앤드롭·미리보기·진행률·범용 리치 텍스트 제외 |
 | 2026-08-31 | WAITING-10, WAITING-12 | 공식 도메인 구매 전에는 Supabase Auth에 등록한 Gmail Custom SMTP로 이메일 확인과 비밀번호 재설정을 구현하고, 공식 도메인 구매 후 SMTP·발신자·Site URL·redirect URL 설정을 교체 | 코드 구현은 `READY-23`; 관리자 승인 결과 알림과 Production migration·기존 사용자 전환은 기존 WAITING 항목 유지 |
 | 2026-09-02 | READY-24 | 공개 화면의 출범 전·준비 단계 표현을 정식 운영 문구로 교체하고 footer에서는 장기 보존 표현을 제외 | 공개 프론트 정적 문구와 seed 기본 콘텐츠; 운영 DB 게시글 변경 제외 |
+| 2026-09-09 | WAITING-16 | 클릭 요소 액션 피드백 통일 작업을 승인하고 배포 없이 로컬 구현·검증 요청 | `READY-31`: 공통 버튼·관리자/회원 제출 상태·파일 제어·모바일/연대기 피드백 |
+| 2026-09-09 | READY-31 | 후속 보완점 3건의 코드 구현 요청 | disabled 효과, 다중 submit intent 표시, 동일 항목 상태 변경 잠금 |
+| 2026-09-09 | READY-31 | 2차 리뷰 후속 보완의 코드 구현 요청 | 키보드 공통 눌림 축소 제거 및 검증 보완 |

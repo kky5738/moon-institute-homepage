@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Pagination } from "@/components/site/Pagination";
+import { PendingButton } from "@/components/ui/pending-button";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   getPostPageWindow,
@@ -86,7 +87,7 @@ export default async function AdminPostsPage({
                     post.status === "PUBLISHED" ? (
                       <Link
                         href={`/research/${post.slug}`}
-                        className="inline-flex h-9 items-center border border-border bg-surface px-3 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
+                        className="inline-flex h-9 items-center border border-border bg-surface px-3 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground disabled:hover:border-border disabled:hover:text-primary-dark"
                       >
                         보기
                       </Link>
@@ -102,12 +103,12 @@ export default async function AdminPostsPage({
                   {post.status !== "ARCHIVED" ? (
                     <form action={archivePost}>
                       <input type="hidden" name="id" value={post.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex h-9 cursor-pointer items-center border border-border bg-surface px-3 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
+                      <PendingButton
+                        pendingLabel="보관 중…"
+                        className="inline-flex h-9 items-center border border-border bg-surface px-3 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
                       >
                         보관
-                      </button>
+                      </PendingButton>
                     </form>
                   ) : null}
                 </div>

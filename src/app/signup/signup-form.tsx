@@ -181,7 +181,13 @@ export function SignupForm() {
         </p>
       ) : null}
 
-      <Button type="submit" disabled={pending} size="lg" className="w-full">
+      <Button
+        type="submit"
+        disabled={pending}
+        aria-busy={pending}
+        size="lg"
+        className="w-full"
+      >
         {pending ? "신청 중" : "가입 신청"}
       </Button>
     </form>

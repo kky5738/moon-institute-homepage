@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import { Card } from "@/components/ui/card";
 import { requireResearcher } from "@/lib/researcher-auth";
 import { deleteAccount, logout } from "./actions";
@@ -39,9 +40,12 @@ export default async function AccountPage() {
             <Link href="/account/posts" className={buttonVariants()}>
               내 글 관리
             </Link>
-            <Button type="submit" variant="outline">
+            <PendingButton
+              pendingLabel="로그아웃 중…"
+              className={buttonVariants({ variant: "outline" })}
+            >
               로그아웃
-            </Button>
+            </PendingButton>
           </div>
         </form>
       </Card>
@@ -64,12 +68,14 @@ export default async function AccountPage() {
             />
             <span>계정을 영구 삭제하고 탈퇴하는 데 동의합니다.</span>
           </label>
-          <Button
-            type="submit"
-            className="mt-4 bg-red-700 text-white hover:bg-red-800"
+          <PendingButton
+            pendingLabel="탈퇴 처리 중…"
+            className={buttonVariants({
+              className: "mt-4 bg-red-700 text-white hover:bg-red-800 active:bg-red-800 disabled:hover:bg-red-700 disabled:active:bg-red-700",
+            })}
           >
             회원 탈퇴
-          </Button>
+          </PendingButton>
         </form>
       </Card>
     </div>

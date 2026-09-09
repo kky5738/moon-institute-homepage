@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Pagination } from "@/components/site/Pagination";
+import { PendingButton } from "@/components/ui/pending-button";
 import { InquiryStatus, InquiryType } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
@@ -77,21 +78,7 @@ export default async function AdminInquiriesPage({
                 >
                   상세 보기
                 </Link>
-                {inquiry.status !== InquiryStatus.REVIEWED ? (
-                  <StatusButton id={inquiry.id} status={InquiryStatus.REVIEWED}>
-                    검토 완료
-                  </StatusButton>
-                ) : null}
-                {inquiry.status !== InquiryStatus.ARCHIVED ? (
-                  <StatusButton id={inquiry.id} status={InquiryStatus.ARCHIVED}>
-                    보관
-                  </StatusButton>
-                ) : null}
-                {inquiry.status !== InquiryStatus.NEW ? (
-                  <StatusButton id={inquiry.id} status={InquiryStatus.NEW}>
-                    새 문의로
-                  </StatusButton>
-                ) : null}
+                <StatusButtons id={inquiry.id} status={inquiry.status} />
               </div>
             </article>
           ))
@@ -139,25 +126,46 @@ async function getAdminInquiryPage(requestedPage: number) {
   }
 }
 
-function StatusButton({
+function StatusButtons({
   id,
   status,
-  children,
 }: {
   id: number;
   status: InquiryStatus;
-  children: React.ReactNode;
 }) {
   return (
-    <form action={updateInquiryStatus}>
+    <form action={updateInquiryStatus} className="flex flex-wrap items-start gap-2">
       <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="status" value={status} />
-      <button
-        type="submit"
-        className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
-      >
-        {children}
-      </button>
+      {status !== InquiryStatus.REVIEWED ? (
+        <PendingButton
+          name="status"
+          value={InquiryStatus.REVIEWED}
+          pendingLabel="검토 완료 중…"
+          className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground disabled:hover:border-border disabled:hover:text-primary-dark"
+        >
+          검토 완료
+        </PendingButton>
+      ) : null}
+      {status !== InquiryStatus.ARCHIVED ? (
+        <PendingButton
+          name="status"
+          value={InquiryStatus.ARCHIVED}
+          pendingLabel="보관 중…"
+          className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground disabled:hover:border-border disabled:hover:text-primary-dark"
+        >
+          보관
+        </PendingButton>
+      ) : null}
+      {status !== InquiryStatus.NEW ? (
+        <PendingButton
+          name="status"
+          value={InquiryStatus.NEW}
+          pendingLabel="새 문의로 변경 중…"
+          className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground disabled:hover:border-border disabled:hover:text-primary-dark"
+        >
+          새 문의로
+        </PendingButton>
+      ) : null}
     </form>
   );
 }

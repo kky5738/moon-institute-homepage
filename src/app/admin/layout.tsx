@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PendingButton } from "@/components/ui/pending-button";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logout } from "./actions";
 
@@ -31,12 +32,12 @@ export default async function AdminLayout({
             </Link>
           </nav>
           <form action={logout}>
-            <button
-              type="submit"
-              className="border border-white/30 px-3 py-1.5 text-sm font-semibold hover:border-white"
+            <PendingButton
+              pendingLabel="로그아웃 중…"
+              className="border border-white/30 px-3 py-1.5 text-sm font-semibold hover:border-white disabled:hover:border-white/30"
             >
               로그아웃
-            </button>
+            </PendingButton>
           </form>
         </div>
       </div>

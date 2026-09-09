@@ -32,7 +32,7 @@ export default function AdminError({
       <button
         type="button"
         onClick={() => unstable_retry()}
-        className="mt-8 inline-flex h-11 items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary"
+        className="mt-8 inline-flex h-11 cursor-pointer items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary active:bg-primary"
       >
         다시 시도
       </button>

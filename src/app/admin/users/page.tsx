@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Pagination } from "@/components/site/Pagination";
+import { PendingButton } from "@/components/ui/pending-button";
 import { UserStatus } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
@@ -74,23 +75,11 @@ export default async function AdminUsersPage({
                 </div>
               </dl>
 
-              <div className="flex flex-wrap items-start gap-2 md:justify-end">
-                {user.status !== UserStatus.APPROVED && user.emailVerifiedAt ? (
-                  <StatusButton id={user.id} status={UserStatus.APPROVED}>
-                    승인
-                  </StatusButton>
-                ) : null}
-                {user.status !== UserStatus.APPROVED && !user.emailVerifiedAt ? (
-                  <span className="px-3 py-1.5 text-xs font-semibold text-muted">
-                    이메일 확인 대기
-                  </span>
-                ) : null}
-                {user.status !== UserStatus.DISABLED ? (
-                  <StatusButton id={user.id} status={UserStatus.DISABLED}>
-                    비활성화
-                  </StatusButton>
-                ) : null}
-              </div>
+              <StatusButtons
+                id={user.id}
+                status={user.status}
+                emailVerified={Boolean(user.emailVerifiedAt)}
+              />
             </article>
           ))
         ) : (
@@ -130,25 +119,54 @@ async function getAdminUserPage(requestedPage: number) {
   }
 }
 
-function StatusButton({
+function StatusButtons({
   id,
   status,
-  children,
+  emailVerified,
 }: {
   id: number;
   status: UserStatus;
-  children: React.ReactNode;
+  emailVerified: boolean;
 }) {
+  const canApprove = status !== UserStatus.APPROVED && emailVerified;
+  const canDisable = status !== UserStatus.DISABLED;
+
+  if (!canApprove && !canDisable) {
+    return (
+      <div className="flex flex-wrap items-start gap-2 md:justify-end">
+        <span className="px-3 py-1.5 text-xs font-semibold text-muted">
+          이메일 확인 대기
+        </span>
+      </div>
+    );
+  }
+
   return (
-    <form action={updateUserStatus}>
+    <form
+      action={updateUserStatus}
+      className="flex flex-wrap items-start gap-2 md:justify-end"
+    >
       <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="status" value={status} />
-      <button
-        type="submit"
-        className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground"
-      >
-        {children}
-      </button>
+      {canApprove ? (
+        <PendingButton
+          name="status"
+          value={UserStatus.APPROVED}
+          pendingLabel="승인 중…"
+          className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground disabled:hover:border-border disabled:hover:text-primary-dark"
+        >
+          승인
+        </PendingButton>
+      ) : null}
+      {canDisable ? (
+        <PendingButton
+          name="status"
+          value={UserStatus.DISABLED}
+          pendingLabel="비활성화 중…"
+          className="border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-primary-dark hover:border-primary hover:text-foreground disabled:hover:border-border disabled:hover:text-primary-dark"
+        >
+          비활성화
+        </PendingButton>
+      ) : null}
     </form>
   );
 }

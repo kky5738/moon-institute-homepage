@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { PendingButton } from "@/components/ui/pending-button";
 import { PostStatus, PostType } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
@@ -167,36 +168,36 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           >
             취소
           </Link>
-          <button
-            type="submit"
+          <PendingButton
             name="intent"
             value="draft"
             disabled={!hasCategories}
-            className="inline-flex h-11 cursor-pointer items-center border border-border bg-surface px-5 text-sm font-semibold text-primary-dark hover:border-primary disabled:cursor-not-allowed"
+            pendingLabel="저장 중…"
+            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-primary-dark hover:border-primary disabled:hover:border-border"
           >
             임시저장
-          </button>
-          <button
-            type="submit"
+          </PendingButton>
+          <PendingButton
             name="intent"
             value="publish"
             disabled={!hasCategories}
-            className="inline-flex h-11 cursor-pointer items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary disabled:cursor-not-allowed"
+            pendingLabel="공개 중…"
+            className="inline-flex h-11 items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary disabled:hover:bg-primary-dark"
           >
             저장 후 공개
-          </button>
+          </PendingButton>
         </div>
       </form>
 
       {post.status !== PostStatus.ARCHIVED ? (
         <form action={archivePost} className="mt-4 flex justify-end">
           <input type="hidden" name="id" value={post.id} />
-          <button
-            type="submit"
-            className="inline-flex h-10 cursor-pointer items-center border border-border bg-surface px-4 text-sm font-semibold text-primary-dark hover:border-primary hover:text-foreground"
+          <PendingButton
+            pendingLabel="보관 중…"
+            className="inline-flex h-10 items-center border border-border bg-surface px-4 text-sm font-semibold text-primary-dark hover:border-primary hover:text-foreground disabled:hover:border-border disabled:hover:text-primary-dark"
           >
             게시글 보관
-          </button>
+          </PendingButton>
         </form>
       ) : null}
     </div>

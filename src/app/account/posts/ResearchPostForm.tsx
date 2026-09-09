@@ -286,7 +286,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
               id="inline-image"
               type="file"
               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-              className="mt-2 block w-full text-sm text-muted file:mr-3 file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold"
+              className="mt-2 block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:active:bg-secondary"
             />
           </FormField>
           <FormField label="이미지 설명" htmlFor="inline-image-alt">
@@ -320,7 +320,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
             addAttachments(event.target.files);
             event.currentTarget.value = "";
           }}
-          className="block w-full text-sm text-muted file:mr-3 file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold"
+          className="block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:active:bg-secondary"
         />
         <p className="mt-3 text-xs leading-5 text-muted">
           PDF, HWP, DOCX · 파일당 최대 20MB
@@ -349,17 +349,24 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
         >
           취소
         </Link>
-        <Button
+          <Button
           type="submit"
           name="intent"
           value="draft"
           variant="outline"
-          formNoValidate
-          disabled={busy}
+            formNoValidate
+            disabled={busy}
+            aria-busy={busy}
         >
           {busy ? "저장 중" : "임시저장"}
         </Button>
-        <Button type="submit" name="intent" value="publish" disabled={busy}>
+        <Button
+          type="submit"
+          name="intent"
+          value="publish"
+          disabled={busy}
+          aria-busy={busy}
+        >
           {busy ? "처리 중" : post ? "저장 후 공개" : "공개하기"}
         </Button>
       </div>
@@ -404,7 +411,7 @@ function FileList({
           <button
             type="button"
             onClick={() => onRemove(file)}
-            className="shrink-0 font-semibold text-primary-dark underline-offset-4 hover:underline"
+            className="shrink-0 cursor-pointer font-semibold text-primary-dark underline-offset-4 hover:underline active:text-primary"
           >
             제거
           </button>

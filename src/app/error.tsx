@@ -32,7 +32,7 @@ export default function AppError({
       <button
         type="button"
         onClick={() => unstable_retry()}
-        className="mt-8 inline-flex h-11 items-center border border-primary bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-dark"
+        className="mt-8 inline-flex h-11 cursor-pointer items-center border border-primary bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-dark active:bg-primary-dark"
       >
         다시 시도
       </button>

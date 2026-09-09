@@ -181,7 +181,7 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                     type="button"
                     disabled={zoomIndex <= 0}
                     onClick={() => openYear(yearGroups[zoomIndex - 1].year)}
-                    className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary active:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary active:bg-secondary disabled:hover:bg-white disabled:active:bg-white disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     이전 연도
                   </button>
@@ -189,7 +189,7 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                     type="button"
                     disabled={zoomIndex === yearGroups.length - 1}
                     onClick={() => openYear(yearGroups[zoomIndex + 1].year)}
-                    className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary active:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="min-h-11 rounded-full border border-gold/40 bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-secondary active:bg-secondary disabled:hover:bg-white disabled:active:bg-white disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     다음 연도
                   </button>
@@ -285,7 +285,7 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                         }}
                         onMouseEnter={() => setPreviewYear(group.year)}
                         onMouseLeave={() => setPreviewYear(null)}
-                        className="group absolute grid h-12 w-12 cursor-pointer place-items-center rounded-full transition-transform active:scale-90"
+                        className="group absolute grid h-12 w-12 cursor-pointer place-items-center rounded-full transition-transform motion-safe:active:scale-90"
                         style={{
                           left: `${chartSide + position * plotWidth}px`,
                           top: `${firstLaneY}px`,
@@ -329,7 +329,7 @@ export function LifeTimelineSection({ events }: { events: LifeEvent[] }) {
                         }}
                         onMouseEnter={() => setPreviewId(event.id)}
                         onMouseLeave={() => setPreviewId(null)}
-                        className="group absolute grid h-11 w-11 cursor-pointer place-items-center rounded-full transition-transform active:scale-90"
+                        className="group absolute grid h-11 w-11 cursor-pointer place-items-center rounded-full transition-transform motion-safe:active:scale-90"
                         style={{
                           left: `${chartSide + event.position * plotWidth}px`,
                           top: `${y}px`,

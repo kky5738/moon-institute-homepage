@@ -40,7 +40,7 @@ export function ForgotPasswordForm() {
           className="mt-2"
         />
       </div>
-      <Button type="submit" disabled={pending} size="lg" className="w-full">
+      <Button type="submit" disabled={pending} aria-busy={pending} size="lg" className="w-full">
         {pending ? "요청 중" : "재설정 메일 받기"}
       </Button>
     </form>

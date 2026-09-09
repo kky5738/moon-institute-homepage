@@ -138,6 +138,7 @@ export function ContactForm() {
       <Button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         size="lg"
       >
         {pending ? "접수 중" : "문의 접수"}

@@ -35,7 +35,11 @@ export default function GlobalError({
             <h1>페이지를 불러오지 못했습니다</h1>
             <p>잠시 후 다시 시도해주세요.</p>
             {error.digest ? <p>오류 코드: {error.digest}</p> : null}
-            <button type="button" onClick={() => unstable_retry()}>
+            <button
+              type="button"
+              onClick={() => unstable_retry()}
+              style={{ cursor: "pointer" }}
+            >
               다시 시도
             </button>
           </div>

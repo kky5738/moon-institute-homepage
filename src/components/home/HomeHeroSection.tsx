@@ -120,7 +120,7 @@ export function HomeHeroSection() {
                 type="button"
                 disabled={prefersReducedMotion}
                 onClick={() => setIsPaused((current) => !current)}
-                className="min-h-11 rounded-full border border-white/35 px-3 text-xs font-semibold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+                className="min-h-11 rounded-full border border-white/35 px-3 text-xs font-semibold text-white hover:bg-white/10 active:bg-white/20 disabled:hover:bg-transparent disabled:active:bg-transparent disabled:opacity-70"
               >
                 {prefersReducedMotion
                   ? "자동 전환 꺼짐"
