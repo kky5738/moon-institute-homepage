@@ -3,8 +3,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login } from "./actions";
-import { LoginSubmit } from "./login-submit";
+import { LoginForm } from "./login-submit";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -41,7 +40,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
         ) : null}
 
-        <form action={login} className="mt-6 space-y-5">
+        <LoginForm>
           <div>
             <Label htmlFor="username">
               아이디 또는 이메일
@@ -73,8 +72,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             />
           </div>
 
-          <LoginSubmit />
-        </form>
+        </LoginForm>
 
         <p className="mt-4 text-center text-sm">
           <Link href="/forgot-password" className="font-semibold text-primary hover:underline">

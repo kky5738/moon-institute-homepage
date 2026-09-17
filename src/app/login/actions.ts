@@ -5,13 +5,15 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { signIn } from "../../../auth";
 import { logServerError } from "@/lib/server-log";
 
-export async function login(formData: FormData) {
+export async function login(_previousState: boolean, formData: FormData) {
   try {
     await signIn("credentials", {
       username: formData.get("username"),
       password: formData.get("password"),
       redirectTo: "/auth/continue",
+      redirect: false,
     });
+    return true;
   } catch (error) {
     unstable_rethrow(error);
 

@@ -1,8 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { login } from "./actions";
+
+export function LoginForm({ children }: { children: ReactNode }) {
+  const [loggedIn, action] = useActionState(login, false);
+
+  useEffect(() => {
+    if (loggedIn) window.location.replace("/auth/continue");
+  }, [loggedIn]);
+
+  return (
+    <form action={action} className="mt-6 space-y-5">
+      {children}
+      <LoginSubmit />
+      {loggedIn ? (
+        <p role="status" className="text-center text-sm">
+          로그인되었습니다.{" "}
+          <a href="/auth/continue" className="font-semibold text-primary hover:underline">
+            계속하기
+          </a>
+        </p>
+      ) : null}
+    </form>
+  );
+}
 
 export function LoginSubmit() {
   const { pending } = useFormStatus();
