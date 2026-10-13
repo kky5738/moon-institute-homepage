@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Pagination } from "@/components/site/Pagination";
+import { buttonVariants } from "@/components/ui/button";
 import { PendingButton } from "@/components/ui/pending-button";
 import { UserStatus } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -42,14 +43,22 @@ export default async function AdminUsersPage({
           이메일 확인이 끝난 신청만 승인할 수 있습니다. 비활성화하면 기존
           연구자 세션과 로그인을 이용할 수 없습니다.
         </p>
-        {pendingOnly || pendingCount > 0 ? (
+        <nav aria-label="회원 목록 필터" className="mt-5 flex flex-wrap gap-2">
           <Link
-            href={pendingOnly ? "/admin/users" : "/admin/users?status=deletion"}
-            className="mt-4 inline-block text-sm font-semibold text-primary underline"
+            href="/admin/users"
+            aria-current={!pendingOnly ? "page" : undefined}
+            className={buttonVariants({ variant: pendingOnly ? "outline" : "default" })}
           >
-            {pendingOnly ? "전체 회원 보기" : `탈퇴 처리 중 ${pendingCount}건 보기`}
+            전체 회원
           </Link>
-        ) : null}
+          <Link
+            href="/admin/users?status=deletion"
+            aria-current={pendingOnly ? "page" : undefined}
+            className={buttonVariants({ variant: pendingOnly ? "default" : "outline" })}
+          >
+            탈퇴 처리 중 {pendingCount}건
+          </Link>
+        </nav>
       </div>
 
       <section className="mt-8 divide-y divide-border border-y border-border bg-surface">
