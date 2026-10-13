@@ -2,12 +2,12 @@
 
 import { signOut } from "../../../auth";
 import { revalidatePath, updateTag } from "next/cache";
-import { PostStatus, PostType, UserStatus } from "@/generated/prisma/enums";
+import { PostType, UserStatus } from "@/generated/prisma/enums";
+import { finishAccountDeletion } from "@/lib/account-deletion";
 import { assertResearcher } from "@/lib/researcher-auth";
 import { prisma } from "@/lib/prisma";
 import { getPublishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
-import { getSupabaseAuthAdminClient } from "@/lib/supabase-auth";
 
 export async function logout() {
   await signOut({ redirectTo: "/login" });
@@ -21,36 +21,33 @@ export async function deleteAccount(formData: FormData) {
   const user = await assertResearcher();
 
   try {
-    await prisma.user.update({
-      where: { id: user.id },
+    const result = await prisma.user.updateMany({
+      where: { id: user.id, status: UserStatus.APPROVED },
       data: {
-        status: UserStatus.DISABLED,
+        status: UserStatus.DELETION_PENDING,
+        statusChangedAt: new Date(),
+        name: "탈퇴 처리 중",
+        email: `deleted-${user.id}@invalid.invalid`,
+        passwordHash: null,
         sessionVersion: { increment: 1 },
       },
     });
-
-    const { error: authDeleteError } =
-      await getSupabaseAuthAdminClient().auth.admin.deleteUser(
-        user.supabaseAuthId!,
-      );
-    if (authDeleteError) {
-      throw new Error("Supabase Auth user deletion failed.", {
-        cause: authDeleteError,
-      });
-    }
-
-    await prisma.$transaction([
-      prisma.post.deleteMany({
-        where: {
-          authorId: user.id,
-          status: PostStatus.DRAFT,
-        },
-      }),
-      prisma.user.delete({ where: { id: user.id } }),
-    ]);
+    if (result.count !== 1) throw new Error("탈퇴 요청을 처리할 수 없습니다.");
   } catch (error) {
-    logServerError("users.deleteSelf", error);
+    logServerError("users.requestDeletion", error);
     throw error;
+  }
+
+  updateTag(getPublishedPostsCacheTag(PostType.RESEARCH));
+  revalidatePath("/research");
+  revalidatePath("/admin/posts");
+
+  try {
+    await finishAccountDeletion(user.id, user.supabaseAuthId!);
+  } catch (error) {
+    logServerError("users.deleteSelf", error, { userId: user.id });
+    await signOut({ redirectTo: "/account/deletion-pending" });
+    return;
   }
 
   updateTag(getPublishedPostsCacheTag(PostType.RESEARCH));

@@ -47,5 +47,5 @@ export function Pagination({
 }
 
 function pageHref(basePath: string, page: number) {
-  return page === 1 ? basePath : `${basePath}?page=${page}`;
+  return page === 1 ? basePath : `${basePath}${basePath.includes("?") ? "&" : "?"}page=${page}`;
 }

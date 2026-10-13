@@ -50,6 +50,10 @@ test("only approved researchers can sign in", () => {
     canResearcherSignIn({ ...verified, status: UserStatus.PENDING }),
     false,
   );
+  assert.equal(
+    canResearcherSignIn({ ...verified, status: UserStatus.DELETION_PENDING }),
+    false,
+  );
   assert.equal(canResearcherSignIn({ ...verified, emailVerifiedAt: null }), false);
   assert.equal(canResearcherSignIn({ ...verified, supabaseAuthId: null }), false);
 });

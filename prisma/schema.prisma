@@ -50,6 +50,7 @@ enum UserStatus {
   PENDING
   APPROVED
   DISABLED
+  DELETION_PENDING
 }
 
 model Category {
