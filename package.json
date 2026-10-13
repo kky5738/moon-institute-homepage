@@ -18,7 +18,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "prisma generate && prisma migrate dev && tsx prisma/seed.ts",
     "docker:db:up": "docker compose up -d postgres",
-    "docker:db:down": "docker compose down"
+    "docker:db:down": "docker compose down",
+    "test:deletion:integration": "node --import tsx --test tests/account-deletion.integration.test.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

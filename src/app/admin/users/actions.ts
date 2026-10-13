@@ -56,14 +56,8 @@ export async function retryAccountDeletion(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id < 1) throw new Error("유효한 회원 ID가 필요합니다.");
 
-  const user = await prisma.user.findFirst({
-    where: { id, status: UserStatus.DELETION_PENDING },
-    select: { supabaseAuthId: true },
-  });
-  if (!user?.supabaseAuthId) throw new Error("탈퇴 처리 중인 계정을 찾을 수 없습니다.");
-
   try {
-    await finishAccountDeletion(id, user.supabaseAuthId);
+    await finishAccountDeletion(id);
   } catch (error) {
     logServerError("admin.users.retryDeletion", error, { userId: id });
     throw error;
