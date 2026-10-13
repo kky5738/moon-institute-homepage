@@ -120,10 +120,11 @@ export default async function AdminUsersPage({
 async function getAdminUserPage(requestedPage: number, pendingOnly: boolean) {
   try {
     const where = pendingOnly ? { status: UserStatus.DELETION_PENDING } : {};
-    const [totalItems, pendingCount] = await Promise.all([
+    const [totalItems, deletionCount] = await Promise.all([
       prisma.user.count({ where }),
-      prisma.user.count({ where: { status: UserStatus.DELETION_PENDING } }),
+      pendingOnly ? null : prisma.user.count({ where: { status: UserStatus.DELETION_PENDING } }),
     ]);
+    const pendingCount = deletionCount ?? totalItems;
     const pagination = getPostPageWindow(requestedPage, totalItems);
     const users = await prisma.user.findMany({
       where,
