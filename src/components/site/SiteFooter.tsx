@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cacheLife } from "next/cache";
 
@@ -38,9 +39,13 @@ export async function SiteFooter() {
         <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr]">
           <div>
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-white/10 text-lg font-semibold text-white">
-                文
-              </span>
+              <Image
+                src="/images/brand/logo.png"
+                alt=""
+                width={56}
+                height={56}
+                className="h-14 w-14 shrink-0 object-contain"
+              />
               <div>
                 <p className="text-lg font-semibold text-white">문선명 연구소</p>
                 <p className="mt-1 text-xs text-white/55">M Institute</p>

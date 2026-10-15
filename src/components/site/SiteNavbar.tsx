@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -50,9 +51,14 @@ export function SiteNavbar({
         className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-10"
       >
         <Link href="/" className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-lg font-semibold text-primary-foreground">
-            文
-          </span>
+          <Image
+            src="/images/brand/logo.png"
+            alt=""
+            width={44}
+            height={44}
+            loading="eager"
+            className="h-11 w-11 shrink-0 object-contain"
+          />
           <span className="flex flex-col leading-none">
             <span className={`text-base font-semibold tracking-tight ${textClassName}`}>
               문선명 연구소
