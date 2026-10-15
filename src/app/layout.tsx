@@ -6,11 +6,20 @@ import { auth } from "../../auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://xn--2e0bj2wlpa62qrpaw4s.com"),
   title: {
     default: "문선명 연구소",
     template: "%s | 문선명 연구소",
   },
   description: "문선명 연구소 공식 홈페이지입니다.",
+  openGraph: {
+    siteName: "문선명 연구소",
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default async function RootLayout({
