@@ -23,11 +23,11 @@ export default async function ResearchPage({
     await getPublishedPostPage(PostType.RESEARCH, requestedPage);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 lg:px-8 lg:py-14">
-      <div className="flex flex-col gap-6 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+    <div className="board-page mx-auto w-full max-w-6xl px-5 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div className="flex flex-col gap-6 pb-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-primary">연구 게시판</p>
-          <h1 className="mt-4 text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+          <p className="text-xs font-semibold tracking-wide text-muted">연구 게시판</p>
+          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl lg:text-4xl">
             회원 연구 글
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
@@ -39,8 +39,8 @@ export default async function ResearchPage({
         </Suspense>
       </div>
 
-      <section className="mt-8 border-y border-border bg-surface" aria-label="연구 글 목록">
-        <div className="hidden grid-cols-[72px_minmax(0,1fr)_72px_120px_110px] border-b border-border bg-background px-4 py-3 text-xs font-semibold text-muted md:grid">
+      <section className="border-y border-border bg-surface" aria-label="연구 글 목록">
+        <div className="hidden grid-cols-[72px_minmax(0,1fr)_72px_120px_110px] border-b border-border bg-secondary px-4 py-3 text-xs font-semibold text-muted md:grid">
           <span className="text-center">번호</span>
           <span>제목</span>
           <span className="text-center">첨부</span>
@@ -52,7 +52,7 @@ export default async function ResearchPage({
             {posts.map((post, index) => (
               <article
                 key={post.id}
-                className="group grid gap-2 px-4 py-4 transition-colors hover:bg-secondary/35 md:min-h-14 md:grid-cols-[72px_minmax(0,1fr)_72px_120px_110px] md:items-center md:gap-0 md:py-3"
+                className="group grid gap-3 px-4 py-6 transition-colors hover:bg-secondary md:min-h-20 md:grid-cols-[72px_minmax(0,1fr)_72px_120px_110px] md:items-center md:gap-0 md:py-5"
               >
                 <span className="hidden text-center text-sm text-muted md:block">
                   {totalItems - offset - index}
@@ -60,7 +60,7 @@ export default async function ResearchPage({
                 <div className="min-w-0">
                   <Link
                     href={`/research/${post.slug}`}
-                    className="block truncate font-semibold text-foreground underline-offset-4 group-hover:text-primary-dark group-hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="board-heading block pr-4 text-base font-semibold leading-7 text-foreground underline-offset-4 group-hover:text-primary-dark group-hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {post.title}
                   </Link>
@@ -89,7 +89,7 @@ export default async function ResearchPage({
             ))}
           </div>
         ) : (
-          <div className="px-5 py-10 text-sm text-muted">
+          <div className="px-5 py-20 text-center text-sm text-muted">
             공개된 연구 글이 없습니다.
           </div>
         )}
