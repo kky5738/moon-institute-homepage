@@ -12,7 +12,7 @@ const navItems = [
   { label: "연구 게시판", href: "/research" },
   { label: "공지사항", href: "/notices" },
   { label: "자료 아카이브", href: "/materials" },
-  { label: "문의/참여", href: "/contact" },
+  { label: "문의하기", href: "/contact" },
 ];
 
 export function SiteNavbar({
@@ -75,7 +75,7 @@ export function SiteNavbar({
               key={item.href}
               href={item.href}
               aria-current={pathname === item.href ? "page" : undefined}
-              className={`text-sm font-medium transition-colors hover:text-gold ${mutedTextClassName}`}
+              className={`inline-flex min-h-11 items-center text-sm font-medium transition-colors hover:text-gold ${mutedTextClassName}`}
             >
               {item.label}
             </Link>
@@ -91,9 +91,6 @@ export function SiteNavbar({
             })}
           >
             {authItem.label}
-          </Link>
-          <Link href="/contact" className={buttonVariants()}>
-            참여 신청
           </Link>
         </div>
 
@@ -144,16 +141,6 @@ export function SiteNavbar({
               })}
             >
               {authItem.label}
-            </Link>
-            <Link
-              href="/contact"
-              onClick={() => setOpen(false)}
-              className={buttonVariants({
-                size: "lg",
-                className: "mt-2 w-full",
-              })}
-            >
-              참여 신청
             </Link>
           </div>
         </div>

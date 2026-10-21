@@ -16,15 +16,6 @@ const footerColumns = [
     links: [
       { label: "홍보자료", href: "/materials" },
       { label: "운영 안내", href: "/notices" },
-      { label: "자료 문의", href: "/contact" },
-    ],
-  },
-  {
-    title: "참여",
-    links: [
-      { label: "문의하기", href: "/contact" },
-      { label: "참여 신청", href: "/contact" },
-      { label: "후원 관심", href: "/contact" },
     ],
   },
 ];
@@ -52,12 +43,11 @@ export async function SiteFooter() {
               </div>
             </div>
             <p className="mt-5 max-w-sm text-sm leading-6 text-white/65">
-              공지, 연구 자료와 문의 기록을 한곳에서 확인할 수 있는 문선명
-              연구소 공식 홈페이지입니다.
+              연구소 소식과 연구 자료를 전하는 문선명 연구소 공식 홈페이지입니다.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8">
             {footerColumns.map((column) => (
               <div key={column.title}>
                 <h2 className="text-sm font-semibold text-white">{column.title}</h2>
@@ -80,8 +70,11 @@ export async function SiteFooter() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Moon Institute. All rights reserved.</p>
-          <Link href="/contact" className="hover:text-white">
-            문의 및 참여 신청
+          <Link
+            href="/contact"
+            className="inline-flex min-h-11 items-center hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          >
+            문의하기
           </Link>
         </div>
       </div>
