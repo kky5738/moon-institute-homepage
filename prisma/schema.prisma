@@ -108,6 +108,7 @@ model PostAttachment {
   imageWidth   Int?
   imageHeight  Int?
   uploadedAt   DateTime?
+  committedAt  DateTime?
   createdAt    DateTime       @default(now())
   deletedAt    DateTime?
 
