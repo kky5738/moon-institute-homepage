@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +12,7 @@ const navItems = [
   { label: "연구 게시판", href: "/research" },
   { label: "공지사항", href: "/notices" },
   { label: "자료 아카이브", href: "/materials" },
-  { label: "문의/참여", href: "/contact" },
+  { label: "문의하기", href: "/contact" },
 ];
 
 export function SiteNavbar({
@@ -50,9 +51,14 @@ export function SiteNavbar({
         className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-10"
       >
         <Link href="/" className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-lg font-semibold text-primary-foreground">
-            文
-          </span>
+          <Image
+            src="/images/brand/logo.png"
+            alt=""
+            width={44}
+            height={44}
+            loading="eager"
+            className="h-11 w-11 shrink-0 object-contain"
+          />
           <span className="flex flex-col leading-none">
             <span className={`text-base font-semibold tracking-tight ${textClassName}`}>
               문선명 연구소
@@ -69,7 +75,7 @@ export function SiteNavbar({
               key={item.href}
               href={item.href}
               aria-current={pathname === item.href ? "page" : undefined}
-              className={`text-sm font-medium transition-colors hover:text-gold ${mutedTextClassName}`}
+              className={`inline-flex min-h-11 items-center text-sm font-medium transition-colors hover:text-gold ${mutedTextClassName}`}
             >
               {item.label}
             </Link>
@@ -85,9 +91,6 @@ export function SiteNavbar({
             })}
           >
             {authItem.label}
-          </Link>
-          <Link href="/contact" className={buttonVariants()}>
-            참여 신청
           </Link>
         </div>
 
@@ -138,16 +141,6 @@ export function SiteNavbar({
               })}
             >
               {authItem.label}
-            </Link>
-            <Link
-              href="/contact"
-              onClick={() => setOpen(false)}
-              className={buttonVariants({
-                size: "lg",
-                className: "mt-2 w-full",
-              })}
-            >
-              참여 신청
             </Link>
           </div>
         </div>

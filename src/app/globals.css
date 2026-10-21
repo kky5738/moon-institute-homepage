@@ -109,3 +109,19 @@ button:disabled {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Reading surfaces use neutral paper tones; brand accents remain on actions. */
+main:has(.board-page) {
+  --background: #ffffff;
+  --foreground: #24262b;
+  --muted: #656970;
+  --border: #e5e7eb;
+  --secondary: #f5f6f7;
+  background: var(--background);
+}
+
+.board-heading {
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  text-wrap: pretty;
+}

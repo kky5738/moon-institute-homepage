@@ -22,51 +22,51 @@ export default async function NoticesPage({
   );
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
-      <div className="flex flex-col gap-4 border-b border-border pb-8 md:flex-row md:items-end md:justify-between">
+    <div className="board-page mx-auto w-full max-w-6xl px-5 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div className="flex flex-col gap-4 pb-10">
         <div>
-          <p className="text-sm font-semibold text-primary">공지사항</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs font-semibold tracking-wide text-muted">공지사항</p>
+          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight lg:text-4xl text-foreground">
             연구소 소식과 안내
           </h1>
         </div>
-        <p className="max-w-md text-sm leading-6 text-muted">
+        <p className="max-w-2xl text-sm leading-6 text-muted">
           연구소의 주요 안내와 운영 소식을 공개된 순서대로 정리합니다.
         </p>
       </div>
 
-      <section className="mt-8 divide-y divide-border border-y border-border bg-surface">
+      <section className="divide-y divide-border border-y border-border bg-surface" aria-label="공지사항 목록">
         {notices.length > 0 ? notices.map((notice) => (
           <article
             key={notice.id}
-            className="grid gap-4 px-5 py-6 md:grid-cols-[140px_1fr] md:px-6"
+            className="group grid gap-3 px-4 py-7 transition-colors hover:bg-secondary md:grid-cols-[120px_minmax(0,1fr)] md:gap-8 md:py-8"
           >
-            <div className="text-sm text-muted">
-              <p>{notice.publishedAt}</p>
-              <p className="mt-2 inline-flex border border-border px-2 py-1 text-xs font-semibold text-primary">
+            <div className="flex items-center gap-3 text-sm text-muted md:block">
+              <time>{notice.publishedAt}</time>
+              <p className="text-xs text-muted md:mt-2">
                 {notice.category}
               </p>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 {notice.isPinned ? (
-                  <span className="border border-border bg-[#f1eef8] px-2 py-1 text-xs font-semibold text-primary-dark">
+                  <span className="rounded bg-secondary px-2 py-1 text-xs font-medium text-muted">
                     고정
                   </span>
                 ) : null}
-                <h2 className="text-xl font-semibold text-foreground">
-                  <Link href={`/notices/${notice.slug}`} className="hover:text-primary hover:underline">
+                <h2 className="board-heading text-lg font-semibold leading-7 text-foreground sm:text-xl">
+                  <Link href={`/notices/${notice.slug}`} className="group-hover:text-primary hover:underline">
                     {notice.title}
                   </Link>
                 </h2>
               </div>
-              <p className="mt-3 text-sm leading-6 text-muted">
+              <p className="mt-2 line-clamp-2 text-sm leading-7 text-muted">
                 {notice.summary}
               </p>
             </div>
           </article>
         )) : (
-          <div className="px-5 py-10 text-sm text-muted md:px-6">
+          <div className="px-5 py-20 text-center text-sm text-muted">
             등록된 공지사항이 없습니다.
           </div>
         )}
