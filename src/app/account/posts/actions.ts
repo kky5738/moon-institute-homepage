@@ -13,6 +13,7 @@ import {
   validateResearchUpload,
 } from "@/lib/research-files";
 import { assertResearcher } from "@/lib/researcher-auth";
+import { saveResearchPostAtomically } from "@/lib/research-posts";
 import { logServerError } from "@/lib/server-log";
 import {
   createResearchUploadTicket,
@@ -212,32 +213,20 @@ export async function saveResearchPost(
       throw new Error("본문에 아직 업로드되지 않은 이미지가 있습니다.");
     }
 
-    await prisma.$transaction([
-      prisma.postAttachment.updateMany({
-        where: {
-          postId,
-          deletedAt: null,
-          OR: [
-            { id: { in: removedIds } },
-            { kind: AttachmentKind.INLINE_IMAGE, id: { notIn: imageIds } },
-          ],
-        },
-        data: { deletedAt: new Date() },
-      }),
-      prisma.post.update({
-        where: { id: post.id },
-        data: {
-          title,
-          summary: getSummary(formData),
-          content,
-          status,
-          publishedAt:
-            status === PostStatus.PUBLISHED
-              ? (post.publishedAt ?? new Date())
-              : post.publishedAt,
-        },
-      }),
-    ]);
+    await saveResearchPostAtomically(prisma, {
+      postId: post.id,
+      authorId: user.id,
+      title,
+      summary: getSummary(formData),
+      content,
+      status,
+      publishedAt:
+        status === PostStatus.PUBLISHED
+          ? (post.publishedAt ?? new Date())
+          : post.publishedAt,
+      imageIds,
+      removedIds,
+    });
 
     revalidateResearchPaths();
     revalidatePath(`/research/${post.slug}`);
