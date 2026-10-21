@@ -33,9 +33,9 @@
 
 ## 현재 실행 순서
 
-- `READY` 하위 작업: `WAITING-17/D1` → `WAITING-17/D2`. A2 스키마·migration은 준비했으나 격리 DB 검증 환경이 없어 `BLOCKED`로 전환했다. D1·D2는 독립 실행 가능하다.
+- `READY` 하위 작업: `WAITING-17/D1` → `WAITING-17/D2`. A2는 PostgreSQL 17.11 격리 DB에서 기존 첨부 보존과 새 필드 `NULL`을 검증해 완료했다. D1·D2는 독립 실행 가능하다.
 - `WAITING-17`은 2026-10-21 사용자 요청으로 `READY`로 전환했다. 첫 실행 항목 B2를 완료했으며 상세 결과는 [2026년 작업 이력](./agent-work-history-2026.md)에 기록했다.
-- 연구 게시글·첨부파일 CRUD 검토의 8개 문제를 5개 묶음, 16개 하위 작업으로 관리한다. A1은 2026-10-21 사용자 승인으로 완료했다. A2는 승인된 nullable `committedAt` 스키마와 추가형 migration을 준비했으며 격리 DB 적용 검증 후속 작업이 남아 `BLOCKED`다. 운영 적용 승인은 기록했고, 실제 적용은 E1~E4 선행 조건 충족 후 진행한다.
+- 연구 게시글·첨부파일 CRUD 검토의 8개 문제를 5개 묶음, 16개 하위 작업으로 관리한다. A1은 2026-10-21 사용자 승인으로 완료했고 A2는 스키마·migration 및 PostgreSQL 17.11 격리 DB 검증을 마쳤다. 운영 적용 승인은 기록했고, 실제 적용은 E1~E4 선행 조건 충족 후 진행한다.
 - 최근 완료: `WAITING-15`를 2026-10-21 사용자 요청으로 `READY` 전환 후 완료했다. 결과는 [2026년 작업 이력](./agent-work-history-2026.md)의 `WAITING-15` 항목에 기록했다.
 
 ## 바로 작업 가능한 일
@@ -137,15 +137,6 @@
 A1 결정은 완료했으므로 P1인 A·B1을 우선한다. B2는 완료했으며 D1·D2는 독립적으로 진행할 수 있다. A3와 B1은 같은 트랜잭션·조건부 갱신 규칙을 사용하며, B3와 C 작업도 그 규칙에 맞춘다. 각 작업에는 해당 회귀 테스트를 포함한다. E1·E2는 개별 테스트를 미루는 단계가 아니라 실제 연결과 외부 환경을 검증하는 단계다.
 
 구현 완료와 독립 배포 가능은 별개다. A2는 기존 코드와 호환되는 추가형 migration으로 준비한다. A3·A4·B1·B3·C1~C3는 함께 동작하는 릴리스로 검증하고 E3·E4의 승인된 전환 순서에 따라 배포한다. A4만 먼저 배포해 기존 첨부를 숨기거나, 기존 행을 전부 자동 확정해 실패 업로드를 공개하지 않는다. B2·D1·D2는 관련 검증 후 별도 배포할 수 있다. 본 기능의 Production 적용은 승인됐으나 검증·배포 선행 조건은 생략하지 않는다.
-
-#### A2. 첨부 확정 상태 스키마와 migration 준비
-
-- 상태: `BLOCKED` — 스키마·migration 준비 완료. 격리 PostgreSQL 검증 환경 부재로 우선순위 P1, 문제 1·2의 검증을 마치지 못했다.
-- 위치: `prisma/schema.prisma`, `prisma/migrations/`, 생성된 Prisma 타입과 관련 fixture.
-- 최소 수정: 승인된 nullable 필드를 추가한다. 기존 행·Storage 원본을 삭제하거나 일괄 확정하지 않고 구버전 코드와 호환되는 migration을 만든다.
-- 검증: Prisma validate·generate와 격리된 테스트 DB migration을 실행한다. 기존 행이 보존되고 새 필드가 미확정 상태로 남는지 확인한다.
-- 완료 조건: 스키마·타입·fixture가 일치하고 migration 검증이 통과한다. Production 적용은 포함하지 않는다.
-- 진행 기록 (2026-10-21): `PostAttachment.committedAt DateTime?`와 `20261021000000_add_post_attachment_committed_at` 추가형 migration을 준비했다. 기존 레코드에 값을 채우지 않는다. Prisma validate·generate, SQL diff 확인, `npm run lint`, `npm run build`는 통과했다. Docker 데몬이 꺼져 있고 로컬 PostgreSQL 실행 도구도 없어 기존 행 보존을 포함한 격리 DB 적용 검증은 실행하지 못했다. DB나 Production에는 migration을 적용하지 않았다. 격리 PostgreSQL이 준비되면 기존 migration 전체 적용과 새 필드 기본값 `NULL` 확인을 마친 뒤 `DONE`으로 전환한다.
 
 #### A3. 최종 저장 트랜잭션에서 요청한 첨부만 확정
 

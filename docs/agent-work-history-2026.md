@@ -905,3 +905,11 @@ node scripts/check-login-ui.mjs
 
 - 결정 결과: nullable `committedAt` 도입, 최종 저장 시 첨부 확정, 확정 첨부 제거의 soft delete 유지. 사용자는 현재 테스트 게시글만 있고 첨부파일은 없다고 확인했다. 따라서 기존 첨부 분류·일괄 보정은 기본 범위에서 제외하고 E3에서 0건을 재확인한다. 승인 원문과 운영 적용 범위는 `docs/agent-decisions.md`에 기록했다.
 - 검증·제한: 사용자 결정과 계획 문서의 정합성을 확인했다. 운영 DB·Storage의 0건 여부는 직접 조회하지 않았고 스키마 변경·배포는 수행하지 않았다.
+
+### WAITING-17/A2. 첨부 확정 상태 스키마와 migration 준비
+
+- 상태: `DONE` — 2026-10-21 A1 모델·전환 원칙 승인 후 P1 우선 작업으로 수행했다.
+- 구현: `PostAttachment.committedAt DateTime?`와 추가형 migration `20261021000000_add_post_attachment_committed_at`을 추가했다. 기존 행을 갱신하거나 Storage 원본을 변경하지 않는다.
+- 격리 DB 검증: 제공된 `a4b7ecd390bb1e41cd82cbdc65bb2653a95e129ee503814d2b079fbb9281ab81`은 이미지 ID가 아니라 `postgres:16`을 사용하는 종료된 `moon-postgres` 컨테이너 ID였고 기존 영속 볼륨에 연결돼 있어 그대로 보존했다. 별도 `postgres:17.11-alpine` 임시 컨테이너에서 기존 Prisma migration 9개를 적용하고, `uploadedAt`이 있는 첨부 fixture를 만든 다음 A2 migration을 적용했다. 결과는 PostgreSQL `17.11`, 첨부 행 1건 유지, `committedAt IS NULL` 1건, `uploadedAt IS NOT NULL` 1건이었다. 임시 컨테이너는 종료·삭제했다.
+- 검증: Prisma validate·generate, SQL diff 확인, 격리 DB migration, `npm run lint`, `npm run build`, `git diff --check`가 통과했다.
+- 제한: 격리 검증에는 표준 PostgreSQL 이미지를 사용했으며 Supabase 확장·Auth·Storage 서비스는 포함하지 않았다. Supabase 운영 DB와 기존 PostgreSQL 16 볼륨에는 변경을 적용하지 않았다. Production migration은 E1~E4 선행 검증 뒤 수행한다.
