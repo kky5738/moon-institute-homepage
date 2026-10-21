@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { acquireLock } from "@/lib/interaction-lock";
 import {
   createResearchImageMarker,
   formatResearchFileSize,
@@ -32,6 +33,7 @@ type PendingFile = ExistingFile & {
   contentType: string;
   imageWidth: number | null;
   imageHeight: number | null;
+  uploaded?: boolean;
 };
 
 type ResearchPostFormProps = {
@@ -49,11 +51,14 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const submitLockRef = useRef(false);
+  const imageInsertLockRef = useRef(false);
   const [postId, setPostId] = useState(post?.id ?? null);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [imageAlt, setImageAlt] = useState("");
   const [busy, setBusy] = useState(false);
+  const [imageInserting, setImageInserting] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
@@ -110,6 +115,17 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
     }
   }
 
+  async function handleInsertInlineImage() {
+    if (submitLockRef.current || !acquireLock(imageInsertLockRef)) return;
+    setImageInserting(true);
+    try {
+      await addInlineImage();
+    } finally {
+      imageInsertLockRef.current = false;
+      setImageInserting(false);
+    }
+  }
+
   function addAttachments(files: FileList | null) {
     if (!files) return;
     setError("");
@@ -157,6 +173,11 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (imageInsertLockRef.current) {
+      setError("본문 이미지 삽입이 끝난 뒤 저장해주세요.");
+      return;
+    }
+    if (!acquireLock(submitLockRef)) return;
     setBusy(true);
     setError("");
 
@@ -178,8 +199,13 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
       const uploads = pendingFiles.filter(
         (file) => file.kind === "ATTACHMENT" || imageIds.has(file.id),
       );
+      const attachmentIds = new Set([
+        ...visibleExisting.map((file) => file.id),
+        ...uploads.map((file) => file.id),
+      ]);
 
       for (const pending of uploads) {
+        if (pending.uploaded) continue;
         setStatus(`${pending.originalName} 업로드 중`);
         const ticket = await requestResearchUpload(prepared.postId, {
           id: pending.id,
@@ -214,10 +240,17 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
           await discardResearchUpload(pending.id);
           throw new Error(confirmed.message);
         }
-        setPendingFiles((files) => files.filter((file) => file.id !== pending.id));
+        setPendingFiles((files) =>
+          files.map((file) =>
+            file.id === pending.id ? { ...file, uploaded: true } : file,
+          ),
+        );
       }
 
       setStatus("게시글 저장 중");
+      for (const attachmentId of attachmentIds) {
+        formData.append("attachmentId", attachmentId);
+      }
       const saved = await saveResearchPost(formData);
       if (!saved.ok) throw new Error(saved.message);
       router.push(saved.redirectTo);
@@ -225,6 +258,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
     } catch (cause) {
       setError(getErrorMessage(cause));
       setStatus(postId ? "다시 저장할 수 있습니다." : "초안으로 보관했습니다.");
+      submitLockRef.current = false;
       setBusy(false);
     }
   }
@@ -246,6 +280,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
           name="title"
           required
           maxLength={200}
+          disabled={busy}
           defaultValue={post?.title}
           className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
         />
@@ -257,6 +292,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
           name="summary"
           rows={3}
           maxLength={500}
+          disabled={busy}
           defaultValue={post?.summary ?? ""}
           className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
         />
@@ -270,6 +306,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
           rows={18}
           required
           maxLength={100_000}
+          disabled={busy}
           defaultValue={post?.content}
           className="mt-2 w-full border border-border bg-surface px-3 py-3 text-sm leading-7 outline-none focus:border-primary"
         />
@@ -285,6 +322,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
               ref={imageInputRef}
               id="inline-image"
               type="file"
+              disabled={busy}
               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
               className="mt-2 block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:active:bg-secondary"
             />
@@ -293,21 +331,27 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
             <input
               id="inline-image-alt"
               value={imageAlt}
+              disabled={busy}
               onChange={(event) => setImageAlt(event.target.value)}
               maxLength={300}
               placeholder="이미지의 내용을 설명해주세요"
               className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </FormField>
-          <Button type="button" variant="outline" onClick={addInlineImage}>
-            현재 위치에 삽입
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleInsertInlineImage}
+            disabled={busy || imageInserting}
+          >
+            {imageInserting ? "이미지 준비 중" : "현재 위치에 삽입"}
           </Button>
         </div>
         <p className="mt-3 text-xs leading-5 text-muted">
           JPEG, PNG, WebP · 파일당 최대 20MB. 미리보기 없이 본문의 현재 커서
           위치에 이미지 표식을 넣습니다.
         </p>
-        <FileList files={inlineImages} onRemove={removeFile} />
+        <FileList files={inlineImages} onRemove={removeFile} disabled={busy} />
       </fieldset>
 
       <fieldset className="border border-border bg-background p-4 sm:p-5">
@@ -315,6 +359,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
         <input
           type="file"
           multiple
+          disabled={busy}
           accept=".pdf,.hwp,.docx,application/pdf,application/x-hwp,application/haansofthwp,application/vnd.hancom.hwp,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           onChange={(event) => {
             addAttachments(event.target.files);
@@ -325,7 +370,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
         <p className="mt-3 text-xs leading-5 text-muted">
           PDF, HWP, DOCX · 파일당 최대 20MB
         </p>
-        <FileList files={attachments} onRemove={removeFile} />
+        <FileList files={attachments} onRemove={removeFile} disabled={busy} />
       </fieldset>
 
       {error ? (
@@ -354,20 +399,26 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
           name="intent"
           value="draft"
           variant="outline"
-            formNoValidate
-            disabled={busy}
-            aria-busy={busy}
+          formNoValidate
+          disabled={busy || imageInserting}
+          aria-busy={busy || imageInserting}
         >
-          {busy ? "저장 중" : "임시저장"}
+          {busy ? "저장 중" : imageInserting ? "이미지 준비 중" : "임시저장"}
         </Button>
         <Button
           type="submit"
           name="intent"
           value="publish"
-          disabled={busy}
-          aria-busy={busy}
+          disabled={busy || imageInserting}
+          aria-busy={busy || imageInserting}
         >
-          {busy ? "처리 중" : post ? "저장 후 공개" : "공개하기"}
+          {busy
+            ? "처리 중"
+            : imageInserting
+              ? "이미지 준비 중"
+              : post
+                ? "저장 후 공개"
+                : "공개하기"}
         </Button>
       </div>
     </form>
@@ -396,9 +447,11 @@ function FormField({
 function FileList({
   files,
   onRemove,
+  disabled,
 }: {
   files: ExistingFile[];
   onRemove: (file: ExistingFile) => void;
+  disabled: boolean;
 }) {
   if (files.length === 0) return null;
   return (
@@ -410,6 +463,7 @@ function FileList({
           </span>
           <button
             type="button"
+            disabled={disabled}
             onClick={() => onRemove(file)}
             className="shrink-0 cursor-pointer font-semibold text-primary-dark underline-offset-4 hover:underline active:text-primary"
           >

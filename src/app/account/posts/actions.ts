@@ -198,20 +198,13 @@ export async function saveResearchPost(
       .getAll("removedAttachmentId")
       .filter((value): value is string => typeof value === "string");
 
-    const uploadedImages = await prisma.postAttachment.findMany({
-      where: {
-        id: { in: imageIds },
-        postId,
-        kind: AttachmentKind.INLINE_IMAGE,
-        uploadedAt: { not: null },
-        deletedAt: null,
-      },
-      select: { id: true },
-    });
-
-    if (uploadedImages.length !== imageIds.length) {
-      throw new Error("본문에 아직 업로드되지 않은 이미지가 있습니다.");
-    }
+    const attachmentIds = [
+      ...new Set(
+        formData
+          .getAll("attachmentId")
+          .filter((value): value is string => typeof value === "string"),
+      ),
+    ];
 
     await saveResearchPostAtomically(prisma, {
       postId: post.id,
@@ -225,6 +218,7 @@ export async function saveResearchPost(
           ? (post.publishedAt ?? new Date())
           : post.publishedAt,
       imageIds,
+      attachmentIds,
       removedIds,
     });
 

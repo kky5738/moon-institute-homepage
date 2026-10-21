@@ -913,3 +913,18 @@ node scripts/check-login-ui.mjs
 - 격리 DB 검증: 제공된 `a4b7ecd390bb1e41cd82cbdc65bb2653a95e129ee503814d2b079fbb9281ab81`은 이미지 ID가 아니라 `postgres:16`을 사용하는 종료된 `moon-postgres` 컨테이너 ID였고 기존 영속 볼륨에 연결돼 있어 그대로 보존했다. 별도 `postgres:17.11-alpine` 임시 컨테이너에서 기존 Prisma migration 9개를 적용하고, `uploadedAt`이 있는 첨부 fixture를 만든 다음 A2 migration을 적용했다. 결과는 PostgreSQL `17.11`, 첨부 행 1건 유지, `committedAt IS NULL` 1건, `uploadedAt IS NOT NULL` 1건이었다. 임시 컨테이너는 종료·삭제했다.
 - 검증: Prisma validate·generate, SQL diff 확인, 격리 DB migration, `npm run lint`, `npm run build`, `git diff --check`가 통과했다.
 - 제한: 격리 검증에는 표준 PostgreSQL 이미지를 사용했으며 Supabase 확장·Auth·Storage 서비스는 포함하지 않았다. Supabase 운영 DB와 기존 PostgreSQL 16 볼륨에는 변경을 적용하지 않았다. Production migration은 E1~E4 선행 검증 뒤 수행한다.
+
+### WAITING-17/D1. 저장 중 편집·중복 제출 차단
+
+- 상태: `DONE` — 2026-10-21 A3와 연관된 연구 게시글 저장 폼 개선으로 D1도 함께 처리했다.
+- 구현: 저장 중 입력 필드·파일 선택·제거 컨트롤을 비활성화한다. ref 잠금으로 빠른 중복 제출과 중복 이미지 삽입을 차단하고, 이미지 삽입이 진행 중이면 저장 버튼을 비활성화한다. 우회 제출도 막고 삽입이 끝난 뒤 다시 저장하도록 안내한다. 저장 실패 시 잠금을 해제해 기존 입력을 계속 편집할 수 있다.
+- 회귀 테스트: 잠금의 첫 획득, 중복 획득 거부, 해제 후 재획득을 `interaction-lock.test.ts`에서 검사한다.
+- 검증: `npm run test:posts` 12건, `npm run lint`, `npm run build` 통과.
+- 제한: 실제 Storage 업로드를 지연시킨 브라우저 마우스·키보드 시나리오는 수행하지 않았다. 비동기 파일 보존·재시도는 C1과 E2 검증 범위로 남긴다.
+
+### WAITING-17/A3. 최종 저장 트랜잭션에서 요청한 첨부만 확정
+
+- 상태: `DONE` — 2026-10-21 사용자가 WAITING-17의 우선순위 높은 작업 수행을 요청했다. A2 완료로 선행 조건이 충족된 P1 A3를 처리했다.
+- 구현: 저장 폼이 이번 요청에서 유지·추가할 첨부 ID를 명시한다. 서버 트랜잭션 안에서 같은 작성자·연구 글·업로드 완료·미삭제 조건으로 모든 ID와 본문 이미지 ID를 다시 검증하고, 선택된 미확정 첨부만 `committedAt`을 기록한다. 첨부 확정·제거와 게시글 갱신이 실패하면 함께 롤백된다. 부분 업로드 후 저장을 다시 시도할 때 이미 업로드된 파일을 재업로드하지 않도록 화면 상태를 유지한다.
+- 검증: 첨부 확정 선택, 유효하지 않은 첨부 ID 거부, 게시글 보관 경합 시 롤백 단위 회귀 테스트를 추가했다.
+- 제한: 테스트는 트랜잭션 동작 단위 테스트다. Supabase Storage를 포함한 브라우저 시나리오와 실제 DB 경합 통합 검증은 E1·E2에서 수행한다.

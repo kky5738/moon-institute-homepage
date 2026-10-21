@@ -19,6 +19,7 @@ type ResearchPostSaveInput = {
   status: PostStatus;
   publishedAt: Date | null;
   imageIds: string[];
+  attachmentIds: string[];
   removedIds: string[];
 };
 
@@ -27,6 +28,54 @@ export async function saveResearchPostAtomically(
   input: ResearchPostSaveInput,
 ) {
   await database.$transaction(async (transaction) => {
+    const attachments = await transaction.postAttachment.findMany({
+      where: {
+        id: { in: input.attachmentIds },
+        postId: input.postId,
+        uploadedAt: { not: null },
+        deletedAt: null,
+        post: {
+          authorId: input.authorId,
+          type: PostType.RESEARCH,
+          deletedAt: null,
+        },
+      },
+      select: { id: true, kind: true, committedAt: true },
+    });
+
+    if (
+      attachments.length !== input.attachmentIds.length ||
+      input.imageIds.some(
+        (id) =>
+          !input.attachmentIds.includes(id) ||
+          !attachments.some(
+            (attachment) =>
+              attachment.id === id && attachment.kind === AttachmentKind.INLINE_IMAGE,
+          ),
+      )
+    ) {
+      throw new Error("저장할 첨부 또는 본문 이미지가 유효하지 않습니다.");
+    }
+
+    const { count: committedCount } = await transaction.postAttachment.updateMany({
+      where: {
+        id: { in: input.attachmentIds },
+        postId: input.postId,
+        committedAt: null,
+        uploadedAt: { not: null },
+        deletedAt: null,
+      },
+      data: { committedAt: new Date() },
+    });
+    if (
+      committedCount !==
+      attachments.filter((attachment) => !attachment.committedAt).length
+    ) {
+      throw new Error(
+        "첨부 상태가 변경되었습니다. 게시글을 새로고침한 뒤 다시 저장해주세요.",
+      );
+    }
+
     await transaction.postAttachment.updateMany({
       where: {
         postId: input.postId,
