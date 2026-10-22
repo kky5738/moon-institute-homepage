@@ -1033,3 +1033,12 @@ node scripts/check-login-ui.mjs
 - 차단·복구: 운영 DB에 영구 트리거를 만드는 임시 차단안과 `npm run db:deploy`는 각각 자동 승인 검토에서 구체적 운영 변경 승인 부족으로 거절됐다. 두 작업 모두 실행되지 않았고 트리거 0건·migration 미적용을 확인했다. Migration을 보류하면서 Firewall 규칙 두 개를 비활성으로 게시했고, 두 POST 경로가 더 이상 WAF에 차단되지 않음을 확인했다. E4 배포·운영 smoke도 미수행이다.
 - 사용자 결정: 2026-10-22 이번 운영 전환 보류. E3·E4는 재개 지시 전까지 수행하지 않는다. `.env.staging`과 별도 Supabase 시험 프로젝트는 보존한다.
 - 재개 후 확인: 2026-10-22 16:26:15(KST) `.env`의 Supabase DB에서 `20261021000000_add_post_attachment_committed_at` migration 완료 기록과 nullable `committedAt` 컬럼을 확인했다. 적용 주체는 확인되지 않았다. 첨부 DB 행·`research-files` Storage 원본은 각 0건이고, 같은 DB를 사용한 로컬 production build는 37개 페이지 생성까지 통과했다. Vercel Production의 16:26:05 실패 배포는 migration 적용 전 시작된 빌드였다. 이후 dev Preview 배포는 Ready지만 Production 재배포는 아직 검증하지 않았다. 임시 Firewall 규칙 두 개는 비활성 상태다. E3 DB 검증 완료, E4 배포·운영 smoke가 남았다.
+
+### WAITING-17/E4. Production 배포·공개 smoke 재개
+
+- 상태: `IN_PROGRESS` — 2026-10-22 사용자 재개 요청에 따라 진행했다.
+- 배포 확인: Vercel 프로젝트에서 최신 Production 배포가 `Ready`, 브랜치 `main`, 커밋 `c100cdf`로 표시되는 것을 확인했다(16:36 KST). 이 배포는 이번 작업에서 시작하지 않았다. `c100cdf`는 E1·E2 검증 코드가 포함된 현재 main 기준이다.
+- 읽기 전용 smoke: 공식 도메인의 홈페이지(`/`), 연구 목록(`/research`), 공개 연구 글 상세 페이지를 Safari에서 열어 주요 콘텐츠와 네비게이션이 표시되는 것을 확인했다. 연구 목록의 공개 글 2건 모두 첨부 수는 0이다.
+- 데이터 일치: E3에서 확인한 운영 후보 DB의 `post_attachments` 행 0건 및 `research-files` Storage object 0건과 공개 목록의 첨부 수 0건이 일치한다. 따라서 기존 첨부 다운로드나 미확정 파일 접근 차단은 Production에서 실물 파일로 검증할 수 없다.
+- 제한: Vercel Production의 DB 연결 비밀값을 E3의 `.env` 연결과 독립 대조하지 않았다. 신규 Production 글·파일 생성, 글 수정·보관·첨부 제거, 실제 첨부 다운로드, 미확정 파일 접근, 구버전·신버전 혼재와 rollback은 수행·검증하지 않았다. 운영 데이터 변경 없이 공개 GET만 수행했다.
+- 다음 단계: E4의 Production 쓰기·첨부 관련 smoke를 위해서는 사용할 일회성 테스트 글/파일과 정리 범위를 정하고, Vercel Production이 E3에서 점검한 DB를 사용함을 확인해야 한다. 잔여 검증 전까지 E4와 상위 WAITING-17은 완료로 표시하지 않는다.
