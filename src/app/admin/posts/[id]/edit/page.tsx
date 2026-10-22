@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { PendingButton } from "@/components/ui/pending-button";
 import { PostStatus, PostType } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getAdminEditableCategoriesWhere } from "@/lib/admin-posts";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { archivePost, updatePost } from "../../actions";
@@ -41,9 +42,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         },
       }),
       prisma.category.findMany({
-        where: {
-          isActive: true,
-        },
+        where: getAdminEditableCategoriesWhere(),
         orderBy: [
           { postType: "asc" },
           { sortOrder: "asc" },

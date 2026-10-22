@@ -4,6 +4,10 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { PostStatus, PostType } from "@/generated/prisma/enums";
 import { assertAdmin } from "@/lib/admin-auth";
+import {
+  getAdminEditableCategoryWhere,
+  getAdminEditablePostWhere,
+} from "@/lib/admin-posts";
 import { prisma } from "@/lib/prisma";
 import { getPublishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
@@ -93,8 +97,8 @@ export async function updatePost(formData: FormData) {
     }
 
     const [post, category, duplicatePost] = await Promise.all([
-      prisma.post.findUnique({
-        where: { id },
+      prisma.post.findFirst({
+        where: getAdminEditablePostWhere(id),
         select: {
           id: true,
           type: true,
@@ -102,10 +106,7 @@ export async function updatePost(formData: FormData) {
         },
       }),
       prisma.category.findFirst({
-        where: {
-          id: categoryId,
-          isActive: true,
-        },
+        where: getAdminEditableCategoryWhere(categoryId),
       }),
       prisma.post.findFirst({
         where: {
@@ -133,8 +134,8 @@ export async function updatePost(formData: FormData) {
     }
 
     affectedTypes = [post.type, category.postType];
-    await prisma.post.update({
-      where: { id },
+    const { count } = await prisma.post.updateMany({
+      where: getAdminEditablePostWhere(id),
       data: {
         title,
         slug,
@@ -149,6 +150,9 @@ export async function updatePost(formData: FormData) {
             : post.publishedAt,
       },
     });
+    if (count !== 1) {
+      throw new Error("공지사항과 홍보자료만 수정할 수 있습니다.");
+    }
   } catch (error) {
     logServerError("admin.posts.update", error);
     throw error;

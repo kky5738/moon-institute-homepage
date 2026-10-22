@@ -966,3 +966,11 @@ node scripts/check-login-ui.mjs
 - 회귀 테스트: 충돌 요청은 본문·첨부를 바꾸지 않고 거부되며, 본문에서 제거한 이미지의 soft delete와 남아 있는 업로드 이미지의 확정은 각각 성공하는지 검사했다.
 - 검증: `npm run test:posts` 25건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과. `npm run build`는 컴파일·TypeScript를 통과했지만 `/` 정적 생성이 Supabase DB의 `post_attachments.committedAt` 누락(`P2022`)으로 실패했다. DB 변경은 하지 않았다.
 - 제한: 테스트는 트랜잭션 helper 단위 검증이다. B1 정리와 저장의 실제 DB 경합은 D2 완료 및 격리 DB 준비 후 E1에서 확인한다.
+
+### WAITING-17/D2. 관리자 액션의 연구 글 수정 우회 차단
+
+- 상태: `DONE` — 2026-10-22 사용자 요청에 따라 READY 우선순위 작업을 처리했다.
+- 구현: 관리자 수정 대상 조회와 최종 조건부 갱신은 `NOTICE`·`PROMOTION`만 허용한다. 수정 카테고리 조회와 수정 화면 목록도 활성 공지·홍보자료로 한정했다. 연구 글 수정 화면의 기존 `notFound` 차단은 유지했다.
+- 회귀 테스트: 허용 게시글 유형, 허용 카테고리 유형과 활성 조건이 Prisma 조회·갱신에 사용되는지 검사했다.
+- 검증: `npm run test:posts` 27건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과. `npm run build`는 컴파일·TypeScript를 통과했지만 `/` 정적 생성이 Supabase DB의 `post_attachments.committedAt` 누락(`P2022`)으로 실패했다. DB 변경은 하지 않았다.
+- 제한: 관리자 계정으로 실제 DB 행을 바꾸는 통합 검증은 수행하지 않았다. E1에서 격리 DB가 준비되면 수정 우회와 대상 유형 변경을 검증한다.
