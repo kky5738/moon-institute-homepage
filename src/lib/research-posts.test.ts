@@ -195,6 +195,65 @@ test("요청 ID에 해당하는 업로드 행이 없으면 본문과 첨부를 �
   assert.equal(state.content, "기존 본문");
 });
 
+test("본문에서 유지하는 이미지를 같은 저장에서 제거할 수 없다", async () => {
+  const image = { id: "referenced-image", kind: AttachmentKind.INLINE_IMAGE };
+  const { database, state } = createSaveHarness(PostStatus.DRAFT, [image]);
+
+  await assert.rejects(
+    saveResearchPostAtomically(database, {
+      ...makeInput(),
+      imageIds: [image.id],
+      attachmentIds: [image.id],
+      removedIds: [image.id],
+    }),
+    /본문에서 사용 중인 이미지는 제거할 수 없습니다/,
+  );
+
+  assert.deepEqual(state.committedAttachmentIds, []);
+  assert.deepEqual(state.deletedAttachmentIds, []);
+  assert.equal(state.content, "기존 본문");
+});
+
+test("본문 이미지 참조 제거 후에는 기존 soft delete가 적용된다", async () => {
+  const image = { id: "removed-image", kind: AttachmentKind.INLINE_IMAGE };
+  const { database, state } = createSaveHarness(PostStatus.DRAFT, [image]);
+
+  await saveResearchPostAtomically(database, {
+    ...makeInput(),
+    imageIds: [],
+    attachmentIds: [],
+    removedIds: [image.id],
+  });
+
+  assert.deepEqual(state.committedAttachmentIds, []);
+  assert.deepEqual(state.deletedAttachmentIds, [image.id]);
+});
+
+test("본문에 남긴 업로드 이미지는 확정하고 삭제하지 않는다", async () => {
+  const image = { id: "kept-image", kind: AttachmentKind.INLINE_IMAGE };
+  const { database, state, getAttachmentWhere } = createSaveHarness(
+    PostStatus.DRAFT,
+    [image],
+  );
+
+  await saveResearchPostAtomically(database, {
+    ...makeInput(),
+    imageIds: [image.id],
+    attachmentIds: [image.id],
+    removedIds: [],
+  });
+
+  assert.deepEqual(state.committedAttachmentIds, [image.id]);
+  assert.deepEqual(state.deletedAttachmentIds, []);
+  assert.deepEqual(getAttachmentWhere(), {
+    id: { in: [image.id] },
+    postId: 4,
+    uploadedAt: { not: null },
+    deletedAt: null,
+    post: { authorId: 12, type: PostType.RESEARCH, deletedAt: null },
+  });
+});
+
 type DiscardRow = {
   id: string;
   objectPath: string;

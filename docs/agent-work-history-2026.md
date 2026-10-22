@@ -958,3 +958,11 @@ node scripts/check-login-ui.mjs
 - 회귀 테스트: 완료된 파일은 재업로드 목록에서 빠지고 저장 첨부 ID에는 남으며, 본문에서 제거한 미참조 이미지 ID는 저장 대상에서 제외되는 계획 함수를 검증했다.
 - 검증: `npm run test:posts` 22건, `npm run lint`, `npx tsc --noEmit` 통과. `npm run build`는 컴파일과 TypeScript를 통과했으나 `/` 정적 생성 중 현재 `.env` Supabase DB에 `post_attachments.committedAt` 컬럼이 없어 `P2022`로 실패했다. DB에 변경은 하지 않았다.
 - 제한: 브라우저에서 실제 부분 업로드·Storage 제거·저장 실패 재시도는 확인하지 않았다. 해당 흐름은 E1·E2 조건 충족 후 검증한다.
+
+### WAITING-17/B3. 본문 이미지 참조와 삭제 요청의 충돌 차단
+
+- 상태: `DONE` — 2026-10-22 사용자 요청에 따라 READY 우선순위 다음 작업을 처리했다.
+- 구현: 본문에 남길 이미지 ID와 제거 요청 ID가 교차하면 `saveResearchPostAtomically`가 첨부 조회·확정·삭제 전에 요청을 거부한다. 정상 참조 검증은 같은 글·본문 이미지 유형·업로드 완료·미삭제 조건을 갖는 기존 첨부 조회를 사용한다.
+- 회귀 테스트: 충돌 요청은 본문·첨부를 바꾸지 않고 거부되며, 본문에서 제거한 이미지의 soft delete와 남아 있는 업로드 이미지의 확정은 각각 성공하는지 검사했다.
+- 검증: `npm run test:posts` 25건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과. `npm run build`는 컴파일·TypeScript를 통과했지만 `/` 정적 생성이 Supabase DB의 `post_attachments.committedAt` 누락(`P2022`)으로 실패했다. DB 변경은 하지 않았다.
+- 제한: 테스트는 트랜잭션 helper 단위 검증이다. B1 정리와 저장의 실제 DB 경합은 D2 완료 및 격리 DB 준비 후 E1에서 확인한다.

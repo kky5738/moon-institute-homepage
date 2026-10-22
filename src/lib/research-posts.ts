@@ -68,6 +68,10 @@ export async function saveResearchPostAtomically(
   input: ResearchPostSaveInput,
 ) {
   await database.$transaction(async (transaction) => {
+    if (input.imageIds.some((id) => input.removedIds.includes(id))) {
+      throw new Error("본문에서 사용 중인 이미지는 제거할 수 없습니다.");
+    }
+
     const attachments = await transaction.postAttachment.findMany({
       where: {
         id: { in: input.attachmentIds },
