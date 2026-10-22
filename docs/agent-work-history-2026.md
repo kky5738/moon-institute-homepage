@@ -1022,3 +1022,13 @@ node scripts/check-login-ui.mjs
 - 이미지: 로컬 NAT64에서 Next 16 이미지 프록시가 staging Supabase 주소를 사설 IP로 판정해 거부했다. `ResearchPostContent`의 개발 환경 이미지만 `unoptimized`로 원본 signed URL을 사용하도록 변경했다. 실제 브라우저에서 PNG가 24×24로 로딩됐고, 익명 요청의 `/research` 목록·상세가 HTTP 200이며 시험 글·이미지를 포함했다. 운영 빌드에서는 기존 Next 이미지 최적화를 유지한다.
 - 검증·정리: `npm run lint`, `npx tsc --noEmit`, staging 환경의 `npm run build`가 통과했다. 최초 빌드 시 샌드박스가 Turbopack 내부 포트 바인딩을 차단해 권한 있는 실행으로 재검증했다. 시험 계정·글·첨부 DB 행·Storage 원본을 식별자 대조 후 정리하고 3000번 개발 서버를 종료했다.
 - 잔여 제한: 운영 환경의 Next 이미지 최적화와 signed URL 만료 후 동작은 E4에서 확인한다. 실제 네트워크 응답 유실·Storage 정리 실패를 브라우저에서 강제로 주입하지는 않았다. 해당 서버 동작은 E1 격리 DB·Storage 대역 통합 테스트에서 검증했다. staging bucket의 파일 크기·MIME 제한은 여전히 미설정이며 `READY-18`의 별도 차단 조건이다.
+
+### WAITING-17/E3. 운영 전환 사전 점검
+
+- 상태: `WAITING` — 2026-10-22 사용자 요청으로 `.env`가 가리키는 Supabase DB·Storage를 읽기 전용 점검했다. 이 연결이 Vercel Production 설정과 동일한지 아직 독립 확인하지 못했다.
+- 확인: `post_attachments` 전체 행 0건, `storage.objects`의 `research-files` 원본 0건, `committedAt` 컬럼 없음, `20261021000000_add_post_attachment_committed_at` migration 미적용. Bucket은 private이며 20MiB 크기·허용 MIME 제한이 설정돼 있다. 테스트 글이나 다른 운영 데이터는 변경하지 않았다.
+- 배포 전 검증: 현재 `fix` 브랜치는 `main`보다 9개 커밋 앞서 있다. 게시글 테스트 29건, lint, `.env.staging` 기반 production build 통과. 최초 build는 샌드박스의 Turbopack 포트 바인딩 제한으로 실패해 권한 있는 실행으로 재검증했다.
+- 추가 확인: Safari의 운영 Vercel 프로젝트 접근을 확인했다. `.env` DB의 공개 연구 글 한 건이 실제 운영 도메인에서도 일치했다. `prisma migrate status`는 미적용 migration이 `20261021000000_add_post_attachment_committed_at` 한 건임을 표시했다. Vercel의 비공개 환경 변수 값 자체는 독립 대조하지 못했다.
+- 임시 쓰기 제한 시험: 사용자 승인에 따라 Firewall에 Production 호스트·POST·`/account/posts` 또는 `/admin/posts` 접두 경로 조건의 Deny 규칙 두 개를 게시했다. 두 경로의 GET은 HTTP 200, POST는 `x-vercel-mitigated: deny`를 포함한 HTTP 403이었다. 규칙 게시 후 첨부 DB 행·Storage 원본 0건을 다시 확인했다.
+- 차단·복구: 운영 DB에 영구 트리거를 만드는 임시 차단안과 `npm run db:deploy`는 각각 자동 승인 검토에서 구체적 운영 변경 승인 부족으로 거절됐다. 두 작업 모두 실행되지 않았고 트리거 0건·migration 미적용을 확인했다. Migration을 보류하면서 Firewall 규칙 두 개를 비활성으로 게시했고, 두 POST 경로가 더 이상 WAF에 차단되지 않음을 확인했다. E4 배포·운영 smoke도 미수행이다.
+- 사용자 결정: 2026-10-22 이번 운영 전환 보류. E3·E4는 재개 지시 전까지 수행하지 않는다. `.env.staging`과 별도 Supabase 시험 프로젝트는 보존한다.
