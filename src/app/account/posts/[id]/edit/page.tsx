@@ -89,6 +89,7 @@ export default async function EditResearchPostPage({
             originalName: file.originalName,
             size: file.size,
             altText: file.altText,
+            committed: file.committedAt !== null,
           })),
         }}
       />

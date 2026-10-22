@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   createResearchImageMarker,
+  getResearchExistingAttachmentIds,
   getResearchUploadPlan,
   getResearchImageIds,
   hasValidImageSignature,
@@ -31,6 +32,25 @@ test("부분 업로드 재시도는 완료 파일을 보존하고 다시 올리�
     "uploaded-a",
     "pending-b",
   ]);
+});
+
+test("재진입한 미확정 첨부는 명시적으로 선택한 것만 저장 목록에 넣는다", () => {
+  const files = [
+    { id: "committed", kind: "ATTACHMENT" as const, committed: true },
+    { id: "recovered-document", kind: "ATTACHMENT" as const, committed: false },
+    { id: "unselected-document", kind: "ATTACHMENT" as const, committed: false },
+    { id: "recovered-image", kind: "INLINE_IMAGE" as const, committed: false },
+    { id: "image-without-marker", kind: "INLINE_IMAGE" as const, committed: false },
+  ];
+
+  assert.deepEqual(
+    getResearchExistingAttachmentIds(
+      files,
+      new Set(["recovered-document", "recovered-image", "image-without-marker"]),
+      new Set(["recovered-image"]),
+    ),
+    ["committed", "recovered-document", "recovered-image"],
+  );
 });
 
 test("실패 파일의 재시도 ID와 본문 이미지 표식을 함께 갱신한다", () => {

@@ -8,6 +8,7 @@ import { acquireLock } from "@/lib/interaction-lock";
 import {
   createResearchImageMarker,
   formatResearchFileSize,
+  getResearchExistingAttachmentIds,
   getResearchImageIds,
   getResearchUploadPlan,
   replaceResearchImageMarker,
@@ -29,6 +30,7 @@ type ExistingFile = {
   originalName: string;
   size: number;
   altText: string | null;
+  committed?: boolean;
 };
 
 type PendingFile = ExistingFile & {
@@ -59,6 +61,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
   const [postId, setPostId] = useState(post?.id ?? null);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [recoveredKeepIds, setRecoveredKeepIds] = useState<string[]>([]);
   const [imageAlt, setImageAlt] = useState("");
   const [busy, setBusy] = useState(false);
   const [imageInserting, setImageInserting] = useState(false);
@@ -67,6 +70,9 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
 
   const visibleExisting =
     post?.attachments.filter((file) => !removedIds.includes(file.id)) ?? [];
+  const recoveredFiles = visibleExisting.filter(
+    (file) => file.committed === false,
+  );
 
   async function addInlineImage() {
     setError("");
@@ -161,9 +167,31 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
     }
   }
 
+  function keepRecoveredFile(file: ExistingFile) {
+    if (file.kind === "INLINE_IMAGE") {
+      const textarea = contentRef.current;
+      if (!textarea) return setError("본문 입력란을 찾을 수 없습니다.");
+      if (!getResearchImageIds(textarea.value).includes(file.id)) {
+        const cursor = textarea.selectionEnd;
+        textarea.setRangeText(
+          `\n${createResearchImageMarker(file.id)}\n`,
+          cursor,
+          cursor,
+          "end",
+        );
+        textarea.focus();
+      }
+    }
+
+    setRecoveredKeepIds((ids) =>
+      ids.includes(file.id) ? ids : [...ids, file.id],
+    );
+    setError("");
+  }
+
   async function removeFile(file: ExistingFile) {
     const pending = pendingFiles.find((item) => item.id === file.id);
-    if (pending?.uploaded) {
+    if (pending?.uploaded || file.committed === false) {
       try {
         await discardResearchUpload(file.id);
       } catch (cause) {
@@ -173,6 +201,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
     }
 
     setPendingFiles((files) => files.filter((item) => item.id !== file.id));
+    setRecoveredKeepIds((ids) => ids.filter((id) => id !== file.id));
     if (post?.attachments.some((item) => item.id === file.id)) {
       setRemovedIds((ids) => [...ids, file.id]);
     }
@@ -201,18 +230,38 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
     if (postId) formData.set("id", String(postId));
 
     try {
+      if (recoveredFiles.some((file) => !recoveredKeepIds.includes(file.id))) {
+        throw new Error("복구할 파일은 저장에 포함하거나 제거한 뒤 저장해주세요.");
+      }
+
+      const imageIds = new Set(
+        getResearchImageIds(String(formData.get("content") ?? "")),
+      );
+      if (
+        recoveredFiles.some(
+          (file) =>
+            file.kind === "INLINE_IMAGE" &&
+            recoveredKeepIds.includes(file.id) &&
+            !imageIds.has(file.id),
+        )
+      ) {
+        throw new Error("본문에 복구한 이미지를 유지하거나 파일을 제거해주세요.");
+      }
+
       const prepared = await prepareResearchPost(formData);
       if (!prepared.ok) throw new Error(prepared.message);
       setPostId(prepared.postId);
       formData.set("id", String(prepared.postId));
 
-      const imageIds = new Set(
-        getResearchImageIds(String(formData.get("content") ?? "")),
+      const existingIds = getResearchExistingAttachmentIds(
+        visibleExisting,
+        new Set(recoveredKeepIds),
+        imageIds,
       );
       const { uploads, attachmentIds } = getResearchUploadPlan(
         pendingFiles,
         imageIds,
-        visibleExisting.map((file) => file.id),
+        existingIds,
       );
 
       for (const pending of uploads) {
@@ -387,7 +436,13 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
           JPEG, PNG, WebP · 파일당 최대 20MB. 미리보기 없이 본문의 현재 커서
           위치에 이미지 표식을 넣습니다.
         </p>
-        <FileList files={inlineImages} onRemove={removeFile} disabled={busy} />
+        <FileList
+          files={inlineImages}
+          keptRecoveredIds={recoveredKeepIds}
+          onKeepRecovered={keepRecoveredFile}
+          onRemove={removeFile}
+          disabled={busy}
+        />
       </fieldset>
 
       <fieldset className="border border-border bg-background p-4 sm:p-5">
@@ -406,7 +461,13 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
         <p className="mt-3 text-xs leading-5 text-muted">
           PDF, HWP, DOCX · 파일당 최대 20MB
         </p>
-        <FileList files={attachments} onRemove={removeFile} disabled={busy} />
+        <FileList
+          files={attachments}
+          keptRecoveredIds={recoveredKeepIds}
+          onKeepRecovered={keepRecoveredFile}
+          onRemove={removeFile}
+          disabled={busy}
+        />
       </fieldset>
 
       {error ? (
@@ -482,10 +543,14 @@ function FormField({
 
 function FileList({
   files,
+  keptRecoveredIds,
+  onKeepRecovered,
   onRemove,
   disabled,
 }: {
   files: Array<ExistingFile & { uploaded?: boolean }>;
+  keptRecoveredIds: string[];
+  onKeepRecovered: (file: ExistingFile) => void;
   onRemove: (file: ExistingFile) => void;
   disabled: boolean;
 }) {
@@ -498,20 +563,41 @@ function FileList({
             <span className="truncate">
               {file.originalName} · {formatResearchFileSize(file.size)}
             </span>
-            {file.uploaded ? (
+            {file.committed === false ? (
+              <span className="shrink-0 text-xs text-muted">
+                업로드 완료 · 저장 미확정
+                {keptRecoveredIds.includes(file.id) ? " · 유지 선택됨" : ""}
+              </span>
+            ) : file.uploaded ? (
               <span className="shrink-0 text-xs text-muted">
                 업로드 완료 · 저장 대기
               </span>
             ) : null}
           </span>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => onRemove(file)}
-            className="shrink-0 cursor-pointer font-semibold text-primary-dark underline-offset-4 hover:underline active:text-primary"
-          >
-            제거
-          </button>
+          <span className="flex shrink-0 items-center gap-2">
+            {file.committed === false ? (
+              <button
+                type="button"
+                disabled={disabled || keptRecoveredIds.includes(file.id)}
+                onClick={() => onKeepRecovered(file)}
+                className="inline-flex min-h-11 cursor-pointer items-center px-2 text-xs font-semibold text-primary-dark underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default disabled:no-underline"
+              >
+                {keptRecoveredIds.includes(file.id)
+                  ? "유지 선택됨"
+                  : file.kind === "INLINE_IMAGE"
+                    ? "본문에 복구"
+                    : "저장에 포함"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => onRemove(file)}
+              className="inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-xs font-semibold text-primary-dark underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:text-primary"
+            >
+              제거
+            </button>
+          </span>
         </li>
       ))}
     </ul>

@@ -25,6 +25,24 @@ export function getResearchUploadPlan<
   };
 }
 
+export function getResearchExistingAttachmentIds<
+  T extends {
+    id: string;
+    kind: ResearchUploadKind;
+    committed?: boolean;
+  },
+>(files: T[], keptIds: ReadonlySet<string>, imageIds: ReadonlySet<string>) {
+  return files
+    .filter(
+      (file) =>
+        file.committed === true ||
+        (file.committed === false &&
+          keptIds.has(file.id) &&
+          (file.kind === "ATTACHMENT" || imageIds.has(file.id))),
+    )
+    .map((file) => file.id);
+}
+
 export function resetResearchUploadForRetry<
   T extends { id: string; uploaded?: boolean },
 >(files: T[], previousId: string, nextId: string) {
