@@ -42,6 +42,7 @@ export function ResearchPostContent({
               height={image.imageHeight}
               sizes="(max-width: 640px) calc(100vw - 2.5rem), 78ch"
               loading="lazy"
+              unoptimized={process.env.NODE_ENV === "development"}
               className="h-auto max-h-[75vh] w-auto max-w-full border border-border object-contain"
             />
             {image.altText ? (

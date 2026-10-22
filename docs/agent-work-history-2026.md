@@ -998,3 +998,27 @@ node scripts/check-login-ui.mjs
 - 검증 범위: 실제 연구자·관리자 Server Action과 Prisma를 연결해 소유권·미확정 파일 공개 차단, Storage 검증 응답 유실 뒤 미확정 상태 유지, 최종 저장 실패 시 본문·첨부 확정 rollback, 본문 이미지 확정과 정리의 경합, 저장과 관리자 보관의 경합, 관리자 연구 글 수정 차단과 공지 수정 정상 동작, Storage 제거 실패 후 재시도를 확인했다.
 - 검증 결과: `npm run test:posts:integration` 5개 시나리오 통과(상위 테스트 포함 6개), `npm run test:posts` 29건 통과, `npx tsc --noEmit`, `npm run lint` 통과.
 - 제한: Storage는 호출·실패를 제어하는 테스트 대역이며 실제 Supabase Storage와 브라우저는 확인하지 않았다. 운영 Supabase DB·Storage에는 연결하지 않았다. E2는 비운영 private Storage와 전용 테스트 계정 확인 후 진행한다. 빌드는 `.env`의 Supabase DB에 연결될 수 있어 실행하지 않았다.
+
+### WAITING-17/E2. staging Storage·브라우저 부분 검증
+
+- 상태: `BLOCKED` — 2026-10-22 사용자 요청으로 3000번 개발 서버와 `.env.staging`에서 검증했다. `.env.staging`의 Supabase 프로젝트가 `.env`와 다르고, private `research-files` bucket과 `post_attachments.committedAt` 컬럼이 있음을 확인했다. 시험 전용 연구자 계정을 별도로 생성했다.
+- 통과: 브라우저에서 PNG 본문 이미지와 PDF를 signed upload로 올리고 글을 공개했다. 두 행의 `uploadedAt`·`committedAt`이 채워졌고 PDF 다운로드가 성공했다. 저장 중 제목·본문·첨부 조작이 비활성화됐다. 확정 PDF를 수정 화면에서 제거하자 공개 상세에서 사라지고 DB에 삭제 표시가 남았다.
+- 복구: 실제 Storage에 업로드 완료·미확정 PDF를 구성해 수정 화면 재진입을 확인했다. 명시적 선택 전 저장은 차단됐고, `저장에 포함` 후 확정되어 Storage 원본을 유지했다. 다른 미확정 PDF는 화면에서 제거한 뒤 DB 삭제 표시와 Storage 원본 부재를 확인했다. 시험 글을 보관하자 연구자 수정 주소가 404를 반환했다.
+- 실패: 공개 이미지의 Supabase 원본은 HTTP 200이지만 로컬 Next 이미지 프록시는 HTTP 400을 반환했다. 개발 서버 로그에는 staging Supabase 주소가 NAT64 IPv6로 해석되어 `resolved to private ip`로 거부됐다고 기록됐다. 브라우저 이미지의 `naturalWidth`는 0이었다. 배포 환경에서 같은 현상이 나는지는 확인하지 않았다.
+- 당시 미검증: 실제 부분 업로드 실패 후 같은 화면 재시도, 최종 저장 실패 후 재시도, 응답 유실·Storage 정리 실패, 익명 공개 목록과 이미지 표시의 완전한 검증. 실패 재현을 위해 bucket 크기 제한을 임시 변경하는 명령은 자동 승인 검토에서 거절됐다. 복구가 같은 명령에 보장되지 않아 지속적 업로드 장애가 생길 수 있다는 이유이며, bucket 설정은 변경되지 않았다. bucket 자체의 파일 크기·MIME 제한도 현재 설정되지 않아 `READY-18` 차단 조건은 남아 있다.
+- 정리: 이번에 만든 시험 글, 첨부 DB 행, Storage 원본, 임시 연구자 계정을 식별자 대조 후 제거했다. 운영 Supabase DB·Storage는 사용하지 않았다. 코드·스키마 변경이나 배포는 하지 않았다.
+
+### WAITING-17/E2. 부분 업로드 실패 후 같은 화면 재시도
+
+- 상태: `DONE`(해당 시나리오) — 2026-10-22 사용자 승인으로 staging private bucket의 크기 한도를 일시적으로 100바이트로 낮췄다. 기존 설정을 먼저 확인하고, 복구 신호 또는 최대 4분 후 원상 복구하는 감시 실행을 사용했다. 시험 후 `public=false`, 크기 제한 없음, MIME 제한 없음으로 복구됐음을 다시 조회해 확인했다.
+- 재현: 88바이트 PNG와 614바이트 PDF를 순서대로 선택해 브라우저에서 공개를 눌렀다. PNG는 `업로드 완료 · 저장 대기`로 유지됐고 PDF만 Storage 업로드에 실패했다. 제목·본문·선택 파일과 이미지 표식은 같은 화면에 남았다.
+- 재시도: bucket 설정 복구 후 같은 화면에서 다시 공개했다. PDF만 새 UUID로 업로드됐고 게시글이 공개됐다. DB·Storage에는 PNG 1건과 PDF 1건만 확정·보존됐으며, 실패한 PDF의 이전 행은 미확정·삭제 표시 상태이고 Storage 원본이 없었다. 공개 상세에는 성공한 PDF 링크 하나만 나타났다.
+- 정리: 재현에 사용한 게시글·첨부 행·Storage 원본·임시 연구자 계정을 식별자 대조 후 제거했다. 이번 시험에서 코드·스키마·운영 환경은 변경하지 않았다. E2 전체 완료에는 최종 저장 실패 후 브라우저 복구와 본문 이미지 표시 검증이 남아 있다.
+
+### WAITING-17/E2. 최종 저장 실패 복구와 공개 이미지 표시
+
+- 상태: `DONE` — 2026-10-22 사용자 요청으로 남은 E2 수용 기준을 staging 연구자 계정과 시험 글에서 검증했다.
+- 저장 실패 재현: 시험 글의 최종 갱신만 `FOR NO KEY UPDATE`로 대기시키고 PDF의 `uploadedAt` 기록 직후 해당 글만 `ARCHIVED`로 전환했다. 브라우저는 최종 저장 오류를 표시하면서 업로드 완료 파일·입력 내용을 같은 화면에 유지했다. DB에는 새 PDF가 업로드 완료·미확정으로 남았고 기존 확정 PDF는 유지됐다. 시험 글을 `PUBLISHED`로 복구한 뒤 같은 화면에서 다시 저장하자 새 PDF가 같은 ID로 확정됐다. 추가 첨부 행이나 Storage 재업로드는 없었다.
+- 이미지: 로컬 NAT64에서 Next 16 이미지 프록시가 staging Supabase 주소를 사설 IP로 판정해 거부했다. `ResearchPostContent`의 개발 환경 이미지만 `unoptimized`로 원본 signed URL을 사용하도록 변경했다. 실제 브라우저에서 PNG가 24×24로 로딩됐고, 익명 요청의 `/research` 목록·상세가 HTTP 200이며 시험 글·이미지를 포함했다. 운영 빌드에서는 기존 Next 이미지 최적화를 유지한다.
+- 검증·정리: `npm run lint`, `npx tsc --noEmit`, staging 환경의 `npm run build`가 통과했다. 최초 빌드 시 샌드박스가 Turbopack 내부 포트 바인딩을 차단해 권한 있는 실행으로 재검증했다. 시험 계정·글·첨부 DB 행·Storage 원본을 식별자 대조 후 정리하고 3000번 개발 서버를 종료했다.
+- 잔여 제한: 운영 환경의 Next 이미지 최적화와 signed URL 만료 후 동작은 E4에서 확인한다. 실제 네트워크 응답 유실·Storage 정리 실패를 브라우저에서 강제로 주입하지는 않았다. 해당 서버 동작은 E1 격리 DB·Storage 대역 통합 테스트에서 검증했다. staging bucket의 파일 크기·MIME 제한은 여전히 미설정이며 `READY-18`의 별도 차단 조건이다.
