@@ -942,3 +942,11 @@ node scripts/check-login-ui.mjs
 - 구현: 작성자·연구 글·미보관·미삭제·미확정 조건을 트랜잭션 조회와 조건부 갱신에 함께 적용했다. 조건부 soft delete 1건에 성공한 경우만 Storage 삭제를 시도한다. 이미 soft delete된 미확정 파일은 권한과 게시글 상태를 다시 확인해 Storage 삭제를 재시도할 수 있으며, Storage 실패 시 삭제 표식과 원본 경로가 남는다.
 - 검증: 권한·글 유형·보관·삭제·확정 거부, 미확정 파일 정리·재시도, 확정과의 경합 및 Storage 실패 후 DB 표식 보존을 단위 테스트로 추가했다. `npm run test:posts` 21건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과.
 - 제한: 격리 DB 및 실제 Storage 통합 검증은 하지 않았다. `.env`가 A2 migration 미적용 Supabase를 가리키며, DB 변경 및 운영 Storage 호출은 수행하지 않았다. 실제 DB 경합은 E1, Storage 실패 복구는 E2에서 확인한다.
+
+### WAITING-17/E1·E2. 통합 검증 착수 조건 점검
+
+- 상태: `BLOCKED` — 2026-10-22 Production 배포 실패 후 사용자가 E1·E2 우선 진행을 요청했으나 계획에 명시된 검증 조건이 충족되지 않아 실제 통합 시나리오는 시작하지 않았다.
+- 확인: A·B·C·D 구현 중 B3·C1·D2가 아직 `READY`다. Docker API 연결 실패로 격리 PostgreSQL DB를 준비할 수 없었다. `.env`에는 Supabase 연결 자격 증명이 설정돼 있으나 비운영 환경·테스트 계정임을 확인할 근거가 없어 DB/Storage 요청은 하지 않았다.
+- 실행한 검증: `npm run test:posts` 21건 통과. 해당 테스트는 단위 테스트이며 DB 트랜잭션 경합·롤백 또는 실제 Storage 동작을 검증하지 않는다.
+- E1 재개 조건: C1·B3·D2 완료 및 운영 DB와 분리된 격리 DB 준비. E1 완료 후 E2에 사용할 비운영 private Storage와 테스트 계정을 확인한다.
+- 관련 배포 오류: 앞서 기록된 `P2022` (`post_attachments.committedAt` 없음)는 DB migration과 배포 코드 간 불일치다. E1·E2 통과만으로 컬럼이 추가되지 않으므로 실제 배포 전 E3 migration·E4 전환 절차가 별도로 필요하다.
