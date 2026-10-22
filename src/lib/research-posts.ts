@@ -23,6 +23,46 @@ type ResearchPostSaveInput = {
   removedIds: string[];
 };
 
+export async function claimResearchUploadForDiscard(
+  database: ResearchPostSaveDatabase,
+  input: { attachmentId: string; authorId: number },
+) {
+  return database.$transaction(async (transaction) => {
+    const attachment = await transaction.postAttachment.findFirst({
+      where: {
+        id: input.attachmentId,
+        committedAt: null,
+        post: {
+          authorId: input.authorId,
+          type: PostType.RESEARCH,
+          status: { not: PostStatus.ARCHIVED },
+          deletedAt: null,
+        },
+      },
+      select: { id: true, objectPath: true, deletedAt: true },
+    });
+
+    if (!attachment) return null;
+
+    const { count } = await transaction.postAttachment.updateMany({
+      where: {
+        id: attachment.id,
+        committedAt: null,
+        deletedAt: attachment.deletedAt,
+        post: {
+          authorId: input.authorId,
+          type: PostType.RESEARCH,
+          status: { not: PostStatus.ARCHIVED },
+          deletedAt: null,
+        },
+      },
+      data: { deletedAt: attachment.deletedAt ?? new Date() },
+    });
+
+    return count === 1 ? attachment.objectPath : null;
+  });
+}
+
 export async function saveResearchPostAtomically(
   database: ResearchPostSaveDatabase,
   input: ResearchPostSaveInput,

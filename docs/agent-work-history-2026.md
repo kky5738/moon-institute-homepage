@@ -935,3 +935,10 @@ node scripts/check-login-ui.mjs
 - 구현: 공개 게시글 목록의 첨부 수, 상세 첨부 조회에 `committedAt IS NOT NULL`, 업로드 완료, 미삭제 조건을 공통 적용했다. 상세 URL은 필터를 통과한 파일에만 생성된다. 저장 후 캐시 갱신 태그는 유지했다.
 - 검증: 공개 첨부 필터 단위 테스트 2건 추가, `npm run test:posts` 16건, `npm run lint`, `git diff --check` 통과.
 - 제한: `npm run build`는 컴파일과 TypeScript 검사를 통과했지만 정적 렌더가 `.env`에서 연결하는 Supabase DB에 A2의 `committedAt` 컬럼이 없어 실패했다. DB에는 쓰지 않았다. Docker 데몬도 실행 중이 아니어서 격리 DB를 사용한 빌드는 하지 못했다. migration 적용과 운영 빌드 검증은 승인된 E3·E4 단계에서 수행한다.
+
+### WAITING-17/B1. 실패 업로드 정리를 미확정 파일로 제한
+
+- 상태: `DONE` — 2026-10-22 사용자가 WAITING-17의 우선순위 높은 작업 수행을 요청해 READY 순서의 P1 B1을 처리했다.
+- 구현: 작성자·연구 글·미보관·미삭제·미확정 조건을 트랜잭션 조회와 조건부 갱신에 함께 적용했다. 조건부 soft delete 1건에 성공한 경우만 Storage 삭제를 시도한다. 이미 soft delete된 미확정 파일은 권한과 게시글 상태를 다시 확인해 Storage 삭제를 재시도할 수 있으며, Storage 실패 시 삭제 표식과 원본 경로가 남는다.
+- 검증: 권한·글 유형·보관·삭제·확정 거부, 미확정 파일 정리·재시도, 확정과의 경합 및 Storage 실패 후 DB 표식 보존을 단위 테스트로 추가했다. `npm run test:posts` 21건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과.
+- 제한: 격리 DB 및 실제 Storage 통합 검증은 하지 않았다. `.env`가 A2 migration 미적용 Supabase를 가리키며, DB 변경 및 운영 Storage 호출은 수행하지 않았다. 실제 DB 경합은 E1, Storage 실패 복구는 E2에서 확인한다.

@@ -13,7 +13,10 @@ import {
   validateResearchUpload,
 } from "@/lib/research-files";
 import { assertResearcher } from "@/lib/researcher-auth";
-import { saveResearchPostAtomically } from "@/lib/research-posts";
+import {
+  claimResearchUploadForDiscard,
+  saveResearchPostAtomically,
+} from "@/lib/research-posts";
 import { logServerError } from "@/lib/server-log";
 import {
   createResearchUploadTicket,
@@ -157,22 +160,14 @@ export async function confirmResearchUpload(
 
 export async function discardResearchUpload(attachmentId: string) {
   const user = await assertResearcher();
-  const attachment = await prisma.postAttachment.findFirst({
-    where: {
-      id: attachmentId,
-      post: { authorId: user.id, type: PostType.RESEARCH },
-    },
-    select: { id: true, objectPath: true },
+  const objectPath = await claimResearchUploadForDiscard(prisma, {
+    attachmentId,
+    authorId: user.id,
   });
-
-  if (!attachment) return;
-  await prisma.postAttachment.update({
-    where: { id: attachment.id },
-    data: { deletedAt: new Date() },
-  });
+  if (!objectPath) return;
 
   try {
-    await removeResearchObjects([attachment.objectPath]);
+    await removeResearchObjects([objectPath]);
   } catch (error) {
     // ponytail: keep the soft-deleted row for manual cleanup; add a retry job if orphan volume grows.
     logServerError("researcher.posts.upload.discard", error, {
