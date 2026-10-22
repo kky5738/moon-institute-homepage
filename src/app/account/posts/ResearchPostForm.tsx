@@ -9,6 +9,7 @@ import {
   createResearchImageMarker,
   formatResearchFileSize,
   getResearchImageIds,
+  getResearchUploadPlan,
   type ResearchUploadKind,
   validateResearchUpload,
 } from "@/lib/research-files";
@@ -158,7 +159,17 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
     }
   }
 
-  function removeFile(file: ExistingFile) {
+  async function removeFile(file: ExistingFile) {
+    const pending = pendingFiles.find((item) => item.id === file.id);
+    if (pending?.uploaded) {
+      try {
+        await discardResearchUpload(file.id);
+      } catch (cause) {
+        setError(getErrorMessage(cause));
+        return;
+      }
+    }
+
     setPendingFiles((files) => files.filter((item) => item.id !== file.id));
     if (post?.attachments.some((item) => item.id === file.id)) {
       setRemovedIds((ids) => [...ids, file.id]);
@@ -196,16 +207,13 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
       const imageIds = new Set(
         getResearchImageIds(String(formData.get("content") ?? "")),
       );
-      const uploads = pendingFiles.filter(
-        (file) => file.kind === "ATTACHMENT" || imageIds.has(file.id),
+      const { uploads, attachmentIds } = getResearchUploadPlan(
+        pendingFiles,
+        imageIds,
+        visibleExisting.map((file) => file.id),
       );
-      const attachmentIds = new Set([
-        ...visibleExisting.map((file) => file.id),
-        ...uploads.map((file) => file.id),
-      ]);
 
       for (const pending of uploads) {
-        if (pending.uploaded) continue;
         setStatus(`${pending.originalName} 업로드 중`);
         const ticket = await requestResearchUpload(prepared.postId, {
           id: pending.id,
@@ -449,7 +457,7 @@ function FileList({
   onRemove,
   disabled,
 }: {
-  files: ExistingFile[];
+  files: Array<ExistingFile & { uploaded?: boolean }>;
   onRemove: (file: ExistingFile) => void;
   disabled: boolean;
 }) {
@@ -458,8 +466,15 @@ function FileList({
     <ul className="mt-4 divide-y divide-border border-y border-border text-sm">
       {files.map((file) => (
         <li key={file.id} className="flex items-center justify-between gap-3 py-3">
-          <span className="min-w-0 truncate">
-            {file.originalName} · {formatResearchFileSize(file.size)}
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+            <span className="truncate">
+              {file.originalName} · {formatResearchFileSize(file.size)}
+            </span>
+            {file.uploaded ? (
+              <span className="shrink-0 text-xs text-muted">
+                업로드 완료 · 저장 대기
+              </span>
+            ) : null}
           </span>
           <button
             type="button"

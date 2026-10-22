@@ -950,3 +950,11 @@ node scripts/check-login-ui.mjs
 - 실행한 검증: `npm run test:posts` 21건 통과. 해당 테스트는 단위 테스트이며 DB 트랜잭션 경합·롤백 또는 실제 Storage 동작을 검증하지 않는다.
 - E1 재개 조건: C1·B3·D2 완료 및 운영 DB와 분리된 격리 DB 준비. E1 완료 후 E2에 사용할 비운영 private Storage와 테스트 계정을 확인한다.
 - 관련 배포 오류: 앞서 기록된 `P2022` (`post_attachments.committedAt` 없음)는 DB migration과 배포 코드 간 불일치다. E1·E2 통과만으로 컬럼이 추가되지 않으므로 실제 배포 전 E3 migration·E4 전환 절차가 별도로 필요하다.
+
+### WAITING-17/C1. 업로드 성공·저장 미확정 파일을 화면 목록에 유지
+
+- 상태: `DONE` — 2026-10-22 사용자 요청에 따라 READY 우선순위 첫 작업을 처리했다.
+- 구현: 저장 대기 중인 업로드 완료 파일에 상태를 표시하고, 다음 저장 시 업로드는 건너뛰되 최종 첨부 ID에는 포함한다. 사용자가 이 파일을 제거하면 B1의 권한·상태 확인 및 soft delete/Storage 정리 경로를 호출한다.
+- 회귀 테스트: 완료된 파일은 재업로드 목록에서 빠지고 저장 첨부 ID에는 남으며, 본문에서 제거한 미참조 이미지 ID는 저장 대상에서 제외되는 계획 함수를 검증했다.
+- 검증: `npm run test:posts` 22건, `npm run lint`, `npx tsc --noEmit` 통과. `npm run build`는 컴파일과 TypeScript를 통과했으나 `/` 정적 생성 중 현재 `.env` Supabase DB에 `post_attachments.committedAt` 컬럼이 없어 `P2022`로 실패했다. DB에 변경은 하지 않았다.
+- 제한: 브라우저에서 실제 부분 업로드·Storage 제거·저장 실패 재시도는 확인하지 않았다. 해당 흐름은 E1·E2 조건 충족 후 검증한다.

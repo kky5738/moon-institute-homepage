@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   createResearchImageMarker,
+  getResearchUploadPlan,
   getResearchImageIds,
   hasValidImageSignature,
   MAX_RESEARCH_FILE_SIZE,
@@ -10,6 +11,25 @@ import {
 } from "@/lib/research-files";
 
 const id = "123e4567-e89b-42d3-a456-426614174000";
+
+test("부분 업로드 재시도는 완료 파일을 보존하고 다시 올리지 않는다", () => {
+  const plan = getResearchUploadPlan(
+    [
+      { id: "uploaded-a", kind: "ATTACHMENT", uploaded: true },
+      { id: "pending-b", kind: "ATTACHMENT" },
+      { id: "unused-image", kind: "INLINE_IMAGE", uploaded: true },
+    ],
+    new Set(),
+    ["existing-file"],
+  );
+
+  assert.deepEqual(plan.uploads, [{ id: "pending-b", kind: "ATTACHMENT" }]);
+  assert.deepEqual([...plan.attachmentIds], [
+    "existing-file",
+    "uploaded-a",
+    "pending-b",
+  ]);
+});
 
 test("문서 형식과 파일당 20MiB 경계를 검사한다", () => {
   assert.equal(

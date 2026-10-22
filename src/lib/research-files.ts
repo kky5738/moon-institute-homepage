@@ -4,6 +4,27 @@ export const RESEARCH_IMAGE_MARKER_PATTERN =
 
 export type ResearchUploadKind = "ATTACHMENT" | "INLINE_IMAGE";
 
+export function getResearchUploadPlan<
+  T extends {
+    id: string;
+    kind: ResearchUploadKind;
+    uploaded?: boolean;
+  },
+>(
+  pendingFiles: T[],
+  imageIds: ReadonlySet<string>,
+  existingIds: string[],
+) {
+  const selected = pendingFiles.filter(
+    (file) => file.kind === "ATTACHMENT" || imageIds.has(file.id),
+  );
+
+  return {
+    uploads: selected.filter((file) => !file.uploaded),
+    attachmentIds: new Set([...existingIds, ...selected.map((file) => file.id)]),
+  };
+}
+
 const documentTypes: Record<string, readonly string[]> = {
   pdf: ["application/pdf"],
   hwp: [
