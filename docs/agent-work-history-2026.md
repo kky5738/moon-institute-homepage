@@ -990,3 +990,11 @@ node scripts/check-login-ui.mjs
 - 회귀 테스트: 기존 확정 첨부를 유지하면서 명시적으로 선택한 미확정 문서와 본문 표식이 있는 이미지만 최종 저장 ID 목록에 들어가는지 확인한다.
 - 검증: `npm run test:posts` 29건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과.
 - 제한: 실제 작성자 계정으로 편집 화면을 다시 열고 Storage 파일을 보존·제거하는 흐름은 격리 DB와 비운영 Storage를 준비한 뒤 E1·E2에서 확인한다. 커밋과 배포는 하지 않았다.
+
+### WAITING-17/E1. Server Action·Prisma 트랜잭션 통합 검증
+
+- 상태: `DONE` — 2026-10-22 사용자 요청으로 다음 우선 작업을 진행했다. Docker 29.8.0과 로컬 `postgres:17.11-alpine` 이미지를 확인해 E1의 격리 DB 조건을 갖췄다.
+- 구현: `tests/research-posts.integration.test.ts`를 추가했다. 테스트는 매번 임시 PostgreSQL 17.11 컨테이너를 만들고 migration을 적용하며, `.env`의 DB 주소를 읽거나 외부 DB에 연결하지 않는다. `npm run test:posts:integration`으로 실행한다.
+- 검증 범위: 실제 연구자·관리자 Server Action과 Prisma를 연결해 소유권·미확정 파일 공개 차단, Storage 검증 응답 유실 뒤 미확정 상태 유지, 최종 저장 실패 시 본문·첨부 확정 rollback, 본문 이미지 확정과 정리의 경합, 저장과 관리자 보관의 경합, 관리자 연구 글 수정 차단과 공지 수정 정상 동작, Storage 제거 실패 후 재시도를 확인했다.
+- 검증 결과: `npm run test:posts:integration` 5개 시나리오 통과(상위 테스트 포함 6개), `npm run test:posts` 29건 통과, `npx tsc --noEmit`, `npm run lint` 통과.
+- 제한: Storage는 호출·실패를 제어하는 테스트 대역이며 실제 Supabase Storage와 브라우저는 확인하지 않았다. 운영 Supabase DB·Storage에는 연결하지 않았다. E2는 비운영 private Storage와 전용 테스트 계정 확인 후 진행한다. 빌드는 `.env`의 Supabase DB에 연결될 수 있어 실행하지 않았다.
