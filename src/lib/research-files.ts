@@ -25,6 +25,14 @@ export function getResearchUploadPlan<
   };
 }
 
+export function resetResearchUploadForRetry<
+  T extends { id: string; uploaded?: boolean },
+>(files: T[], previousId: string, nextId: string) {
+  return files.map((file) =>
+    file.id === previousId ? { ...file, id: nextId, uploaded: false } : file,
+  );
+}
+
 const documentTypes: Record<string, readonly string[]> = {
   pdf: ["application/pdf"],
   hwp: [
@@ -127,6 +135,17 @@ export function createResearchObjectPath(
 export function createResearchImageMarker(id: string) {
   if (!isUuid(id)) throw new Error("유효하지 않은 이미지 식별자입니다.");
   return `[[research-image:${id.toLowerCase()}]]`;
+}
+
+export function replaceResearchImageMarker(
+  content: string,
+  previousId: string,
+  nextId: string,
+) {
+  return content.replaceAll(
+    createResearchImageMarker(previousId),
+    createResearchImageMarker(nextId),
+  );
 }
 
 export function getResearchImageIds(content: string) {

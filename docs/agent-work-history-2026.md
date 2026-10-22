@@ -974,3 +974,11 @@ node scripts/check-login-ui.mjs
 - 회귀 테스트: 허용 게시글 유형, 허용 카테고리 유형과 활성 조건이 Prisma 조회·갱신에 사용되는지 검사했다.
 - 검증: `npm run test:posts` 27건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과. `npm run build`는 컴파일·TypeScript를 통과했지만 `/` 정적 생성이 Supabase DB의 `post_attachments.committedAt` 누락(`P2022`)으로 실패했다. DB 변경은 하지 않았다.
 - 제한: 관리자 계정으로 실제 DB 행을 바꾸는 통합 검증은 수행하지 않았다. E1에서 격리 DB가 준비되면 수정 우회와 대상 유형 변경을 검증한다.
+
+### WAITING-17/C2. 실패 파일 UUID와 본문 표식을 함께 갱신해 재시도
+
+- 상태: `DONE` — 2026-10-22 사용자 요청에 따라 READY 우선순위 작업을 처리했다.
+- 구현: 업로드 요청, signed Storage 업로드, 업로드 확인의 실패를 공통 복구 경로로 처리한다. 이전 미확정 시도를 정리하고, 파일 객체와 사용자 입력을 유지한 채 해당 파일만 새 UUID로 바꾼다. 본문 이미지 표식도 새 UUID로 교체해 같은 화면에서 다시 저장할 수 있게 했다. 정리 액션이 예외를 반환하면 정리 실패를 별도로 안내한다.
+- 회귀 테스트: 실패한 파일만 새 ID와 `uploaded: false`로 갱신되고 다른 파일은 유지되는지, 본문 표식이 같은 새 ID를 가리키는지 검사한다.
+- 검증: `npm run test:posts` 28건, `npm run lint`, `npx tsc --noEmit`, `git diff --check` 통과.
+- 제한: 실제 브라우저·Storage 업로드 실패, 요청 응답 유실 및 정리 실패는 비운영 테스트 환경이 준비된 뒤 E2에서 검증한다. DB 경합은 E1에서 확인한다. 커밋과 배포는 하지 않았다.

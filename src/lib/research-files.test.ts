@@ -6,6 +6,8 @@ import {
   getResearchImageIds,
   hasValidImageSignature,
   MAX_RESEARCH_FILE_SIZE,
+  replaceResearchImageMarker,
+  resetResearchUploadForRetry,
   splitResearchContent,
   validateResearchUpload,
 } from "@/lib/research-files";
@@ -29,6 +31,33 @@ test("부분 업로드 재시도는 완료 파일을 보존하고 다시 올리�
     "uploaded-a",
     "pending-b",
   ]);
+});
+
+test("실패 파일의 재시도 ID와 본문 이미지 표식을 함께 갱신한다", () => {
+  const nextId = "123e4567-e89b-42d3-b456-426614174001";
+  const otherId = "123e4567-e89b-42d3-a456-426614174002";
+  const file = { id, kind: "INLINE_IMAGE" as const, uploaded: true, file: {} };
+  const otherFile = { id: otherId, kind: "ATTACHMENT" as const, uploaded: true };
+  const content = [
+    "앞 문단",
+    createResearchImageMarker(id),
+    createResearchImageMarker(otherId),
+    "뒤 문단",
+  ].join("\n");
+
+  assert.deepEqual(resetResearchUploadForRetry([file, otherFile], id, nextId), [
+    { ...file, id: nextId, uploaded: false },
+    otherFile,
+  ]);
+  assert.equal(
+    replaceResearchImageMarker(content, id, nextId),
+    [
+      "앞 문단",
+      createResearchImageMarker(nextId),
+      createResearchImageMarker(otherId),
+      "뒤 문단",
+    ].join("\n"),
+  );
 });
 
 test("문서 형식과 파일당 20MiB 경계를 검사한다", () => {

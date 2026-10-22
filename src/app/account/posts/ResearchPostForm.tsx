@@ -10,6 +10,8 @@ import {
   formatResearchFileSize,
   getResearchImageIds,
   getResearchUploadPlan,
+  replaceResearchImageMarker,
+  resetResearchUploadForRetry,
   type ResearchUploadKind,
   validateResearchUpload,
 } from "@/lib/research-files";
@@ -215,38 +217,64 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
 
       for (const pending of uploads) {
         setStatus(`${pending.originalName} 업로드 중`);
-        const ticket = await requestResearchUpload(prepared.postId, {
-          id: pending.id,
-          kind: pending.kind,
-          name: pending.originalName,
-          size: pending.size,
-          contentType: pending.contentType,
-          altText: pending.altText,
-          imageWidth: pending.imageWidth,
-          imageHeight: pending.imageHeight,
-        });
-        if (!ticket.ok) throw new Error(ticket.message);
+        try {
+          const ticket = await requestResearchUpload(prepared.postId, {
+            id: pending.id,
+            kind: pending.kind,
+            name: pending.originalName,
+            size: pending.size,
+            contentType: pending.contentType,
+            altText: pending.altText,
+            imageWidth: pending.imageWidth,
+            imageHeight: pending.imageHeight,
+          });
+          if (!ticket.ok) throw new Error(ticket.message);
 
-        const { createClient } = await import("@supabase/supabase-js");
-        const storage = createClient(ticket.supabaseUrl, ticket.publishableKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        }).storage.from(ticket.bucket);
-        // ponytail: standard signed upload is enough for the 20MiB ceiling; add TUS only if real uploads prove unreliable.
-        const { error: uploadError } = await storage.uploadToSignedUrl(
-          ticket.path,
-          ticket.token,
-          pending.file,
-          { contentType: pending.contentType },
-        );
-        if (uploadError) {
-          await discardResearchUpload(pending.id);
-          throw new Error(`${pending.originalName} 업로드에 실패했습니다.`);
-        }
+          const { createClient } = await import("@supabase/supabase-js");
+          const storage = createClient(ticket.supabaseUrl, ticket.publishableKey, {
+            auth: { autoRefreshToken: false, persistSession: false },
+          }).storage.from(ticket.bucket);
+          // ponytail: standard signed upload is enough for the 20MiB ceiling; add TUS only if real uploads prove unreliable.
+          const { error: uploadError } = await storage.uploadToSignedUrl(
+            ticket.path,
+            ticket.token,
+            pending.file,
+            { contentType: pending.contentType },
+          );
+          if (uploadError) {
+            throw new Error(`${pending.originalName} 업로드에 실패했습니다.`);
+          }
 
-        const confirmed = await confirmResearchUpload(pending.id);
-        if (!confirmed.ok) {
-          await discardResearchUpload(pending.id);
-          throw new Error(confirmed.message);
+          const confirmed = await confirmResearchUpload(pending.id);
+          if (!confirmed.ok) throw new Error(confirmed.message);
+        } catch (cause) {
+          let cleanupError: unknown;
+          let cleanupFailed = false;
+          try {
+            await discardResearchUpload(pending.id);
+          } catch (error) {
+            cleanupFailed = true;
+            cleanupError = error;
+          }
+
+          const retryId = crypto.randomUUID();
+          setPendingFiles((files) =>
+            resetResearchUploadForRetry(files, pending.id, retryId),
+          );
+          if (pending.kind === "INLINE_IMAGE" && contentRef.current) {
+            contentRef.current.value = replaceResearchImageMarker(
+              contentRef.current.value,
+              pending.id,
+              retryId,
+            );
+          }
+
+          if (cleanupFailed) {
+            throw new Error(
+              `${getErrorMessage(cause)} 이전 업로드 정리 요청도 실패했습니다: ${getErrorMessage(cleanupError)}`,
+            );
+          }
+          throw cause;
         }
         setPendingFiles((files) =>
           files.map((file) =>
