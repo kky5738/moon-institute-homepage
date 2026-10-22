@@ -4,6 +4,7 @@ import { AttachmentKind, PostStatus, PostType } from "@/generated/prisma/enums";
 import { getPostPageWindow, POSTS_PER_PAGE } from "@/lib/pagination";
 import { decodePostSlug } from "@/lib/post-slug";
 import { prisma } from "@/lib/prisma";
+import { getPublicPostAttachmentWhere } from "@/lib/public-post-attachments";
 import { isPrismaMissingTableError, logServerError } from "@/lib/server-log";
 import { createResearchFileUrls } from "@/lib/supabase-storage";
 
@@ -70,11 +71,7 @@ const boardPostSelect = {
   _count: {
     select: {
       attachments: {
-        where: {
-          kind: AttachmentKind.ATTACHMENT,
-          uploadedAt: { not: null },
-          deletedAt: null,
-        },
+        where: getPublicPostAttachmentWhere(AttachmentKind.ATTACHMENT),
       },
     },
   },
@@ -267,7 +264,7 @@ async function findPublishedPostBySlug(type: PostType, decodedSlug: string) {
           },
         },
         attachments: {
-          where: { uploadedAt: { not: null }, deletedAt: null },
+          where: getPublicPostAttachmentWhere(),
           orderBy: { createdAt: "asc" },
           select: {
             id: true,

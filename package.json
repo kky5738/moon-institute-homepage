@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:auth": "tsx --test src/lib/user-auth.test.ts src/lib/admin-security.test.ts src/lib/confirmation-email.test.ts src/lib/login-timing.test.ts src/lib/account-deletion-flow.test.ts",
-    "test:posts": "node --import tsx --test src/lib/post-slug.test.ts src/lib/material-guides.test.ts src/lib/pagination.test.ts src/lib/research-files.test.ts src/lib/research-posts.test.ts src/lib/interaction-lock.test.ts",
+    "test:posts": "node --import tsx --test src/lib/post-slug.test.ts src/lib/material-guides.test.ts src/lib/pagination.test.ts src/lib/research-files.test.ts src/lib/research-posts.test.ts src/lib/public-post-attachments.test.ts src/lib/interaction-lock.test.ts",
     "test:timeline": "tsx --test src/lib/life-events.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
