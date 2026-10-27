@@ -1034,9 +1034,9 @@ node scripts/check-login-ui.mjs
 - 사용자 결정: 2026-10-22 이번 운영 전환 보류. E3·E4는 재개 지시 전까지 수행하지 않는다. `.env.staging`과 별도 Supabase 시험 프로젝트는 보존한다.
 - 재개 후 확인: 2026-10-22 16:26:15(KST) `.env`의 Supabase DB에서 `20261021000000_add_post_attachment_committed_at` migration 완료 기록과 nullable `committedAt` 컬럼을 확인했다. 적용 주체는 확인되지 않았다. 첨부 DB 행·`research-files` Storage 원본은 각 0건이고, 같은 DB를 사용한 로컬 production build는 37개 페이지 생성까지 통과했다. Vercel Production의 16:26:05 실패 배포는 migration 적용 전 시작된 빌드였다. 이후 dev Preview 배포는 Ready지만 Production 재배포는 아직 검증하지 않았다. 임시 Firewall 규칙 두 개는 비활성 상태다. E3 DB 검증 완료, E4 배포·운영 smoke가 남았다.
 
-### WAITING-17/E4. Production 배포·공개 smoke 재개
+### WAITING-17/E4. Production 배포·공개 전환 검증
 
-- 상태: `IN_PROGRESS` — 2026-10-22 재개한 Production smoke와 테스트 글 보관까지 완료했다. 2026-10-26 사용자가 Vercel Production DB target이 Supabase 운영 프로젝트와 일치하고 `committedAt` migration 로그가 있음을 확인했다. Supabase Free에는 관리형 DB 백업·복구가 없어 E4의 rollback은 앱 배포 되돌리기로만 정의한다.
+- 상태: `DONE` — 2026-10-27 완료 조건을 기록된 검증 결과와 대조했다. 2026-10-22 Production smoke와 테스트 글 보관을 마쳤고, 2026-10-26 사용자가 Vercel Production DB target이 Supabase 운영 프로젝트와 일치하고 `committedAt` migration 로그가 있음을 확인했다. Supabase Free에는 관리형 DB 백업·복구가 없어 E4의 rollback은 앱 배포 되돌리기로만 정의한다.
 - 배포 확인: Vercel 프로젝트에서 최신 Production 배포가 `Ready`, 브랜치 `main`, 커밋 `c100cdf`로 표시되는 것을 확인했다(16:36 KST). 이 배포는 이번 작업에서 시작하지 않았다. `c100cdf`는 E1·E2 검증 코드가 포함된 현재 main 기준이다.
 - 읽기 전용 smoke: 공식 도메인의 홈페이지(`/`), 연구 목록(`/research`), 공개 연구 글 상세 페이지를 Safari에서 열어 주요 콘텐츠와 네비게이션이 표시되는 것을 확인했다. 연구 목록의 공개 글 2건 모두 첨부 수는 0이다.
 - 데이터 일치: E3에서 확인한 운영 후보 DB의 `post_attachments` 행 0건 및 `research-files` Storage object 0건과 공개 목록의 첨부 수 0건이 일치한다. 따라서 기존 첨부 다운로드나 미확정 파일 접근 차단은 Production에서 실물 파일로 검증할 수 없다.
@@ -1048,3 +1048,11 @@ node scripts/check-login-ui.mjs
 - 첨부 행 확인: Production Supabase의 `post_attachments`에서 게시글 ID 22에 연결된 610바이트 `e4-smoke-test.pdf` 행에 `committedAt`과 `deletedAt`이 설정된 것을 읽기 전용으로 확인했다. DB 행은 soft delete 됐다. Storage object의 실제 존속 여부는 조회하지 않았다.
 - 복구 기준: Supabase [Database Backups](https://supabase.com/docs/guides/platform/backups) 및 [Production Checklist](https://supabase.com/docs/guides/deployment/going-into-prod)에 따르면 Free 프로젝트에는 관리형 일일 백업과 다운로드 가능한 dashboard 백업이 없으며, Free 사용자는 `db dump`로 자체 논리 백업을 관리해야 한다. 이 수동 백업은 향후 복구를 위한 선택지일 뿐, 이번 migration 적용 전 백업이 없다면 현재 시점에서 과거 DB 상태를 복원할 수 없다. DB 백업에는 Storage API의 파일 바이트도 포함되지 않는다. A2 migration은 nullable 컬럼 추가이므로 앱 배포를 되돌려도 migration은 유지하고, A4 공개 필터가 포함된 `c100cdf` 또는 그 이후 버전으로만 앱을 되돌린다. 이전 버전으로 돌아가 uncommitted 첨부를 노출할 위험을 피한다.
 - 잔여 제한: 위 앱 rollback은 소스와 migration 호환성에 기반해 정의한 절차이며 실제 Production rollback은 실행하지 않았다. 첨부 Storage object의 물리 상태도 확인하지 않았다. 현재 Production과 기존 smoke 배포의 앱·Prisma 소스는 동일하며, uncommitted 공개 차단은 동일 코드의 E1 통합 검증 및 E2 실제 staging 검증 결과로 뒷받침된다. 다운로드한 합성 PDF 사본은 로컬 `~/Downloads/e4-smoke-test.pdf`에 남아 있다.
+- 완료 조건 대조: `d615bc1` Ready와 앱·Prisma 소스 일치, Production의 공개 목록 첨부 수 1건→제거 후 0건, 상세 파일 링크와 PDF 다운로드, 보관 후 목록 제외·직접 주소 404, DB `committedAt`·`deletedAt` 확인으로 공개 조회·첨부 수·다운로드 일치를 충족했다. 8개 문제의 서버 정합성·권한·실패 복구는 A~D 회귀 테스트, E1 격리 DB 통합 검증, E2 실제 staging Storage·브라우저 검증을 근거로 한다. 앱 전용 rollback 기준도 기록했다. Production에서 미확정 파일 공개 차단·타인 소유권·이미지 최적화·Storage 원본 물리 상태를 각각 직접 재현하지 않았으며, 실제 rollback은 완료 조건에서 제외된다.
+
+### WAITING-17. 연구 게시글·첨부파일 CRUD 정합성과 권한 수정
+
+- 상태: `DONE` — 2026-10-27 E4 완료 조건을 대조하고 상위 작업을 종료했다. 2026-10-21 검토의 P1 2건·P2 6건을 A1~A4, B1~B3, C1~C3, D1~D2, E1~E4의 16개 하위 작업으로 처리했다. 각 구현·회귀 결과는 위의 원래 ID별 기록을 따른다.
+- 운영 결과: 추가형 `committedAt` migration과 호환 앱 배포, 공개 첨부 조회·수·다운로드, 작성자 수정·첨부 제거, 보관 후 비공개를 확인했다. 기존 첨부는 전환 전 0건이었으며 Production smoke에는 합성 글 1건·PDF 1개를 사용하고 글을 보관했다.
+- 완료 근거: A~D 단위 회귀, E1 PostgreSQL 통합 검증, E2 별도 Supabase Storage·브라우저 실패 복구, E3 운영 migration·0건 확인, E4 Production smoke와 DB soft-delete 대조 및 앱 전용 rollback 기준. Production 단독으로 재현하지 않은 경계와 Storage 원본·이미지 최적화의 미확인 사항은 E4 제한으로 남긴다. 실제 Production rollback은 수행하지 않는다.
+- 별도 작업: `READY-18`의 UI·bucket 설정 차단 조건은 이 완료로 해제되지 않는다. `.env.staging`과 별도 Supabase 시험 프로젝트는 보존한다.
