@@ -74,3 +74,9 @@
 | 2026-10-22 | WAITING-17/E1 | 사용자가 WAITING-17의 우선순위 높은 작업 수행을 요청 | 격리 PostgreSQL 17.11에서 실제 Server Action·Prisma 통합 시나리오 5개를 검증해 E1을 완료했다. 로컬 임시 DB와 Storage 대역만 사용했으며 운영 DB·Storage는 건드리지 않았다. 실제 Storage·브라우저 검증은 E2에 남긴다. |
 | 2026-10-22 | WAITING-17/E4 | 사용자가 기존 연구자 계정으로 합성 테스트 글 1건과 PDF 1개를 Production에 잠시 공개해 목록·상세·다운로드·수정·첨부 제거를 확인한 뒤 보관하도록 승인 | 테스트 글 ID 22와 610바이트 PDF의 공개·다운로드·수정·첨부 제거를 확인했다. 관리자 세션에서 글을 `ARCHIVED` 처리한 뒤 공개 목록에서 사라지고 직접 주소가 404임을 확인했다. 영구 삭제와 Storage 정책 변경은 범위 밖이다. 첨부 행 soft-delete와 물리 Storage 정리, Production DB 연결 대조, 혼재 버전·rollback 및 전체 8개 문제 검증은 미완료라 E4는 계속 `BLOCKED`다. 다운로드한 PDF 사본은 로컬 `~/Downloads/e4-smoke-test.pdf`에 남아 있다. |
 | 2026-10-26 | WAITING-17/E4 | 사용자가 Vercel Production DB와 Supabase 운영 프로젝트가 일치하고 `committedAt` migration 로그가 있음을 확인했으며, Supabase Free에는 관리형 백업이 없음을 알림 | E4를 `IN_PROGRESS`로 갱신했다. 최신 Production `d615bc1`이 Ready이고 앱·Prisma 소스가 `c100cdf`와 동일하며, 테스트 첨부 ID 22는 `committedAt`·`deletedAt`이 설정돼 있음을 확인했다. DB 복원을 rollback으로 사용하지 않는다. 장애 시 nullable migration은 유지하고 A4 공개 필터가 포함된 `c100cdf` 또는 이후 앱 버전으로만 배포를 되돌린다. Supabase의 `db dump`는 향후 수동 논리 백업 수단일 뿐 사전 백업이 없던 과거 시점 복구를 제공하지 않는다. 실제 Production rollback과 Storage object 물리 상태는 확인하지 않았다. |
+
+## READY-18 UI 유지 (2026-10-27)
+
+- 사용자 결정: “ui는 현재 디자인을 유지할게”.
+- 적용 범위: 연구 게시판의 현재 레이아웃(`92f6063`)을 유지한다. 데스크톱 목록 최소 80px 행·제목 줄바꿈, 상세 `max-w-4xl` 프레임·`w-full` 본문, 본문 아래 첨부 배치를 기준으로 한다. 기존 48~56px 한 줄 행·72~80ch 본문·메타데이터 바로 아래 첨부 요구를 대체한다.
+- READY-18의 UI 기준 불일치는 해소하되 파일 접근 권한·업로드 검증·1280px와 390px 접근성 및 가로 넘침 검증은 유지한다. 초안 파일 열람과 실제 환경 잔여 검증의 완료를 뜻하지 않는다.
