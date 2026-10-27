@@ -33,7 +33,7 @@
 
 ## 현재 실행 순서
 
-- `READY` 하위 작업 없음. A~D 구현과 E1 격리 DB 통합 검증, E2 staging Storage·브라우저 검증을 완료했다. `WAITING-17/E4`에서 승인된 Production smoke와 테스트 글 보관까지 마쳤다. E4의 나머지 운영 검증은 Production DB 연결 대조·혼재 버전·rollback 확인이 남아 `BLOCKED` 상태다. E1은 PostgreSQL 17.11 임시 컨테이너에서 통과했다.
+- `READY` 하위 작업 없음. A~D 구현과 E1 격리 DB 통합 검증, E2 staging Storage·브라우저 검증을 완료했다. 사용자가 Vercel Production DB와 Supabase 운영 프로젝트가 일치하고 A2 migration 로그가 있음을 확인해 `WAITING-17/E4`를 `IN_PROGRESS`로 재개했다. Supabase Free에는 관리형 DB 백업·복구가 없으므로 E4의 rollback은 DB 복원이 아닌 앱 배포 되돌리기로 정의한다. 자세한 검증 결과는 작업 이력에 기록했다. E1은 PostgreSQL 17.11 임시 컨테이너에서 통과했다.
 - E2는 브라우저 정상 흐름·부분 업로드 실패·최종 저장 실패 후 같은 화면 재시도·재진입 복구·첨부 제거·보관 후 수정 거부·공개 이미지 표시를 확인했다. 로컬 개발에서는 NAT64로 인한 Next 이미지 프록시 차단을 피해 원본 signed URL을 사용한다. 운영 Supabase DB·Storage는 사용하지 않았다.
 - `WAITING-17`은 2026-10-21 사용자 요청으로 `READY`로 전환했다. 완료된 하위 작업의 구현·검증 결과는 [2026년 작업 이력](./agent-work-history-2026.md)에 기록했다.
 - 연구 게시글·첨부파일 CRUD 검토의 8개 문제를 5개 묶음, 16개 하위 작업으로 관리한다. A1은 2026-10-21 사용자 승인으로 완료했고 A2는 스키마·migration 및 PostgreSQL 17.11 격리 DB 검증을 마쳤다. 운영 적용 승인은 기록했으며 실제 적용은 E2~E4 선행 조건 충족 후 진행한다.
@@ -41,7 +41,7 @@
 
 ## 바로 작업 가능한 일
 
-- `WAITING-17/E4`는 `BLOCKED`다. 승인된 Production smoke(테스트 글·PDF 생성, 공개·다운로드·첨부 제거·보관)는 완료했고 공개 목록에서 글이 사라지며 직접 주소가 404임을 확인했다. E3 기준 첨부 행·Storage 원본은 각 0건이었으나 이번 테스트 첨부의 DB soft-delete와 물리 Storage 정리는 직접 조회하지 않았다. Production DB 연결값 대조, 미확정 파일 접근 차단, 혼재 버전·rollback, 전체 8개 문제 회귀 확인이 남았다. 자세한 내용은 [2026년 작업 이력](./agent-work-history-2026.md)에 기록한다.
+- `WAITING-17/E4`는 `IN_PROGRESS`다. 사용자가 Vercel Production DB가 Supabase 운영 프로젝트와 일치하고 `committedAt` migration 로그가 있음을 확인했다. 최신 Production `d615bc1`은 Ready이며 앱·Prisma 소스가 기존 smoke 배포 `c100cdf`와 동일하다. 승인된 Production smoke와 테스트 글 보관을 마쳤고 Supabase에서 테스트 첨부 행의 `committedAt`·`deletedAt` 설정도 확인했다. Free 요금제에서 DB 시점 복구는 불가하다. 앱을 되돌릴 때는 A4 공개 필터가 포함된 `c100cdf` 또는 이후 빌드로만 되돌리고 nullable migration은 유지한다. 실제 Production rollback이나 Storage object 물리 상태는 확인하지 않았다.
 
 상세 범위·검증 기준은 아래 `WAITING-17` 하위 블록을 기준으로 한다. 완료된 선행 작업에 따라 종속 항목을 `READY`로 전환한다.
 
@@ -215,7 +215,7 @@ A·B·C·D 구현과 단위 검증을 완료했고 E1은 격리 PostgreSQL에서
 
 #### E3. 기존 첨부 0건 확인·운영 migration 적용
 
-- 상태: `DONE` — 2026-10-22 16:26:15(KST) `.env`가 가리키는 Supabase DB에 해당 migration이 적용 완료된 기록과 nullable `committedAt` 컬럼을 확인했다. 적용 주체는 확인되지 않았다. 적용 후 첨부 DB 행·Storage 원본은 각 0건이고, 같은 DB 대상 production build가 통과했다. 이전 자동 승인 검토에서 거절된 명령은 실행하지 않았다. Vercel Production 연결값의 독립 대조와 운영 배포 검증은 E4에 남아 있다. 임시 Firewall 규칙은 비활성이다. 문제 1·2.
+- 상태: `DONE` — 2026-10-22 16:26:15(KST) `.env`가 가리키는 Supabase DB에 해당 migration이 적용 완료된 기록과 nullable `committedAt` 컬럼을 확인했다. 적용 주체는 확인되지 않았다. 적용 후 첨부 DB 행·Storage 원본은 각 0건이고, 같은 DB 대상 production build가 통과했다. 이전 자동 승인 검토에서 거절된 명령은 실행하지 않았다. 2026-10-26 사용자가 Vercel Production DB target이 Supabase 운영 프로젝트와 일치하고 migration 로그가 있음을 확인했다. 실제 배포 결과 검증은 E4에 남아 있다. 임시 Firewall 규칙은 비활성이다. 문제 1·2.
 - 전제: 2026-10-21 사용자 확인으로 현재 글은 테스트 글뿐이며 첨부파일은 없다. 기존 파일의 개별 분류·일괄 확정·데이터 보정 작업은 기본 범위에서 제외한다. 테스트 글은 삭제하지 않는다.
 - 실행: 전환 중 연구 글 저장·업로드를 일시 제한하고 첨부 DB 행(미업로드·삭제 표시 포함)과 관련 Storage 원본이 없는지 확인한 뒤 승인된 추가형 migration을 적용한다. E4 검증까지 쓰기 통제를 유지한다.
 - 예외: 새 첨부나 잔여 파일이 발견되면 임의 삭제·일괄 확정하지 않는다. 전환을 보류하고 작성자 또는 운영자 확인으로 확정 대상을 결정한다. 미분류 파일은 보존하고 새 조회 기준에서는 비공개로 유지한다.
@@ -223,12 +223,12 @@ A·B·C·D 구현과 단위 검증을 완료했고 E1은 격리 PostgreSQL에서
 
 #### E4. 배포·공개 조회 전환 검증
 
-- 상태: `BLOCKED` — 2026-10-22 사용자 재개 요청으로 진행했다. Vercel Production 최신 배포는 `Ready`, 환경 `Production`, 소스 `main`의 `c100cdf`이며 16:36 KST 배포로 표시됐다. 이번 작업에서 재배포는 하지 않았다. 승인된 Production smoke와 테스트 글 보관은 완료했지만 Production DB 연결값 대조·미확정 파일 접근 차단·혼재 버전·rollback 및 전체 8개 문제 회귀 확인이 남아 있다. 문제 1~8.
+- 상태: `IN_PROGRESS` — 2026-10-26 사용자가 Vercel Production DB target과 Supabase 운영 프로젝트가 일치하며 `committedAt` 추가 migration 로그가 있음을 확인했다. 최신 Production 배포 `d615bc1`은 `Ready`이고, 앱·Prisma 소스는 기존 smoke 배포 `c100cdf`와 동일하다. 승인된 smoke·보관과 첨부 soft-delete 확인을 마쳤다. Supabase Free에는 관리형 DB backup/restore가 없으므로 DB 복원은 rollback 경로에서 제외하고, 앱 배포만 A4 공개 필터가 포함된 `c100cdf` 또는 이후 버전으로 되돌린다. nullable `committedAt` migration은 되돌리지 않고 유지한다. 실제 Production rollback은 수행하지 않았고 이번 첨부의 Storage object 물리 상태도 확인하지 않았다. 문제 1~8.
 - 승인된 일회성 테스트 범위: 기존 연구자 계정으로 합성 글 1건과 무해한 PDF 1개를 잠시 공개하고 목록·상세·다운로드·첨부 제거를 확인한 뒤 보관한다. 글의 영구 삭제, 다른 데이터 변경, Storage 정책 변경은 범위 밖이다.
 - 범위: A3·A4·B1·B3·C1~C3의 호환되는 변경을 전환 계획대로 배포하고 공개 캐시를 갱신한다. E3와 배포 사이의 쓰기를 통제하며 구버전·신버전 요청이 혼재할 때의 처리도 확인한다.
-- 검증: 기존 정상 글·첨부 접근, 미확정 파일 비공개, 새 글 저장·수정·첨부 제거, 보관·소유권 경계를 승인된 smoke 범위로 확인한다. 예상과 다른 첨부 누락·공개가 있으면 전환을 중단하고 승인된 복구 절차를 따른다.
-- 현재 결과·잔여 확인: E3 사전 점검의 첨부 행 및 `research-files` Storage object 각 0건은 공개 목록과 일치했다. 사용자가 승인한 기존 연구자 계정으로 합성 테스트 글 1건(ID 22)과 610바이트짜리 PDF 1개를 Production에 게시했다. 공개 목록·상세에서 글과 첨부 1건을 확인하고 PDF 다운로드에 성공했다. 연구자 수정 화면에서 첨부를 제거해 저장한 뒤 공개 목록의 첨부 수가 `-`로 바뀌었다. 기존 관리자 세션으로 글을 `ARCHIVED` 처리했고 공개 연구 목록에서 사라졌으며 직접 주소는 404를 반환했다. 첨부 DB 행의 soft-delete 상태와 Storage object의 물리 정리는 직접 조회하지 않았다. 내려받은 PDF 사본은 로컬 `~/Downloads/e4-smoke-test.pdf`에 남아 있다. Vercel Production DB 연결값과 E3 연결값의 독립 대조, 미확정 파일 접근 차단, 구버전·신버전 혼재, rollback 및 전체 8개 문제 회귀는 검증하지 않았다.
-- 완료 조건: 전환 후 공개 조회·첨부 수·다운로드가 일치하고 8개 문제의 회귀 검증 결과가 기록된다. 실패 업로드를 다시 노출하는 구버전 복귀를 안전한 rollback으로 간주하지 않는다.
+- 검증: 기존 정상 글·첨부 접근, 미확정 파일 비공개, 새 글 저장·수정·첨부 제거, 보관·소유권 경계를 승인된 smoke 범위로 확인한다. 예상과 다른 첨부 누락·공개가 있으면 A4 공개 필터가 포함된 앱 버전으로 배포를 되돌리고 migration은 유지한 채 전진 수정한다. Supabase Free에는 시점 복구용 관리형 DB backup/restore가 없으므로 DB 복원을 전제로 하지 않는다.
+- 현재 결과·잔여 확인: 사용자가 Vercel Production DB target과 Supabase 운영 프로젝트가 일치하고 `committedAt` migration 로그가 있음을 확인했다. Vercel에서 Production `main`의 최신 배포 `d615bc1`이 `Ready`임을 확인했다. `c100cdf..HEAD`의 `src`·`prisma` 차이는 없고, `c100cdf`의 공개 첨부 필터는 `committedAt`·`uploadedAt` 설정 및 `deletedAt IS NULL`을 요구한다. E1 통합 검증과 E2 실제 staging 검증도 완료했다. Supabase Table Editor에서 테스트 글 ID 22의 `e4-smoke-test.pdf`(610바이트) 행은 `committedAt`·`deletedAt`이 모두 설정돼 있음을 읽기 전용으로 확인했다. Production 공개 목록에서는 글이 사라졌고 직접 주소는 404를 반환했다. 첨부 Storage object의 물리 상태와 실제 rollback은 확인하지 않았다. 내려받은 PDF 사본은 로컬 `~/Downloads/e4-smoke-test.pdf`에 남아 있다.
+- 완료 조건: 전환 후 공개 조회·첨부 수·다운로드가 일치하고 8개 문제의 회귀 검증 결과와 앱 전용 rollback 기준이 기록된다. 실패 업로드를 다시 노출할 수 있는 A4 이전 앱 버전으로 되돌리는 것은 안전한 rollback으로 간주하지 않는다. 실제 Production rollback은 실행하지 않는다.
 - 기록: 배포 버전·migration·전환 결과·미확인 사항을 남긴다. 완료된 하위 작업은 원래 ID를 유지해 작업 이력으로 옮기고, 모든 하위 작업이 끝나면 상위 WAITING-17도 완료 이력으로 이동한다.
 
 #### 검증 공통 기준
@@ -277,7 +277,7 @@ A·B·C·D 구현과 단위 검증을 완료했고 E1은 격리 PostgreSQL에서
   - 공식 도메인
   - Vercel Production Branch가 실제로 `main`인지 여부
   - Preview와 Production DB 분리 여부
-  - Supabase 요금제와 자동 백업 보존 범위
+  - Supabase 요금제와 자동 백업 보존 범위 — 사용자가 2026-10-26 Free 요금제임을 확인. 관리형 일일 백업은 제공되지 않으며 `db dump` 수동 논리 백업을 별도 운영해야 한다.
 - 필요한 승인:
   - Production 환경 변수 변경
   - 운영 DB Migration 적용
@@ -288,11 +288,13 @@ A·B·C·D 구현과 단위 검증을 완료했고 E1은 격리 PostgreSQL에서
 ### WAITING-04. 백업·복구·모니터링 운영 정책
 
 - 상태: `WAITING`
+- 현재 제약: 사용자가 2026-10-26 Supabase Free 요금제에는 관리형 백업 기능이 없음을 확인했다. Supabase [Database Backups](https://supabase.com/docs/guides/platform/backups) 및 [Production Checklist](https://supabase.com/docs/guides/deployment/going-into-prod)는 Free 프로젝트의 관리형 일일·다운로드 백업이 없으며 `db dump` 수동 논리 백업을 권장한다고 안내한다. DB 백업은 Storage 파일 바이트를 포함하지 않는다.
 - 필요한 결정:
-  - 백업 주기와 보존 기간
+  - `db dump` 백업 주기·보존 기간·외부 보관 위치
+  - DB와 Storage object를 함께 복구할 수 있는 백업·복구 절차
   - 장애 알림 수신자와 채널
   - 장애 대응 담당자
-  - 배포 실패 시 rollback 기준
+  - 앱 배포 rollback과 DB 복구를 구분한 장애 대응 기준
 - 필요한 승인:
   - 외부 모니터링 또는 알림 서비스 연결
   - 운영 DB 복원 시험

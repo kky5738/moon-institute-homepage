@@ -1036,7 +1036,7 @@ node scripts/check-login-ui.mjs
 
 ### WAITING-17/E4. Production 배포·공개 smoke 재개
 
-- 상태: `BLOCKED` — 2026-10-22 사용자 재개 요청으로 이어서 진행했다. 승인된 smoke와 테스트 글 보관까지 완료했으나 E4의 나머지 운영 검증은 별도로 남아 있다.
+- 상태: `IN_PROGRESS` — 2026-10-22 재개한 Production smoke와 테스트 글 보관까지 완료했다. 2026-10-26 사용자가 Vercel Production DB target이 Supabase 운영 프로젝트와 일치하고 `committedAt` migration 로그가 있음을 확인했다. Supabase Free에는 관리형 DB 백업·복구가 없어 E4의 rollback은 앱 배포 되돌리기로만 정의한다.
 - 배포 확인: Vercel 프로젝트에서 최신 Production 배포가 `Ready`, 브랜치 `main`, 커밋 `c100cdf`로 표시되는 것을 확인했다(16:36 KST). 이 배포는 이번 작업에서 시작하지 않았다. `c100cdf`는 E1·E2 검증 코드가 포함된 현재 main 기준이다.
 - 읽기 전용 smoke: 공식 도메인의 홈페이지(`/`), 연구 목록(`/research`), 공개 연구 글 상세 페이지를 Safari에서 열어 주요 콘텐츠와 네비게이션이 표시되는 것을 확인했다. 연구 목록의 공개 글 2건 모두 첨부 수는 0이다.
 - 데이터 일치: E3에서 확인한 운영 후보 DB의 `post_attachments` 행 0건 및 `research-files` Storage object 0건과 공개 목록의 첨부 수 0건이 일치한다. 따라서 기존 첨부 다운로드나 미확정 파일 접근 차단은 Production에서 실물 파일로 검증할 수 없다.
@@ -1044,4 +1044,7 @@ node scripts/check-login-ui.mjs
 - 테스트 결과: 연구자 권한으로 `/account/posts/new` 접근을 확인했다. 합성 글 `[E4 임시 검증] 20261022`(게시글 ID 22)과 `e4-smoke-test.pdf`(610바이트, 1페이지)를 공개했다. 공개 연구 목록에서 글과 첨부 1건을 확인했고, 상세 화면에서도 파일 링크가 노출됐다. Safari가 Production 사이트의 파일 다운로드를 허용할지 물어 허용한 뒤 PDF를 내려받아 PDF 1페이지·610바이트임을 확인했다.
 - 첨부 정리: 작성자가 수정 화면에서 PDF를 제거하고 저장했다. 이후 공개 연구 목록에서 해당 글은 남아 있고 첨부 수는 `-`로 표시됐다. DB 첨부 행의 soft-delete 상태와 Storage 원본의 물리 상태는 직접 조회하지 않았다. 영구 삭제나 bucket 설정 변경은 하지 않았다. 다운로드한 합성 PDF 사본은 로컬 `~/Downloads/e4-smoke-test.pdf`에 남아 있다.
 - 보관·공개 차단 확인: 기존 관리자 세션의 `/admin/posts`에서 대상 글만 `ARCHIVED`로 보관했다. 공개 연구 목록에서 글이 사라졌고 기존 글 주소는 404를 반환했다. 무관한 게시글은 변경하지 않았다.
-- 잔여 제한: Vercel Production DB 연결값과 E3의 `.env` 연결을 독립 대조하지 않았다. 미확정 파일 접근 차단, 구버전·신버전 혼재, rollback과 전체 8개 문제의 회귀 검증도 확인하지 않았다. 이 기준이 확인되기 전까지 E4와 상위 WAITING-17은 완료로 표시하지 않는다.
+- DB·배포 대조: 사용자가 Vercel Production DB가 Supabase 운영 프로젝트와 일치하고 `committedAt` 추가 migration 로그가 있음을 확인했다. Vercel Deployments에서 2026-10-23 17:58 KST `d615bc1` Production 배포가 Ready임을 확인했다. `c100cdf..HEAD` 사이 `src`·`prisma` 변경은 없고 `c100cdf`의 공개 첨부 필터는 `committedAt`·`uploadedAt`이 설정된 미삭제 행만 노출한다.
+- 첨부 행 확인: Production Supabase의 `post_attachments`에서 게시글 ID 22에 연결된 610바이트 `e4-smoke-test.pdf` 행에 `committedAt`과 `deletedAt`이 설정된 것을 읽기 전용으로 확인했다. DB 행은 soft delete 됐다. Storage object의 실제 존속 여부는 조회하지 않았다.
+- 복구 기준: Supabase [Database Backups](https://supabase.com/docs/guides/platform/backups) 및 [Production Checklist](https://supabase.com/docs/guides/deployment/going-into-prod)에 따르면 Free 프로젝트에는 관리형 일일 백업과 다운로드 가능한 dashboard 백업이 없으며, Free 사용자는 `db dump`로 자체 논리 백업을 관리해야 한다. 이 수동 백업은 향후 복구를 위한 선택지일 뿐, 이번 migration 적용 전 백업이 없다면 현재 시점에서 과거 DB 상태를 복원할 수 없다. DB 백업에는 Storage API의 파일 바이트도 포함되지 않는다. A2 migration은 nullable 컬럼 추가이므로 앱 배포를 되돌려도 migration은 유지하고, A4 공개 필터가 포함된 `c100cdf` 또는 그 이후 버전으로만 앱을 되돌린다. 이전 버전으로 돌아가 uncommitted 첨부를 노출할 위험을 피한다.
+- 잔여 제한: 위 앱 rollback은 소스와 migration 호환성에 기반해 정의한 절차이며 실제 Production rollback은 실행하지 않았다. 첨부 Storage object의 물리 상태도 확인하지 않았다. 현재 Production과 기존 smoke 배포의 앱·Prisma 소스는 동일하며, uncommitted 공개 차단은 동일 코드의 E1 통합 검증 및 E2 실제 staging 검증 결과로 뒷받침된다. 다운로드한 합성 PDF 사본은 로컬 `~/Downloads/e4-smoke-test.pdf`에 남아 있다.
