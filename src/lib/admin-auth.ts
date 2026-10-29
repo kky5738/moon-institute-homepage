@@ -23,6 +23,12 @@ export async function requireAdmin() {
   return session;
 }
 
+export class AdminUnauthorizedError extends Error {
+  constructor() {
+    super("Unauthorized");
+  }
+}
+
 export async function assertAdmin() {
   let session;
 
@@ -39,7 +45,7 @@ export async function assertAdmin() {
     session.user.adminSessionValid !== true
   ) {
     console.error("[auth-error] Unauthorized admin server action attempt.");
-    throw new Error("Unauthorized");
+    throw new AdminUnauthorizedError();
   }
 
   return session;

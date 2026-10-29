@@ -8,7 +8,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminEditableCategoriesWhere } from "@/lib/admin-posts";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
-import { archivePost, updatePost } from "../../actions";
+import { archivePost } from "../../actions";
+import { PostForm } from "../../post-form";
 
 type EditPostPageProps = {
   params: Promise<{ id: string }>;
@@ -59,8 +60,6 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     notFound();
   }
 
-  const hasCategories = categories.length > 0;
-
   return (
     <div className="mx-auto w-full max-w-3xl px-5 py-14 lg:px-8">
       <Link href="/admin/posts" className="text-sm font-semibold text-primary hover:underline">
@@ -76,117 +75,10 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         </p>
       </div>
 
-      <form action={updatePost} className="mt-8 space-y-6">
-        <input type="hidden" name="id" value={post.id} />
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="title">
-            제목
-          </label>
-          <input
-            id="title"
-            name="title"
-            required
-            defaultValue={post.title}
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="slug">
-            슬러그
-          </label>
-          <input
-            id="slug"
-            name="slug"
-            required
-            pattern="[a-zA-Z0-9-]+"
-            defaultValue={post.slug}
-            placeholder="example-post-title"
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="summary">
-            요약
-          </label>
-          <textarea
-            id="summary"
-            name="summary"
-            rows={3}
-            defaultValue={post.summary ?? ""}
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="content">
-            본문
-          </label>
-          <textarea
-            id="content"
-            name="content"
-            rows={12}
-            required
-            defaultValue={post.content}
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm leading-6 outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="categoryId">
-            카테고리
-          </label>
-          <select
-            id="categoryId"
-            name="categoryId"
-            required
-            defaultValue={post.categoryId ?? ""}
-            disabled={!hasCategories}
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          >
-            <option value="">선택</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.postType === "NOTICE" ? "공지사항" : "홍보자료"} / {category.name}
-              </option>
-            ))}
-          </select>
-          {!hasCategories ? (
-            <p className="mt-2 text-sm text-red-700">
-              활성 카테고리가 없습니다. 먼저 seed 또는 관리자 카테고리 데이터를 확인해주세요.
-            </p>
-          ) : null}
-        </div>
-
-        <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-6">
-          <Link
-            href="/admin/posts"
-            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:border-accent"
-          >
-            취소
-          </Link>
-          <PendingButton
-            name="intent"
-            value="draft"
-            disabled={!hasCategories}
-            pendingLabel="저장 중…"
-            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-primary-dark hover:border-primary disabled:hover:border-border"
-          >
-            임시저장
-          </PendingButton>
-          <PendingButton
-            name="intent"
-            value="publish"
-            disabled={!hasCategories}
-            pendingLabel="공개 중…"
-            className="inline-flex h-11 items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary disabled:hover:bg-primary-dark"
-          >
-            저장 후 공개
-          </PendingButton>
-        </div>
-      </form>
+      <PostForm categories={categories} post={{
+        id: post.id, title: post.title, slug: post.slug, summary: post.summary,
+        content: post.content, categoryId: post.categoryId,
+      }} />
 
       {post.status !== PostStatus.ARCHIVED ? (
         <form action={archivePost} className="mt-4 flex justify-end">

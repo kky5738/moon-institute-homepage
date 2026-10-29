@@ -107,7 +107,7 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
     });
     const adminActions = load<typeof import("../src/app/admin/posts/actions")>("src/app/admin/posts/actions.ts", {
       "next/cache": cache,
-      "next/navigation": { redirect(path: string) { throw Object.assign(new Error("redirect"), { destination: path }); } },
+      "next/navigation": { unstable_rethrow() {}, redirect(path: string) { throw Object.assign(new Error("redirect"), { destination: path }); } },
       "@/generated/prisma/enums": enums, "@/lib/admin-auth": adminAuth,
       "@/lib/admin-posts": adminPosts, "@/lib/prisma": { prisma },
       "@/lib/posts": { getPublishedPostsCacheTag: () => "posts" },
@@ -333,14 +333,17 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
       const update = (id: number, title: string) => makeForm({
         id: String(id), title, slug: randomUUID(), content: "Changed", categoryId: String(category.id), intent: "publish",
       });
-      await assert.rejects(adminActions.updatePost(update(researchPost.id, "Forbidden")), /게시글을 찾을 수 없습니다/);
+      const formState = { status: "idle" as const, message: "" };
+      const rejected = await adminActions.updatePost(formState, update(researchPost.id, "Forbidden"));
+      assert.equal(rejected.status, "validation");
+      assert.match(rejected.message, /게시글을 찾을 수 없습니다/);
       assert.equal((await prisma.post.findUniqueOrThrow({ where: { id: researchPost.id } })).title, "Protected research");
 
       const notice = await prisma.post.create({ data: {
         title: "Notice", slug: randomUUID(), content: "Before", type: enums.PostType.NOTICE,
         status: enums.PostStatus.DRAFT, categoryId: category.id,
       } });
-      await assert.rejects(adminActions.updatePost(update(notice.id, "Updated notice")),
+      await assert.rejects(adminActions.updatePost(formState, update(notice.id, "Updated notice")),
         (error: { destination?: string }) => error.destination === "/admin/posts");
       assert.equal((await prisma.post.findUniqueOrThrow({ where: { id: notice.id } })).title, "Updated notice");
     });

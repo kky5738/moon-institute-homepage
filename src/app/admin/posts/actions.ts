@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath, updateTag } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { PostStatus, PostType } from "@/generated/prisma/enums";
-import { assertAdmin } from "@/lib/admin-auth";
+import { AdminUnauthorizedError, assertAdmin } from "@/lib/admin-auth";
 import {
   getAdminEditableCategoryWhere,
   getAdminEditablePostWhere,
@@ -12,11 +12,18 @@ import { prisma } from "@/lib/prisma";
 import { getPublishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
 
-export async function createPost(formData: FormData) {
-  await assertAdmin();
+export type PostFormState = {
+  status: "idle" | "validation" | "auth" | "error";
+  message: string;
+};
+
+class PostValidationError extends Error {}
+
+export async function createPost(_previous: PostFormState, formData: FormData): Promise<PostFormState> {
   let affectedType: PostType;
 
   try {
+    await assertAdmin();
     const title = getRequiredString(formData, "title");
     const slug = normalizeSlug(getRequiredString(formData, "slug"));
     const content = getRequiredString(formData, "content");
@@ -25,7 +32,7 @@ export async function createPost(formData: FormData) {
     const status = parsePostIntent(formData);
 
     if (!Number.isInteger(categoryId) || categoryId < 1) {
-      throw new Error("유효한 카테고리를 선택해주세요.");
+      throw new PostValidationError("유효한 카테고리를 선택해주세요.");
     }
 
     const category = await prisma.category.findFirst({
@@ -36,7 +43,7 @@ export async function createPost(formData: FormData) {
     });
 
     if (!category) {
-      throw new Error("카테고리를 찾을 수 없습니다.");
+      throw new PostValidationError("사용 가능한 카테고리를 선택해주세요.");
     }
 
     const duplicatePost = await prisma.post.findUnique({
@@ -49,7 +56,7 @@ export async function createPost(formData: FormData) {
     });
 
     if (duplicatePost) {
-      throw new Error("이미 사용 중인 슬러그입니다.");
+      throw new PostValidationError("이미 사용 중인 슬러그입니다.");
     }
 
     affectedType = category.postType;
@@ -66,8 +73,7 @@ export async function createPost(formData: FormData) {
       },
     });
   } catch (error) {
-    logServerError("admin.posts.create", error);
-    throw error;
+    return postSaveError("admin.posts.create", error);
   }
 
   revalidatePostPaths(affectedType);
@@ -75,11 +81,11 @@ export async function createPost(formData: FormData) {
   redirect("/admin/posts");
 }
 
-export async function updatePost(formData: FormData) {
-  await assertAdmin();
+export async function updatePost(_previous: PostFormState, formData: FormData): Promise<PostFormState> {
   let affectedTypes: PostType[];
 
   try {
+    await assertAdmin();
     const id = Number(getRequiredString(formData, "id"));
     const title = getRequiredString(formData, "title");
     const slug = normalizeSlug(getRequiredString(formData, "slug"));
@@ -89,11 +95,11 @@ export async function updatePost(formData: FormData) {
     const status = parsePostIntent(formData);
 
     if (!Number.isInteger(id) || id < 1) {
-      throw new Error("유효한 게시글 ID가 필요합니다.");
+      throw new PostValidationError("유효한 게시글 ID가 필요합니다.");
     }
 
     if (!Number.isInteger(categoryId) || categoryId < 1) {
-      throw new Error("유효한 카테고리를 선택해주세요.");
+      throw new PostValidationError("유효한 카테고리를 선택해주세요.");
     }
 
     const [post, category, duplicatePost] = await Promise.all([
@@ -122,15 +128,15 @@ export async function updatePost(formData: FormData) {
     ]);
 
     if (!post) {
-      throw new Error("게시글을 찾을 수 없습니다.");
+      throw new PostValidationError("수정할 수 있는 게시글을 찾을 수 없습니다.");
     }
 
     if (!category) {
-      throw new Error("카테고리를 찾을 수 없습니다.");
+      throw new PostValidationError("사용 가능한 카테고리를 선택해주세요.");
     }
 
     if (duplicatePost) {
-      throw new Error("이미 사용 중인 슬러그입니다.");
+      throw new PostValidationError("이미 사용 중인 슬러그입니다.");
     }
 
     affectedTypes = [post.type, category.postType];
@@ -151,11 +157,10 @@ export async function updatePost(formData: FormData) {
       },
     });
     if (count !== 1) {
-      throw new Error("공지사항과 홍보자료만 수정할 수 있습니다.");
+      throw new PostValidationError("수정할 수 있는 게시글을 찾을 수 없습니다.");
     }
   } catch (error) {
-    logServerError("admin.posts.update", error);
-    throw error;
+    return postSaveError("admin.posts.update", error);
   }
 
   revalidatePostPaths(...affectedTypes);
@@ -216,7 +221,8 @@ function getRequiredString(formData: FormData, key: string) {
   const value = formData.get(key);
 
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`${key} 값이 필요합니다.`);
+    const labels: Record<string, string> = { title: "제목", slug: "슬러그", content: "본문", categoryId: "카테고리", id: "게시글 ID" };
+    throw new PostValidationError(`${labels[key] ?? key}을(를) 입력해주세요.`);
   }
 
   return value.trim();
@@ -237,7 +243,7 @@ function normalizeSlug(value: string) {
   const slug = value.trim().toLowerCase();
 
   if (!/^[a-z0-9-]+$/.test(slug)) {
-    throw new Error("슬러그는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.");
+    throw new PostValidationError("슬러그는 영문자, 숫자, 하이픈만 사용할 수 있습니다.");
   }
 
   return slug;
@@ -254,5 +260,20 @@ function parsePostIntent(formData: FormData) {
     return PostStatus.PUBLISHED;
   }
 
-  throw new Error("저장 방식을 선택해주세요.");
+  throw new PostValidationError("저장 방식을 선택해주세요.");
+}
+
+function postSaveError(context: string, error: unknown): PostFormState {
+  unstable_rethrow(error);
+  if (error instanceof AdminUnauthorizedError) {
+    return { status: "auth", message: "관리자 세션이 만료되었거나 권한이 없습니다. 새 창에서 로그인한 후 다시 저장해주세요." };
+  }
+  if (error instanceof PostValidationError) {
+    return { status: "validation", message: error.message };
+  }
+  if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+    return { status: "validation", message: "이미 사용 중인 슬러그입니다." };
+  }
+  logServerError(context, error);
+  return { status: "error", message: "저장하지 못했습니다. 잠시 후 다시 시도해주세요." };
 }

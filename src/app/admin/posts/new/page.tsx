@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { PendingButton } from "@/components/ui/pending-button";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
-import { createPost } from "../actions";
+import { PostForm } from "../post-form";
 
 export const metadata: Metadata = {
   title: "새 게시글",
@@ -34,8 +33,6 @@ export default async function NewPostPage() {
     throw error;
   }
 
-  const hasCategories = categories.length > 0;
-
   return (
     <div className="mx-auto w-full max-w-3xl px-5 py-14 lg:px-8">
       <Link href="/admin/posts" className="text-sm font-semibold text-primary hover:underline">
@@ -51,110 +48,7 @@ export default async function NewPostPage() {
         </p>
       </div>
 
-      <form action={createPost} className="mt-8 space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="title">
-            제목
-          </label>
-          <input
-            id="title"
-            name="title"
-            required
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="slug">
-            슬러그
-          </label>
-          <input
-            id="slug"
-            name="slug"
-            required
-            pattern="[a-zA-Z0-9-]+"
-            placeholder="example-post-title"
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="summary">
-            요약
-          </label>
-          <textarea
-            id="summary"
-            name="summary"
-            rows={3}
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="content">
-            본문
-          </label>
-          <textarea
-            id="content"
-            name="content"
-            rows={12}
-            required
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm leading-6 outline-none focus:border-primary"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-foreground" htmlFor="categoryId">
-            카테고리
-          </label>
-          <select
-            id="categoryId"
-            name="categoryId"
-            required
-            disabled={!hasCategories}
-            className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-          >
-            <option value="">선택</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.postType === "NOTICE" ? "공지사항" : "홍보자료"} / {category.name}
-              </option>
-            ))}
-          </select>
-          {!hasCategories ? (
-            <p className="mt-2 text-sm text-red-700">
-              활성 카테고리가 없습니다. 먼저 seed 또는 관리자 카테고리 데이터를 확인해주세요.
-            </p>
-          ) : null}
-        </div>
-
-        <div className="flex justify-end gap-3 border-t border-border pt-6">
-          <Link
-            href="/admin/posts"
-            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:border-accent"
-          >
-            취소
-          </Link>
-          <PendingButton
-            name="intent"
-            value="draft"
-            disabled={!hasCategories}
-            pendingLabel="저장 중…"
-            className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-primary-dark hover:border-primary disabled:hover:border-border"
-          >
-            임시저장
-          </PendingButton>
-          <PendingButton
-            name="intent"
-            value="publish"
-            disabled={!hasCategories}
-            pendingLabel="공개 중…"
-            className="inline-flex h-11 items-center border border-primary bg-primary-dark px-5 text-sm font-semibold text-white hover:bg-primary disabled:hover:bg-primary-dark"
-          >
-            공개하기
-          </PendingButton>
-        </div>
-      </form>
+      <PostForm categories={categories} />
     </div>
   );
 }
