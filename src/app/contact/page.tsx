@@ -20,7 +20,7 @@ export default function ContactPage() {
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted">
             일반 문의, 참여 신청, 후원 관심을 접수합니다. 남겨주신 내용은
-            관리자만 확인하며 장기 보존을 전제로 관리합니다.
+            관리자만 확인하며 처리 완료 후 1년간 보관합니다.
           </p>
         </div>
       </section>

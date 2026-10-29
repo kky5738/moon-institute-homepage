@@ -219,6 +219,7 @@ After deployment, check:
 - `/admin/posts` can archive a post by setting `ARCHIVED` without deleting the database row.
 - `/admin/inquiries` lists submitted inquiries and shows only the contact data needed for an operator to respond.
 - Inquiry status can be changed to `REVIEWED` or `ARCHIVED` without deleting the record.
+- In an isolated test environment, record actual completion separately, inspect inquiries completed at least one year ago, and verify confirmed permanent deletion.
 - Published notice/material posts appear on the public board.
 - A wrong admin password does not create a session.
 - Logging out returns to `/login`.

@@ -30,8 +30,8 @@
 - `/admin/posts`: 관리자 게시글 목록.
 - `/admin/posts/new`: 관리자 게시글 작성.
 - `/admin/posts/[id]/edit`: 관리자 게시글 수정.
-- `/admin/inquiries`: 관리자 문의/참여 신청 10건 단위 목록.
-- `/admin/inquiries/[id]`: 선택한 문의 한 건의 연락처와 본문 확인.
+- `/admin/inquiries`: 관리자 문의/참여 신청 10건 단위 목록과 처리 완료 후 1년 경과 대상.
+- `/admin/inquiries/[id]`: 문의의 연락처·본문 확인, 처리 완료 기록 및 영구 삭제.
 - `/admin/users`: 연구자 가입 신청 승인과 계정 비활성화.
 
 ## 운영 메모

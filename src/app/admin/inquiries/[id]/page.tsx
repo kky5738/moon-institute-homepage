@@ -6,6 +6,9 @@ import { InquiryStatus, InquiryType } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
+import { PendingButton } from "@/components/ui/pending-button";
+import { completeInquiry } from "../actions";
+import { DeleteInquiryButton } from "../delete-inquiry-button";
 
 export const metadata: Metadata = {
   title: "문의 상세",
@@ -38,6 +41,7 @@ export default async function AdminInquiryDetailPage({
         subject: true,
         message: true,
         createdAt: true,
+        completedAt: true,
       },
     });
   } catch (error) {
@@ -79,6 +83,10 @@ export default async function AdminInquiryDetailPage({
             <dd className="mt-1 text-muted">{formatDate(inquiry.createdAt)}</dd>
           </div>
           <div>
+            <dt className="font-semibold text-foreground">처리 완료일</dt>
+            <dd className="mt-1 text-muted">{inquiry.completedAt ? formatDate(inquiry.completedAt) : "미확인"}</dd>
+          </div>
+          <div>
             <dt className="font-semibold text-foreground">이메일</dt>
             <dd className="mt-1 text-muted">
               {inquiry.email ? (
@@ -109,6 +117,14 @@ export default async function AdminInquiryDetailPage({
           <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted">
             {inquiry.message}
           </p>
+        </div>
+        <div className="mt-8 flex flex-wrap items-start gap-4 border-t border-border pt-6">
+          {!inquiry.completedAt && <form action={completeInquiry}>
+            <input type="hidden" name="id" value={inquiry.id} />
+            <PendingButton pendingLabel="기록 중…" className="border border-border px-3 py-2 text-sm font-semibold text-primary-dark">처리 완료 기록</PendingButton>
+            <p className="mt-2 text-sm text-muted">답변 또는 실제 처리가 끝난 경우에만 현재 시각을 기록합니다.</p>
+          </form>}
+          <DeleteInquiryButton id={inquiry.id} />
         </div>
       </article>
     </div>

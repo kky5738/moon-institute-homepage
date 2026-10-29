@@ -5,6 +5,7 @@ import { Pagination } from "@/components/site/Pagination";
 import { PendingButton } from "@/components/ui/pending-button";
 import { InquiryStatus, InquiryType } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
+import { inquiryRetentionCutoff } from "@/lib/inquiry-retention";
 import {
   getPostPageWindow,
   parsePageParam,
@@ -22,13 +23,15 @@ export const metadata: Metadata = {
 export default async function AdminInquiriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string | string[] }>;
+  searchParams: Promise<{ page?: string | string[]; expired?: string | string[] }>;
 }) {
   await connection();
   await requireAdmin();
-  const requestedPage = parsePageParam((await searchParams).page);
+  const params = await searchParams;
+  const requestedPage = parsePageParam(params.page);
+  const expired = params.expired === "1";
   const { inquiries, page, totalPages } =
-    await getAdminInquiryPage(requestedPage);
+    await getAdminInquiryPage(requestedPage, expired);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
@@ -39,10 +42,14 @@ export default async function AdminInquiriesPage({
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
           공개 문의 폼으로 접수된 일반 문의, 참여 신청, 후원 관심 목록입니다.
-          삭제하지 않고 상태 변경으로 보존합니다.
+          처리 완료 후 1년이 지난 개인정보는 확인 후 삭제합니다.
         </p>
       </div>
 
+      <div className="mt-6 flex gap-4 text-sm font-semibold text-primary-dark">
+        <Link href="/admin/inquiries">전체 문의</Link>
+        <Link href="/admin/inquiries?expired=1">1년 경과 대상</Link>
+      </div>
       <section className="mt-8 divide-y divide-border border-y border-border bg-surface">
         {inquiries.length > 0 ? (
           inquiries.map((inquiry) => (
@@ -55,6 +62,7 @@ export default async function AdminInquiriesPage({
                   {getInquiryTypeLabel(inquiry.type)}
                 </p>
                 <p>{formatDate(inquiry.createdAt)}</p>
+                <p>처리 완료: {inquiry.completedAt ? formatDate(inquiry.completedAt) : "미확인"}</p>
               </div>
 
               <div>
@@ -84,12 +92,12 @@ export default async function AdminInquiriesPage({
           ))
         ) : (
           <div className="px-5 py-10 text-sm text-muted md:px-6">
-            접수된 문의가 없습니다.
+            {expired ? "1년 경과 대상이 없습니다." : "접수된 문의가 없습니다."}
           </div>
         )}
       </section>
       <Pagination
-        basePath="/admin/inquiries"
+        basePath={expired ? "/admin/inquiries?expired=1" : "/admin/inquiries"}
         page={page}
         totalPages={totalPages}
       />
@@ -97,11 +105,14 @@ export default async function AdminInquiriesPage({
   );
 }
 
-async function getAdminInquiryPage(requestedPage: number) {
+async function getAdminInquiryPage(requestedPage: number, expired: boolean) {
+  const cutoff = inquiryRetentionCutoff(new Date());
+  const where = expired ? { completedAt: { lte: cutoff } } : {};
   try {
-    const totalItems = await prisma.inquiry.count();
+    const totalItems = await prisma.inquiry.count({ where });
     const pagination = getPostPageWindow(requestedPage, totalItems);
     const inquiries = await prisma.inquiry.findMany({
+      where,
       select: {
         id: true,
         name: true,
@@ -109,6 +120,7 @@ async function getAdminInquiryPage(requestedPage: number) {
         status: true,
         subject: true,
         createdAt: true,
+        completedAt: true,
       },
       orderBy: [
         { status: "asc" },

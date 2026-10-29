@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { InquiryStatus } from "@/generated/prisma/enums";
-import { assertAdmin } from "@/lib/admin-auth";
+import { AdminUnauthorizedError, assertAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 
@@ -10,12 +11,8 @@ export async function updateInquiryStatus(formData: FormData) {
   await assertAdmin();
 
   try {
-    const id = Number(getRequiredString(formData, "id"));
+    const id = getId(formData);
     const status = parseInquiryStatus(getRequiredString(formData, "status"));
-
-    if (!Number.isInteger(id) || id < 1) {
-      throw new Error("유효한 문의 ID가 필요합니다.");
-    }
 
     await prisma.inquiry.update({
       where: { id },
@@ -30,6 +27,51 @@ export async function updateInquiryStatus(formData: FormData) {
   }
 
   revalidatePath("/admin/inquiries");
+  revalidatePath(`/admin/inquiries/${getId(formData)}`);
+}
+
+export type InquiryActionState = { message: string };
+
+export async function completeInquiry(formData: FormData) {
+  await assertAdmin();
+  const id = getId(formData);
+  const result = await prisma.inquiry.updateMany({
+    where: { id, completedAt: null },
+    data: { completedAt: new Date() },
+  });
+  if (!result.count && !await prisma.inquiry.findUnique({ where: { id }, select: { id: true } })) {
+    throw new Error("문의가 존재하지 않습니다.");
+  }
+  revalidatePath("/admin/inquiries");
+  revalidatePath(`/admin/inquiries/${id}`);
+}
+
+export async function deleteInquiry(_previous: InquiryActionState, formData: FormData): Promise<InquiryActionState> {
+  let id: number;
+  try {
+    await assertAdmin();
+    try {
+      id = getId(formData);
+    } catch {
+      return { message: "유효한 문의 ID가 필요합니다." };
+    }
+    const result = await prisma.inquiry.deleteMany({ where: { id } });
+    if (!result.count) return { message: "이미 삭제되었거나 존재하지 않는 문의입니다." };
+  } catch (error) {
+    unstable_rethrow(error);
+    if (error instanceof AdminUnauthorizedError) return { message: "관리자 인증이 필요합니다. 다시 로그인해주세요." };
+    logServerError("admin.inquiries.delete", error);
+    return { message: "삭제하지 못했습니다. 다시 시도해주세요." };
+  }
+  revalidatePath("/admin/inquiries");
+  revalidatePath(`/admin/inquiries/${id}`);
+  redirect("/admin/inquiries");
+}
+
+function getId(formData: FormData) {
+  const id = Number(getRequiredString(formData, "id"));
+  if (!Number.isSafeInteger(id) || id < 1 || id > 2147483647) throw new Error("유효한 문의 ID가 필요합니다.");
+  return id;
 }
 
 function getRequiredString(formData: FormData, key: string) {
