@@ -37,10 +37,7 @@ export async function createPost(_previous: PostFormState, formData: FormData): 
     }
 
     const category = await prisma.category.findFirst({
-      where: {
-        id: categoryId,
-        isActive: true,
-      },
+      where: getAdminEditableCategoryWhere(categoryId),
     });
 
     if (!category) {

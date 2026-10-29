@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getAdminEditableCategoriesWhere } from "@/lib/admin-posts";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { PostForm } from "../post-form";
@@ -19,9 +20,7 @@ export default async function NewPostPage() {
 
   try {
     categories = await prisma.category.findMany({
-      where: {
-        isActive: true,
-      },
+      where: getAdminEditableCategoriesWhere(),
       orderBy: [
         { postType: "asc" },
         { sortOrder: "asc" },
