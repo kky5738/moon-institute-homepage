@@ -6,7 +6,7 @@ const adminEditablePostTypes: PostType[] = [
 ];
 
 export function getAdminEditablePostWhere(id: number) {
-  return { id, type: { in: adminEditablePostTypes } };
+  return { id, type: { in: adminEditablePostTypes }, deletedAt: null };
 }
 
 export function getAdminEditableCategoriesWhere() {

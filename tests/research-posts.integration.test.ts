@@ -111,6 +111,7 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
       "@/generated/prisma/enums": enums, "@/lib/admin-auth": adminAuth,
       "@/lib/admin-posts": adminPosts, "@/lib/prisma": { prisma },
       "@/lib/posts": { getPublishedPostsCacheTag: () => "posts" },
+      "@/lib/supabase-storage": { removeResearchObjects: async () => {} },
       "@/lib/server-log": serverLog,
     });
 

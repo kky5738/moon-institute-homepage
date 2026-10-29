@@ -32,6 +32,7 @@ function setup() {
     "@/lib/admin-auth": authExports,
     "@/lib/admin-posts": adminPosts,
     "@/lib/posts": { getPublishedPostsCacheTag: () => "tag" },
+    "@/lib/supabase-storage": { removeResearchObjects: async () => {} },
     "@/lib/server-log": { logServerError(_context: string, error: unknown) { logged.push(error); } },
     "@/lib/prisma": { prisma: {
       category: { async findFirst() { return { id: 1, postType: enums.PostType.NOTICE }; } },

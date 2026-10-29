@@ -5,11 +5,12 @@ import { connection } from "next/server";
 import { PendingButton } from "@/components/ui/pending-button";
 import { PostStatus, PostType } from "@/generated/prisma/enums";
 import { requireAdmin } from "@/lib/admin-auth";
-import { getAdminEditableCategoriesWhere } from "@/lib/admin-posts";
+import { getAdminEditableCategoriesWhere, getAdminEditablePostWhere } from "@/lib/admin-posts";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { archivePost } from "../../actions";
 import { PostForm } from "../../post-form";
+import { DeletePostButton } from "../../delete-post-button";
 
 type EditPostPageProps = {
   params: Promise<{ id: string }>;
@@ -36,8 +37,8 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
 
   try {
     [post, categories] = await Promise.all([
-      prisma.post.findUnique({
-        where: { id },
+      prisma.post.findFirst({
+        where: getAdminEditablePostWhere(id),
         include: {
           category: true,
         },
@@ -80,7 +81,9 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         content: post.content, categoryId: post.categoryId,
       }} />
 
-      {post.status !== PostStatus.ARCHIVED ? (
+      {post.status === PostStatus.ARCHIVED ? (
+        <div className="mt-4 flex justify-end"><DeletePostButton id={post.id} title={post.title} /></div>
+      ) : (
         <form action={archivePost} className="mt-4 flex justify-end">
           <input type="hidden" name="id" value={post.id} />
           <PendingButton
@@ -90,7 +93,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
             게시글 보관
           </PendingButton>
         </form>
-      ) : null}
+      )}
     </div>
   );
 }

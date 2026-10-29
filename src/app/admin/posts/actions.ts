@@ -11,6 +11,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { getPublishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
+import { removeResearchObjects } from "@/lib/supabase-storage";
 
 export type PostFormState = {
   status: "idle" | "validation" | "auth" | "error";
@@ -179,13 +180,12 @@ export async function archivePost(formData: FormData) {
       throw new Error("유효한 게시글 ID가 필요합니다.");
     }
 
-    const post = await prisma.post.update({
-      where: { id },
-      data: {
-        status: PostStatus.ARCHIVED,
-      },
+    const [post] = await prisma.post.updateManyAndReturn({
+      where: { id, deletedAt: null },
+      data: { status: PostStatus.ARCHIVED },
       select: { type: true },
     });
+    if (!post) throw new Error("게시글을 찾을 수 없습니다.");
     affectedType = post.type;
   } catch (error) {
     logServerError("admin.posts.archive", error);
@@ -194,6 +194,46 @@ export async function archivePost(formData: FormData) {
 
   revalidatePostPaths(affectedType);
 
+  redirect("/admin/posts");
+}
+
+export async function deletePost(_previous: PostFormState, formData: FormData): Promise<PostFormState> {
+  let files: Array<{ id: string; objectPath: string }> = [];
+  let affectedType: PostType;
+  try {
+    await assertAdmin();
+    const id = Number(getRequiredString(formData, "id"));
+    if (!Number.isInteger(id) || id < 1) throw new PostValidationError("유효한 게시글 ID가 필요합니다.");
+
+    const result = await prisma.$transaction(async (tx) => {
+      const post = await tx.post.findFirst({
+        where: { id, type: { in: [PostType.NOTICE, PostType.PROMOTION] }, status: PostStatus.ARCHIVED },
+        select: { type: true, deletedAt: true },
+      });
+      if (!post) throw new PostValidationError("보관된 공지사항 또는 홍보자료만 삭제할 수 있습니다.");
+      if (!post.deletedAt) {
+        const deletedAt = new Date();
+        const { count } = await tx.post.updateMany({
+          where: { ...getAdminEditablePostWhere(id), status: PostStatus.ARCHIVED },
+          data: { deletedAt },
+        });
+        if (count !== 1) throw new PostValidationError("게시글 상태가 변경되었습니다. 목록을 새로고침해주세요.");
+        await tx.postAttachment.updateMany({ where: { postId: id, deletedAt: null }, data: { deletedAt } });
+      }
+      const attachments = await tx.postAttachment.findMany({ where: { postId: id }, select: { id: true, objectPath: true } });
+      return { type: post.type, attachments };
+    });
+    files = result.attachments;
+    affectedType = result.type;
+    await removeResearchObjects(files.map((file) => file.objectPath));
+  } catch (error) {
+    unstable_rethrow(error);
+    if (error instanceof AdminUnauthorizedError || error instanceof PostValidationError) return postSaveError("admin.posts.delete", error);
+    logServerError("admin.posts.delete", error, { files });
+    // shortcut: 화면 이동 후 재시도 불가, 정리 상태 추적을 도입할 때 개선한다.
+    return { status: "error", message: "삭제 처리를 완료하지 못했습니다. 이 화면에서 다시 시도해주세요." };
+  }
+  revalidatePostPaths(affectedType);
   redirect("/admin/posts");
 }
 

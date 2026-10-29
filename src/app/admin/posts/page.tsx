@@ -12,6 +12,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
 import { archivePost } from "./actions";
+import { DeletePostButton } from "./delete-post-button";
 
 export const metadata: Metadata = {
   title: "게시글 관리",
@@ -100,6 +101,9 @@ export default async function AdminPostsPage({
                       수정
                     </Link>
                   )}
+                  {post.status === "ARCHIVED" && post.type !== "RESEARCH" ? (
+                    <DeletePostButton id={post.id} title={post.title} />
+                  ) : null}
                   {post.status !== "ARCHIVED" ? (
                     <form action={archivePost}>
                       <input type="hidden" name="id" value={post.id} />
@@ -128,9 +132,10 @@ export default async function AdminPostsPage({
 
 async function getAdminPostPage(requestedPage: number) {
   try {
-    const totalItems = await prisma.post.count();
+    const totalItems = await prisma.post.count({ where: { deletedAt: null } });
     const pagination = getPostPageWindow(requestedPage, totalItems);
     const posts = await prisma.post.findMany({
+      where: { deletedAt: null },
       select: {
         id: true,
         type: true,

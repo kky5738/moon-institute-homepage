@@ -11,6 +11,7 @@ test("관리자 게시글 수정은 공지와 홍보자료 유형으로 제한�
   assert.deepEqual(getAdminEditablePostWhere(42), {
     id: 42,
     type: { in: [PostType.NOTICE, PostType.PROMOTION] },
+    deletedAt: null,
   });
 });
 
