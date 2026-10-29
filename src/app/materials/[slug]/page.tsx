@@ -41,14 +41,10 @@ export default async function MaterialDetailPage({
 
   const guide = getMaterialGuide(post.slug);
 
-  if (!guide) {
-    notFound();
-  }
-
-  const materials = await getPublishedPostPreview(PostType.PROMOTION, {
+  const materials = guide ? await getPublishedPostPreview(PostType.PROMOTION, {
     slugs: guide.recommendationSlugs,
     take: 3,
-  });
+  }) : [];
   const recommendedMaterials = getRecommendedMaterialPosts(post.slug, materials);
 
   return (
@@ -64,12 +60,13 @@ export default async function MaterialDetailPage({
           <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] lg:items-start">
             <div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark">
+                {guide && <><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark">
                   {guide.stepLabel}
                 </span>
                 <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold text-[color:var(--gold)]">
                   읽기 {String(guide.readingOrder).padStart(2, "0")}
                 </span>
+                </>}
                 <span>{post.publishedAt}</span>
                 <span>{post.category}</span>
               </div>
@@ -81,7 +78,7 @@ export default async function MaterialDetailPage({
               </p>
             </div>
 
-            <aside className="rounded-lg border border-border bg-secondary/55 p-5 shadow-[var(--shadow-soft)] sm:p-6">
+            {guide && <aside className="rounded-lg border border-border bg-secondary/55 p-5 shadow-[var(--shadow-soft)] sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-purple">
                 Reading Context
               </p>
@@ -107,14 +104,14 @@ export default async function MaterialDetailPage({
                   영상 안내
                 </Link>
               </div>
-            </aside>
+            </aside>}
           </div>
         </div>
       </section>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-5 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:px-10 lg:py-16">
+      <div className={`mx-auto grid w-full max-w-7xl gap-6 px-5 py-12 sm:px-6 ${guide ? "lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)]" : ""} lg:px-10 lg:py-16`}>
         <div className="grid gap-6">
-          <section className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+          {guide && <><section className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-purple">
               Commentary
             </p>
@@ -148,6 +145,8 @@ export default async function MaterialDetailPage({
             </ul>
           </section>
 
+          </>}
+
           <section className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-purple">
               Original Material
@@ -161,7 +160,7 @@ export default async function MaterialDetailPage({
           </section>
         </div>
 
-        <aside className="grid gap-6 lg:self-start">
+        {guide && <aside className="grid gap-6 lg:self-start">
           <RecommendedMaterialList posts={recommendedMaterials} />
 
           <section className="rounded-lg border border-border bg-primary-dark p-5 text-white shadow-[var(--shadow-elegant)] sm:p-6">
@@ -181,7 +180,7 @@ export default async function MaterialDetailPage({
               영상 콘텐츠 보기
             </Link>
           </section>
-        </aside>
+        </aside>}
       </div>
     </article>
   );

@@ -5,10 +5,7 @@ import { Pagination } from "@/components/site/Pagination";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PostType } from "@/generated/prisma/enums";
-import {
-  getMaterialArchiveItems,
-  materialGuideSlugs,
-} from "@/lib/material-guides";
+import { getMaterialGuide } from "@/lib/material-guides";
 import { parsePageParam } from "@/lib/pagination";
 import { getPublishedPostPage } from "@/lib/posts";
 
@@ -27,10 +24,7 @@ export default async function MaterialsPage({
     posts: materials,
     page,
     totalPages,
-  } = await getPublishedPostPage(PostType.PROMOTION, requestedPage, {
-    slugs: materialGuideSlugs,
-  });
-  const archiveItems = getMaterialArchiveItems(materials);
+  } = await getPublishedPostPage(PostType.PROMOTION, requestedPage);
 
   return (
     <div className="bg-background">
@@ -39,20 +33,20 @@ export default async function MaterialsPage({
           <div>
             <p className="text-sm font-semibold text-primary">홍보자료</p>
             <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
-              읽는 순서가 있는 자료 아카이브
+              홍보자료 아카이브
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground">
-              공개 자료의 이용 순서와 해설 요약을 함께 확인할 수 있습니다.
+              공개 자료와 선별된 자료의 해설을 함께 확인할 수 있습니다.
             </p>
           </div>
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-6 lg:px-10 lg:py-16">
-        {archiveItems.length > 0 ? (
+        {materials.length > 0 ? (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {archiveItems.map((item) => (
-              <MaterialArchiveCard key={item.post.id} item={item} />
+            {materials.map((post) => (
+              <MaterialArchiveCard key={post.id} post={post} guide={getMaterialGuide(post.slug)} />
             ))}
           </div>
         ) : (
@@ -104,7 +98,7 @@ export default async function MaterialsPage({
                       공개 기준
                     </dt>
                     <dd className="mt-1">
-                      게시 가능한 자료만 선별하여 해설 요약과 함께 제공합니다.
+                      공개된 홍보자료를 제공하며, 일부 자료에는 해설이 함께 제공됩니다.
                     </dd>
                   </div>
                   <div>
@@ -112,7 +106,7 @@ export default async function MaterialsPage({
                       탐색 경로
                     </dt>
                     <dd className="mt-1">
-                      등록된 자료는 연구 주제와 자료 해설 페이지에 연결됩니다.
+                      일부 자료는 연구 주제와 자료 해설에 연결됩니다.
                     </dd>
                   </div>
                 </dl>

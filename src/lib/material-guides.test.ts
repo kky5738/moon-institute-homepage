@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getMaterialArchiveItems } from "@/lib/material-guides";
+import { getMaterialArchiveItems, getRecommendedMaterialPosts } from "@/lib/material-guides";
 import type { BoardPost } from "@/lib/posts";
 
 const basePost: BoardPost = {
@@ -26,4 +26,12 @@ test("해설이 명시된 홍보자료만 자료 아카이브에 포함한다", 
     items.map((item) => item.post.slug),
     ["life-research-material-guide"],
   );
+});
+
+
+test("추천은 해설에 지정된 공개 자료만 연결한다", () => {
+  const recommended = { ...basePost, id: 2, slug: "words-research-material-guide" };
+  assert.deepEqual(getRecommendedMaterialPosts(basePost.slug, [basePost, recommended]).map((post) => post.slug), [recommended.slug]);
+  assert.deepEqual(getRecommendedMaterialPosts(basePost.slug, [basePost]), []);
+  assert.deepEqual(getRecommendedMaterialPosts("new-material", [recommended]), []);
 });
