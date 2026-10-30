@@ -55,7 +55,22 @@ try {
   for (const [key, field] of Object.entries(fields)) {
     assert.equal(await field.inputValue(), key === "type" ? "GENERAL" : "", key);
   }
-  console.log("PASS: validation and DB errors preserve all fields; retry succeeds and resets them");
+  await page.waitForTimeout(250);
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await fields.type.selectOption(values.type);
+    for (const key of ["name", "email", "phone", "subject", "message"]) await fields[key].fill(values[key]);
+    await submit.click();
+    if (attempt < 3) {
+      await page.getByRole("status").filter({ hasText: "문의가 접수되었습니다" }).waitFor();
+      await fields.name.waitFor({ state: "visible" });
+      await page.waitForFunction(() => document.querySelector("#name").value === "");
+      await page.waitForTimeout(250);
+    } else {
+      await page.getByRole("alert").filter({ hasText: "15분 동안 최대 5건" }).waitFor();
+      await check();
+    }
+  }
+  console.log("PASS: validation, DB and rate-limit errors preserve fields; success resets them");
 } finally {
   await browser.close();
 }
