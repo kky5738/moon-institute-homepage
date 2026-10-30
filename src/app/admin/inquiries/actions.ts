@@ -6,6 +6,7 @@ import { InquiryStatus } from "@/generated/prisma/enums";
 import { AdminUnauthorizedError, assertAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-log";
+import { parseInquiryForm } from "@/lib/inquiry-validation";
 
 export async function updateInquiryStatus(formData: FormData) {
   await assertAdmin();
@@ -31,6 +32,26 @@ export async function updateInquiryStatus(formData: FormData) {
 }
 
 export type InquiryActionState = { message: string };
+
+export async function updateInquiry(_previous: InquiryActionState, formData: FormData): Promise<InquiryActionState> {
+  let id: number;
+  try {
+    await assertAdmin();
+    try { id = getId(formData); } catch { return { message: "유효한 문의 ID가 필요합니다." }; }
+    const parsed = parseInquiryForm(formData);
+    if (!parsed.ok) return { message: parsed.message };
+    const result = await prisma.inquiry.updateMany({ where: { id }, data: parsed.data });
+    if (!result.count) return { message: "이미 삭제되었거나 존재하지 않는 문의입니다." };
+  } catch (error) {
+    unstable_rethrow(error);
+    if (error instanceof AdminUnauthorizedError) return { message: "관리자 인증이 필요합니다. 다시 로그인해주세요." };
+    logServerError("admin.inquiries.update", error);
+    return { message: "정정 내용을 저장하지 못했습니다. 다시 시도해주세요." };
+  }
+  revalidatePath("/admin/inquiries");
+  revalidatePath(`/admin/inquiries/${id}`);
+  redirect(`/admin/inquiries/${id}`);
+}
 
 export async function completeInquiry(formData: FormData) {
   await assertAdmin();

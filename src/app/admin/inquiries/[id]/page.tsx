@@ -119,6 +119,7 @@ export default async function AdminInquiryDetailPage({
           </p>
         </div>
         <div className="mt-8 flex flex-wrap items-start gap-4 border-t border-border pt-6">
+          <Link href={`/admin/inquiries/${inquiry.id}/edit`} className="border border-border px-3 py-2 text-sm font-semibold text-primary-dark">문의 정정</Link>
           {!inquiry.completedAt && <form action={completeInquiry}>
             <input type="hidden" name="id" value={inquiry.id} />
             <PendingButton pendingLabel="기록 중…" className="border border-border px-3 py-2 text-sm font-semibold text-primary-dark">처리 완료 기록</PendingButton>
