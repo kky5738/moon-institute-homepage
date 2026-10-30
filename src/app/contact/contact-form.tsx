@@ -96,7 +96,7 @@ export function ContactForm() {
           className="mt-2"
         />
         <p id="contact-method-help" className="mt-2 text-xs leading-5 text-muted">
-          이메일 또는 연락처 중 하나는 입력해주세요.
+          이메일 또는 연락처 중 하나는 입력해주세요. 연락처는 숫자 7~15자리이며 맨 앞의 +와 숫자 사이 공백 1칸 또는 하이픈 1개를 사용할 수 있습니다.
         </p>
       </div>
 

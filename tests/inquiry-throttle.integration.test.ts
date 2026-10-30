@@ -7,7 +7,7 @@ import test from "node:test";
 import ts from "typescript";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-import * as enums from "../src/generated/prisma/enums";
+import * as inquiryValidation from "../src/lib/inquiry-validation";
 import * as crypto from "node:crypto";
 import * as net from "node:net";
 
@@ -63,7 +63,7 @@ test("문의 제한은 DB에서 직접·동시 요청, 만료 및 장애를 처�
     const actions = load<typeof import("../src/app/contact/actions")>("src/app/contact/actions.ts", {
       "next/cache": { revalidatePath() {} },
       "next/headers": { headers: async () => requests },
-      "@/generated/prisma/enums": enums,
+      "@/lib/inquiry-validation": inquiryValidation,
       "@/lib/prisma": { prisma },
       "@/lib/server-log": { logServerError() {} },
       "@/lib/inquiry-throttle": { consumeInquiryAttempt: (h: Headers) => {
