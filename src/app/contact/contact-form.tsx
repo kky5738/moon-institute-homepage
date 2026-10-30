@@ -15,16 +15,23 @@ const initialState: ContactFormState = {
 
 export function ContactForm() {
   const formRef = useRef<HTMLFormElement>(null);
+  const allowReset = useRef(false);
   const [state, formAction, pending] = useActionState(createInquiry, initialState);
 
   useEffect(() => {
     if (state.submissionId > 0) {
+      allowReset.current = true;
       formRef.current?.reset();
+      allowReset.current = false;
     }
   }, [state.submissionId]);
 
+  // React resets uncontrolled fields after any resolved action, including errors.
   return (
-    <form ref={formRef} action={formAction} className="space-y-6">
+    <form ref={formRef} action={formAction} onReset={(event) => {
+      if (!allowReset.current) event.preventDefault();
+    }} className="space-y-6">
+      <fieldset disabled={pending} className="space-y-6">
       <div>
         <Label htmlFor="type">
           문의 유형
@@ -121,6 +128,7 @@ export function ContactForm() {
         />
       </div>
 
+      </fieldset>
       {state.message ? (
         <p
           aria-live={state.status === "error" ? "assertive" : "polite"}
