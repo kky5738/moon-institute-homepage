@@ -25,7 +25,7 @@ export async function HomeLandingSections() {
   );
 
   return (
-    <div id="home-content" tabIndex={-1} className="scroll-mt-16 overflow-hidden bg-background">
+    <div className="overflow-hidden bg-background">
       <HomeHeroSection />
       <section
         id="life-timeline"

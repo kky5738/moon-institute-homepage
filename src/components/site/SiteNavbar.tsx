@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { isBeforeHome } from "@/lib/home-navigation";
+import { isBeforeHome, isOnManifesto } from "@/lib/home-navigation";
 import { getAuthNavigation } from "@/lib/user-auth";
 
 const navItems = [
@@ -28,13 +28,18 @@ export function SiteNavbar({
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [inIntroduction, setInIntroduction] = useState(true);
+  const [onManifesto, setOnManifesto] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 12);
       if (isHome) {
         const homeContent = document.getElementById("home-content");
-        const visible = isBeforeHome(homeContent?.getBoundingClientRect().top, navRef.current?.getBoundingClientRect().bottom ?? 0);
+        const navBottom = navRef.current?.getBoundingClientRect().bottom ?? 0;
+        const homeTop = homeContent?.getBoundingClientRect().top;
+        const visible = isBeforeHome(homeTop, navBottom);
+        const manifesto = document.getElementById("founding-manifesto");
+        setOnManifesto(isOnManifesto(manifesto?.getBoundingClientRect().top, homeTop, navBottom));
         setInIntroduction(visible);
         if (visible) setOpen(false);
       }
@@ -49,7 +54,7 @@ export function SiteNavbar({
   }, [isHome]);
 
   const logoOnly = isHome && inIntroduction;
-  const elevated = !logoOnly && (!isHome || scrolled || open);
+  const elevated = (logoOnly && onManifesto) || (!logoOnly && (!isHome || scrolled || open));
   const headerClassName = [
     isHome ? "fixed inset-x-0 top-0" : "sticky top-0",
     "z-50 transition-all duration-300",
