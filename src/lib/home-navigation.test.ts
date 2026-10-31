@@ -9,7 +9,7 @@ test("메뉴는 기존 홈이 내비게이션에 닿을 때 표시된다", () =>
   assert.equal(isBeforeHome(-20, 64), false);
 });
 
-test("선언문 구간에서만 로고 배경을 표시한다", () => {
+test("선언문 구간을 기존 홈과 구분한다", () => {
   assert.equal(isOnManifesto(undefined, 800, 64), false);
   assert.equal(isOnManifesto(65, 800, 64), false);
   assert.equal(isOnManifesto(64, 800, 64), true);

@@ -58,6 +58,7 @@ export function SiteNavbar({
   const headerClassName = [
     isHome ? "fixed inset-x-0 top-0" : "sticky top-0",
     "z-50 transition-all duration-300",
+    isHome && onManifesto ? "invisible opacity-0" : "visible opacity-100",
     elevated
       ? "border-b border-border bg-background/90 shadow-[var(--shadow-soft)] backdrop-blur-md"
       : "bg-transparent",

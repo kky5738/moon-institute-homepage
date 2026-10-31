@@ -1,6 +1,6 @@
 .introduction {
   display: grid;
-  grid-template-rows: minmax(12rem, 1fr) auto auto;
+  grid-template-rows: minmax(12rem, 1fr) auto;
   gap: 2rem;
   height: 100svh;
   min-height: min-content;
@@ -40,7 +40,10 @@
   inset: 50% auto auto 50%;
   transform: translate(-50%, -50%);
   container-type: inline-size;
-  mask-image: radial-gradient(ellipse closest-side, #000 55%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent, #000 4%, #000 96%, transparent),
+    linear-gradient(to bottom, transparent, #000 4%, #000 96%, transparent);
+  mask-composite: intersect;
 }
 
 .image {
@@ -51,9 +54,12 @@
 }
 
 .blurredImage {
-  filter: blur(clamp(4px, 3cqw, 24px));
+  filter: blur(clamp(2px, 1.2cqw, 10px));
 }
 
 .sharpImage {
-  mask-image: radial-gradient(ellipse closest-side, #000 45%, transparent 85%);
+  mask-image:
+    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+  mask-composite: intersect;
 }
