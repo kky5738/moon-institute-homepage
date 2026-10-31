@@ -33,6 +33,9 @@ export function HomeIntroductionSection() {
       <p className="text-xl font-semibold leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] sm:text-2xl">
         {homeIntroduction.message}
       </p>
+      <a href="#home-content" className="mx-auto inline-flex min-h-11 items-center px-4 text-sm font-medium text-white underline underline-offset-4 hover:text-white/75">
+        홈페이지 바로가기 <span aria-hidden="true" className="ml-2">↓</span>
+      </a>
     </section>
   );
 }

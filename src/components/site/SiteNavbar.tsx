@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { isBeforeHome } from "@/lib/home-navigation";
 import { getAuthNavigation } from "@/lib/user-auth";
 
 const navItems = [
@@ -23,6 +24,7 @@ export function SiteNavbar({
   const pathname = usePathname();
   const authItem = getAuthNavigation(role);
   const isHome = pathname === "/";
+  const navRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [inIntroduction, setInIntroduction] = useState(true);
@@ -31,8 +33,8 @@ export function SiteNavbar({
     const onScroll = () => {
       setScrolled(window.scrollY > 12);
       if (isHome) {
-        const introduction = document.getElementById("home-introduction");
-        const visible = !introduction || introduction.getBoundingClientRect().bottom > 64;
+        const homeContent = document.getElementById("home-content");
+        const visible = isBeforeHome(homeContent?.getBoundingClientRect().top, navRef.current?.getBoundingClientRect().bottom ?? 0);
         setInIntroduction(visible);
         if (visible) setOpen(false);
       }
@@ -61,6 +63,7 @@ export function SiteNavbar({
   return (
     <header className={headerClassName}>
       <nav
+        ref={navRef}
         aria-label="주요 메뉴"
         className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-10"
       >

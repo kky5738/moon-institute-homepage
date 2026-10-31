@@ -1,9 +1,32 @@
 .introduction {
   display: grid;
-  grid-template-rows: minmax(12rem, 1fr) auto;
+  grid-template-rows: minmax(12rem, 1fr) auto auto;
   gap: 2rem;
   height: 100svh;
   min-height: min-content;
+}
+
+@supports (animation-timeline: view()) and (animation-range: exit 0% exit 100%) {
+  @media (prefers-reduced-motion: no-preference) {
+    .introduction {
+      view-timeline-name: --introduction;
+      view-timeline-axis: block;
+    }
+
+    .imageSpace,
+    .introduction > p {
+      animation: introduction-exit linear both;
+      animation-timeline: --introduction;
+      animation-range: exit 0% exit 100%;
+    }
+  }
+}
+
+@keyframes introduction-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
 }
 
 .imageSpace {
