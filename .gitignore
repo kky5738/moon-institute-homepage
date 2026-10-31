@@ -56,3 +56,6 @@ docker-data
 
 # codex output
 /outputs/
+
+
+/src/app/img_set/
