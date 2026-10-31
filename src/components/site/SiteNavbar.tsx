@@ -25,15 +25,29 @@ export function SiteNavbar({
   const isHome = pathname === "/";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [inIntroduction, setInIntroduction] = useState(true);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 12);
+      if (isHome) {
+        const introduction = document.getElementById("home-introduction");
+        const visible = !introduction || introduction.getBoundingClientRect().bottom > 64;
+        setInIntroduction(visible);
+        if (visible) setOpen(false);
+      }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [isHome]);
 
-  const elevated = !isHome || scrolled || open;
+  const logoOnly = isHome && inIntroduction;
+  const elevated = !logoOnly && (!isHome || scrolled || open);
   const headerClassName = [
     isHome ? "fixed inset-x-0 top-0" : "sticky top-0",
     "z-50 transition-all duration-300",
@@ -69,7 +83,7 @@ export function SiteNavbar({
           </span>
         </Link>
 
-        <div className="hidden items-center gap-8 lg:flex">
+        <div className={logoOnly ? "hidden" : "hidden items-center gap-8 lg:flex"}>
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -82,7 +96,7 @@ export function SiteNavbar({
           ))}
         </div>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className={logoOnly ? "hidden" : "hidden items-center gap-2 lg:flex"}>
           <Link
             href={authItem.href}
             aria-current={pathname === authItem.href ? "page" : undefined}
@@ -94,7 +108,7 @@ export function SiteNavbar({
           </Link>
         </div>
 
-        <Button
+        {!logoOnly && <Button
           type="button"
           variant="outline"
           size="icon"
@@ -111,10 +125,10 @@ export function SiteNavbar({
           <span aria-hidden="true" className="text-xl leading-none">
             {open ? "×" : "≡"}
           </span>
-        </Button>
+        </Button>}
       </nav>
 
-      {open ? (
+      {open && !logoOnly ? (
         <div id="mobile-menu" className="border-t border-border bg-background lg:hidden">
           <div className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-6">
             <div className="grid gap-1">
