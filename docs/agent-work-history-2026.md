@@ -4,6 +4,18 @@
 
 ## 완료 작업
 
+### READY-50. 홈 탐색 영역 1/3 — 묶음 모듈과 데이터 조회 분리
+
+- 상태: `DONE` (2026-11-01)
+- 우선순위: 중간 · 예상: 15~20분 · 선행 작업: 없음
+- 변경 범위: `src/components/home/HomeLandingSections.tsx`, 새 `src/components/home/HomeDiscoverySections.tsx`, 새 `src/lib/home-discovery.ts`의 공통 표시 값 `homeDiscoveryEnabled`. 클라이언트 네비게이션바와 서버 컴포넌트가 함께 읽으므로 표시 값 모듈에는 이미지·DB·서버 전용 import를 넣지 않는다.
+- 구현: `HomeDiscoverySections` 서버 컴포넌트에서 기존 세 컴포넌트를 연구 주제 허브 → 영상 콘텐츠 → 자료 아카이브 순서로 조합한다. 현재 `HomeLandingSections`의 `getPublishedPostPreview` 호출과 `getMaterialArchiveItems` 변환을 이 모듈의 실행 본문으로 옮긴다. 자료 조회 조건(`PROMOTION`, `materialGuideSlugs`, 최대 3개)과 빈 자료 상태는 유지한다.
+- 비활성화: `homeDiscoveryEnabled = false`로 두고 `HomeLandingSections`에서 참일 때만 묶음 모듈을 렌더링한다. 모듈 최상위에서 조회하지 않으며 비활성화 중에는 해당 조회가 실행되지 않게 한다. 상위 컴포넌트에서 불필요해진 import·자료 변수·`async`를 정리하고 생애사 조회는 유지한다.
+- 완료 조건: 홈 DOM과 접근성 트리에 세 영역이 없고 빈 여백도 남지 않는다. 기존 컴포넌트·콘텐츠·자료 조회 로직은 보존된다. 표시 값 하나로 같은 위치(생애사와 문의 영역 사이)에 세 영역과 데이터 조회를 다시 연결할 수 있다.
+
+- 결과: 세 영역과 기존 자료 조회·변환을 `HomeDiscoverySections`로 묶고 서버·클라이언트에서 공유할 수 있는 `src/lib/home-discovery.ts`의 `homeDiscoveryEnabled` 기본값을 `false`로 설정했다. 비활성화 시 묶음 컴포넌트를 렌더링하지 않아 해당 조회가 호출되지 않으며, 생애사·문의 영역은 유지한다.
+- 검증: 로컬 인앱 브라우저에서 비활성화 시 세 영역이 없고 생애사 다음에 문의 영역이 이어짐을 확인했다. 값을 잠시 `true`로 바꾸어 세 영역의 원래 순서와 기존 빈 자료 상태를 확인한 뒤 `false`로 복원했다. `npm run lint`, `npm run build` 통과. 자료 조회 호출의 모의 검증과 메뉴·관련 링크 정리는 각각 `READY-52`, `READY-51`에 남는다.
+
 ### READY-49. 도입부 사각 블러·선언문 연속 배치·구간 전환
 
 - 상태: `DONE` (2026-11-01). 아래 내용은 `READY-42~48`의 타원형 마스크·바로가기·선언문 제목 및 안내·페이지별 원본 링크 배치를 대체하는 사용자 요청이다.

@@ -1,25 +1,13 @@
 import { readFileSync } from "node:fs";
 import { HomeHeroSection } from "@/components/home/HomeHeroSection";
+import { HomeDiscoverySections } from "@/components/home/HomeDiscoverySections";
 import { LifeTimelineEventList } from "@/components/home/LifeTimelineEventList";
 import { LifeTimelineSection } from "@/components/home/LifeTimelineSection";
-import { MaterialReadingPathSection } from "@/components/home/MaterialReadingPathSection";
 import { ParticipationCtaSection } from "@/components/home/ParticipationCtaSection";
-import { ResearchTopicHubSection } from "@/components/home/ResearchTopicHubSection";
-import { VideoContentSection } from "@/components/home/VideoContentSection";
-import { PostType } from "@/generated/prisma/enums";
-import {
-  getMaterialArchiveItems,
-  materialGuideSlugs,
-} from "@/lib/material-guides";
+import { homeDiscoveryEnabled } from "@/lib/home-discovery";
 import { parseLifeEventsCsv } from "@/lib/life-events";
-import { getPublishedPostPreview } from "@/lib/posts";
 
-export async function HomeLandingSections() {
-  const materials = await getPublishedPostPreview(PostType.PROMOTION, {
-    slugs: materialGuideSlugs,
-    take: 3,
-  });
-  const readingPath = getMaterialArchiveItems(materials).slice(0, 3);
+export function HomeLandingSections() {
   const lifeEvents = parseLifeEventsCsv(
     readFileSync("src/lib/sample life events.csv", "utf8"),
   );
@@ -37,9 +25,7 @@ export async function HomeLandingSections() {
           <LifeTimelineEventList events={lifeEvents} />
         </div>
       </section>
-      <ResearchTopicHubSection />
-      <VideoContentSection />
-      <MaterialReadingPathSection items={readingPath} />
+      {homeDiscoveryEnabled && <HomeDiscoverySections />}
       <ParticipationCtaSection />
     </div>
   );
