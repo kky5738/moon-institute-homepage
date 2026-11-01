@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RecommendedMaterialList } from "@/components/materials/RecommendedMaterialList";
 import { PostType } from "@/generated/prisma/enums";
+import { homeDiscoveryEnabled } from "@/lib/home-discovery";
 import {
   getMaterialGuide,
   getRecommendedMaterialPosts,
@@ -97,12 +98,12 @@ export default async function MaterialDetailPage({
                 >
                   관련 주제 보기
                 </Link>
-                <Link
+                {(homeDiscoveryEnabled || guide.videoGuide.href !== "/#media") && <Link
                   href={guide.videoGuide.href}
                   className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary-dark transition-colors hover:border-accent-purple hover:bg-background"
                 >
                   영상 안내
-                </Link>
+                </Link>}
               </div>
             </aside>}
           </div>
@@ -173,12 +174,12 @@ export default async function MaterialDetailPage({
             <p className="mt-3 text-sm leading-6 text-white/70">
               {guide.videoGuide.description}
             </p>
-            <Link
+            {(homeDiscoveryEnabled || guide.videoGuide.href !== "/#media") && <Link
               href={guide.videoGuide.href}
               className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-primary-dark transition-colors hover:bg-gold"
             >
               영상 콘텐츠 보기
-            </Link>
+            </Link>}
           </section>
         </aside>}
       </div>

@@ -61,9 +61,12 @@ test("일반 홍보자료 공개·수정·비공개와 페이지 및 선별 연�
     "@/components/ui/button": { buttonVariants: () => "" },
     "@/components/ui/card": { Card: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children) },
   });
-  const detail = load<typeof import("@/app/materials/[slug]/page")>("src/app/materials/[slug]/page.tsx", { ...common,
+  const detailDependencies = { ...common,
     "next/navigation": { notFound: () => { throw new Error("404"); } },
     "@/components/materials/RecommendedMaterialList": { RecommendedMaterialList: () => React.createElement("div", null, "추천 자료") },
+  };
+  const detail = load<typeof import("@/app/materials/[slug]/page")>("src/app/materials/[slug]/page.tsx", { ...detailDependencies,
+    "@/lib/home-discovery": { homeDiscoveryEnabled: false },
   });
   const listing = async (page = "1") => renderToStaticMarkup(await list.default({ searchParams: Promise.resolve({ page }) }));
   const view = async (slug: string) => renderToStaticMarkup(await detail.default({ params: Promise.resolve({ slug }) }));
@@ -74,6 +77,12 @@ test("일반 홍보자료 공개·수정·비공개와 페이지 및 선별 연�
   assert.doesNotMatch(await view("new-material-1"), /해설 요약/);
   assert.match(await view("life-research-material-guide"), /해설 요약/);
   assert.match(await view("life-research-material-guide"), /추천 자료/);
+  assert.doesNotMatch(await view("life-research-material-guide"), /href="\/#media"/);
+  assert.match(await view("life-research-material-guide"), /생애 연구 영상 안내/);
+  const enabledDetail = load<typeof import("@/app/materials/[slug]/page")>("src/app/materials/[slug]/page.tsx", { ...detailDependencies,
+    "@/lib/home-discovery": { homeDiscoveryEnabled: true },
+  });
+  assert.match(renderToStaticMarkup(await enabledDetail.default({ params: Promise.resolve({ slug: "life-research-material-guide" }) })), /href="\/#media"/);
   rows[1].title = "수정 제목"; rows[1].content = "수정 본문";
   assert.match(await listing(), /수정 제목/);
   assert.match(await view("new-material-1"), /수정 본문/);

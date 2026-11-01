@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cacheLife } from "next/cache";
+import { homeDiscoveryEnabled } from "@/lib/home-discovery";
 
 const footerColumns = [
   {
@@ -50,9 +51,9 @@ export async function SiteFooter() {
           <div className="grid grid-cols-2 gap-8">
             {footerColumns.map((column) => (
               <div key={column.title}>
-                <h2 className="text-sm font-semibold text-white">{column.title}</h2>
+                <h2 className="text-sm font-semibold text-white">{!homeDiscoveryEnabled && column.title === "자료" ? "안내" : column.title}</h2>
                 <ul className="mt-4 grid gap-2.5">
-                  {column.links.map((link) => (
+                  {column.links.filter((link) => homeDiscoveryEnabled || (link.href !== "/topics" && link.href !== "/materials")).map((link) => (
                     <li key={`${column.title}-${link.label}`}>
                       <Link
                         href={link.href}

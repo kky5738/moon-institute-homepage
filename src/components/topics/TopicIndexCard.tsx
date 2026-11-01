@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { homeDiscoveryEnabled } from "@/lib/home-discovery";
 import type { ResearchTopic } from "@/lib/topics";
 
 export function TopicIndexCard({
@@ -44,14 +45,14 @@ export function TopicIndexCard({
         >
           상세 페이지 보기
         </Link>
-        <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
-          {topic.secondaryLinks.map((link) => (
+        <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:flex">
+          {topic.secondaryLinks.filter((link) => homeDiscoveryEnabled || link.href !== "/#media").map((link) => (
             <Link
               key={`${topic.slug}-${link.label}`}
               href={link.href}
               className={buttonVariants({
                 variant: "outline",
-                className: "min-h-10 rounded-none px-2 py-2 text-center",
+                className: "min-h-10 rounded-none px-2 py-2 text-center min-[420px]:flex-1",
               })}
             >
               {link.label}

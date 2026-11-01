@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TopicPostList } from "@/components/topics/TopicPostList";
 import { getTopicRelatedPosts } from "@/lib/topic-posts";
+import { homeDiscoveryEnabled } from "@/lib/home-discovery";
 import {
   getResearchTopicBySlug,
   getResearchTopicStaticParams,
@@ -68,7 +69,7 @@ export default async function TopicDetailPage({
                   연결 경로
                 </h2>
                 <div className="mt-5 grid gap-2">
-                  {topic.secondaryLinks.map((link) => (
+                  {topic.secondaryLinks.filter((link) => homeDiscoveryEnabled || link.href !== "/#media").map((link) => (
                     <Link
                       key={`${topic.slug}-${link.label}`}
                       href={link.href}
@@ -105,7 +106,7 @@ export default async function TopicDetailPage({
         </section>
 
         <section className="border-y border-border bg-[#f1eef8]">
-          <div className="mx-auto grid w-full max-w-6xl gap-6 px-5 py-12 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)] lg:px-8 lg:py-16">
+          <div className={`mx-auto grid w-full max-w-6xl gap-6 px-5 py-12 lg:px-8 lg:py-16 ${homeDiscoveryEnabled || topic.videoGuide.href !== "/#media" ? "lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]" : ""}`}>
             <div>
               <p className="text-sm font-semibold text-primary">영상 안내</p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight text-foreground">
@@ -115,7 +116,7 @@ export default async function TopicDetailPage({
                 {topic.videoGuide.description}
               </p>
             </div>
-            <Link
+            {(homeDiscoveryEnabled || topic.videoGuide.href !== "/#media") && <Link
               href={topic.videoGuide.href}
               className="flex min-h-40 flex-col justify-between border border-border bg-surface p-5 shadow-sm shadow-primary-dark/5 hover:border-primary sm:p-6"
             >
@@ -125,7 +126,7 @@ export default async function TopicDetailPage({
               <span className="text-xl font-semibold text-foreground">
                 영상 자료 안내 보기
               </span>
-            </Link>
+            </Link>}
           </div>
         </section>
 

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { isBeforeHome, isOnManifesto } from "@/lib/home-navigation";
+import { homeDiscoveryEnabled } from "@/lib/home-discovery";
 import { getAuthNavigation } from "@/lib/user-auth";
 
 const navItems = [
@@ -23,6 +24,9 @@ export function SiteNavbar({
 }) {
   const pathname = usePathname();
   const authItem = getAuthNavigation(role);
+  const visibleNavItems = navItems.filter((item) =>
+    homeDiscoveryEnabled || (item.href !== "/topics" && item.href !== "/materials"),
+  );
   const isHome = pathname === "/";
   const navRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
@@ -93,7 +97,7 @@ export function SiteNavbar({
         </Link>
 
         <div className={logoOnly ? "hidden" : "hidden items-center gap-8 lg:flex"}>
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -141,7 +145,7 @@ export function SiteNavbar({
         <div id="mobile-menu" className="border-t border-border bg-background lg:hidden">
           <div className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-6">
             <div className="grid gap-1">
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
