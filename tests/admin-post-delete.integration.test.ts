@@ -9,6 +9,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import * as enums from "../src/generated/prisma/enums";
 import * as helpers from "../src/lib/admin-posts";
+import { saveResearchPostAtomically } from "../src/lib/research-posts";
 
 function load<T>(path: string, dependencies: Record<string, unknown>): T {
   const exports = {};
@@ -61,21 +62,25 @@ test("READY-35 관리자 삭제: 격리 PostgreSQL과 Storage 대역", { timeout
     };
     const actions = load<typeof import("../src/app/admin/posts/actions")>("src/app/admin/posts/actions.ts", deps);
     const category = await prisma.category.create({ data: { name: "Notice", slug: "notice-test", postType: enums.PostType.NOTICE } });
-    const makePost = (type: enums.PostType = enums.PostType.NOTICE, status: enums.PostStatus = enums.PostStatus.ARCHIVED) => prisma.post.create({ data: { title: "test", slug: randomUUID(), content: "body", type, status, categoryId: category.id } });
+    const makePost = (type: enums.PostType = enums.PostType.NOTICE, status: enums.PostStatus = enums.PostStatus.ARCHIVED, authorId?: number) => prisma.post.create({ data: { title: "test", slug: randomUUID(), content: "body", type, status, authorId } });
     const redirect = (promise: Promise<unknown>) => assert.rejects(promise, /redirect/);
 
-    await t.test("권한·활성 글·연구 글 차단 및 공지/홍보 삭제", async () => {
+    await t.test("권한·활성 글 차단 및 카테고리 없는 보관 글 삭제", async () => {
       const archived = await makePost();
       session = null;
       assert.equal((await actions.deletePost(initial, form(archived.id))).status, "auth");
       session = { user: { role: "RESEARCHER", adminSessionValid: false } };
       assert.equal((await actions.deletePost(initial, form(archived.id))).status, "auth");
+      session = { user: { role: "ADMIN", adminSessionValid: false } };
+      assert.equal((await actions.deletePost(initial, form(archived.id))).status, "auth");
       session = { user: { role: "ADMIN", adminSessionValid: true } };
-      for (const post of [await makePost(enums.PostType.NOTICE, enums.PostStatus.PUBLISHED), await makePost(enums.PostType.RESEARCH)]) {
+      for (const type of [enums.PostType.NOTICE, enums.PostType.PROMOTION, enums.PostType.RESEARCH]) for (const status of [enums.PostStatus.DRAFT, enums.PostStatus.PUBLISHED]) {
+        const post = await makePost(type, status);
         assert.equal((await actions.deletePost(initial, form(post.id))).status, "validation");
         assert.equal((await prisma.post.findUniqueOrThrow({ where: { id: post.id } })).deletedAt, null);
       }
-      for (const post of [archived, await makePost(enums.PostType.PROMOTION)]) {
+      for (const post of [archived, await makePost(enums.PostType.PROMOTION), await makePost(enums.PostType.RESEARCH)]) {
+        assert.equal(post.categoryId, null);
         await redirect(actions.deletePost(initial, form(post.id)));
         assert.ok((await prisma.post.findUniqueOrThrow({ where: { id: post.id } })).deletedAt);
         await redirect(actions.deletePost(initial, form(post.id)));
@@ -86,7 +91,7 @@ test("READY-35 관리자 삭제: 격리 PostgreSQL과 Storage 대역", { timeout
     });
 
     await t.test("첨부 원본 정리 실패는 숨김·경로를 보존하고 재시도한다", async () => {
-      const post = await makePost();
+      const post = await makePost(enums.PostType.RESEARCH);
       const attachment = await prisma.postAttachment.create({ data: { postId: post.id, kind: enums.AttachmentKind.ATTACHMENT, originalName: "a.pdf", objectPath: `test/${randomUUID()}`, contentType: "application/pdf", size: 10 } });
       storageFails = true;
       assert.equal((await actions.deletePost(initial, form(post.id))).status, "error");
@@ -98,6 +103,34 @@ test("READY-35 관리자 삭제: 격리 PostgreSQL과 Storage 대역", { timeout
       storageFails = false;
       await redirect(actions.deletePost(initial, form(post.id)));
       assert.ok(paths.some((items) => items.includes(attachment.objectPath)));
+    });
+
+    await t.test("활성 카테고리가 없으면 수정은 막고 삭제는 허용한다", async () => {
+      await prisma.category.update({ where: { id: category.id }, data: { isActive: false } });
+      for (const type of [enums.PostType.NOTICE, enums.PostType.PROMOTION]) {
+        const post = await makePost(type);
+        const update = form(post.id, { title: "changed", slug: randomUUID(), content: "changed", categoryId: String(category.id), intent: "publish" });
+        assert.equal((await actions.updatePost(initial, update)).status, "validation");
+        await redirect(actions.deletePost(initial, form(post.id)));
+        assert.ok((await prisma.post.findUniqueOrThrow({ where: { id: post.id } })).deletedAt);
+      }
+      await prisma.category.update({ where: { id: category.id }, data: { isActive: true } });
+    });
+
+    await t.test("연구 글 저장과 중복 삭제 경합은 글을 되살리지 않는다", async () => {
+      const user = await prisma.user.create({ data: { name: "Researcher", email: `${randomUUID()}@example.test` } });
+      const post = await makePost(enums.PostType.RESEARCH, enums.PostStatus.ARCHIVED, user.id);
+      const save = () => saveResearchPostAtomically(prisma, { postId: post.id, authorId: user.id, title: "changed", summary: null, content: "changed", status: enums.PostStatus.PUBLISHED, publishedAt: new Date(), imageIds: [], attachmentIds: [], removedIds: [] });
+      const results = await Promise.allSettled([actions.deletePost(initial, form(post.id)), actions.deletePost(initial, form(post.id)), save()]);
+      assert.equal(results[2].status, "rejected");
+      const deleted = await prisma.post.findUniqueOrThrow({ where: { id: post.id } });
+      assert.ok(deleted.deletedAt);
+      assert.equal(deleted.status, enums.PostStatus.ARCHIVED);
+      assert.equal(deleted.title, "test");
+      assert.equal(await prisma.post.count({ where: { id: post.id, status: enums.PostStatus.PUBLISHED, deletedAt: null } }), 0);
+      assert.equal(await prisma.post.count({ where: { id: post.id, authorId: user.id, deletedAt: null } }), 0);
+      assert.equal(await prisma.post.count({ where: { id: post.id, deletedAt: null } }), 0);
+      await assert.rejects(save());
     });
 
     await t.test("DB 실패 시 삭제 표식이 롤백된다", async () => {

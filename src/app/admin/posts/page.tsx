@@ -37,6 +37,9 @@ export default async function AdminPostsPage({
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
             게시글 관리
           </h1>
+          <p className="mt-4 text-sm leading-6 text-muted">
+            보관된 회원 연구 글은 공개와 작성자 수정이 중단되며 관리자가 삭제할 수 있습니다.
+          </p>
         </div>
         <Link
           href="/admin/posts/new"
@@ -101,7 +104,7 @@ export default async function AdminPostsPage({
                       수정
                     </Link>
                   )}
-                  {post.status === "ARCHIVED" && post.type !== "RESEARCH" ? (
+                  {post.status === "ARCHIVED" ? (
                     <DeletePostButton id={post.id} title={post.title} />
                   ) : null}
                   {post.status !== "ARCHIVED" ? (

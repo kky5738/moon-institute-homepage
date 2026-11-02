@@ -204,14 +204,14 @@ export async function deletePost(_previous: PostFormState, formData: FormData): 
 
     const result = await prisma.$transaction(async (tx) => {
       const post = await tx.post.findFirst({
-        where: { id, type: { in: [PostType.NOTICE, PostType.PROMOTION] }, status: PostStatus.ARCHIVED },
+        where: { id, type: { in: [PostType.NOTICE, PostType.PROMOTION, PostType.RESEARCH] }, status: PostStatus.ARCHIVED },
         select: { type: true, deletedAt: true },
       });
-      if (!post) throw new PostValidationError("보관된 공지사항 또는 홍보자료만 삭제할 수 있습니다.");
+      if (!post) throw new PostValidationError("보관된 게시글만 삭제할 수 있습니다.");
       if (!post.deletedAt) {
         const deletedAt = new Date();
         const { count } = await tx.post.updateMany({
-          where: { ...getAdminEditablePostWhere(id), status: PostStatus.ARCHIVED },
+          where: { id, type: post.type, deletedAt: null, status: PostStatus.ARCHIVED },
           data: { deletedAt },
         });
         if (count !== 1) throw new PostValidationError("게시글 상태가 변경되었습니다. 목록을 새로고침해주세요.");

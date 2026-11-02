@@ -76,6 +76,9 @@ export default async function AccountPostsPage() {
                 <h2 className="mt-2 text-lg font-semibold text-foreground">
                   {post.title}
                 </h2>
+                {post.status === PostStatus.ARCHIVED ? (
+                  <p className="mt-2 text-sm text-muted">관리자가 보관한 글은 공개되지 않으며 수정할 수 없습니다. 삭제는 관리자에게 문의해 주세요.</p>
+                ) : null}
                 {post.summary ? (
                   <p className="mt-2 text-sm leading-6 text-muted">
                     {post.summary}
