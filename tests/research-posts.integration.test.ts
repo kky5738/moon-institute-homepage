@@ -187,6 +187,60 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
       await prisma.$executeRawUnsafe(`DROP FUNCTION IF EXISTS e1_attachment_gate()`);
     }
 
+    await t.test("READY-56 all boards keep URLs through draft, edit, publication, archive and deletion", async () => {
+      signInAdmin();
+      const state = { status: "idle" as const, message: "" };
+      for (const type of [enums.PostType.RESEARCH, enums.PostType.NOTICE, enums.PostType.PROMOTION]) {
+        for (const withFile of [false, true]) {
+          const title = `READY56-${randomUUID()}`;
+          const owner = await createResearcher(); signInResearcher(owner);
+          let id: number;
+          let categoryId: number | undefined;
+          if (type === enums.PostType.RESEARCH) {
+            const prepared = await researcherActions.prepareResearchPost(makeForm({ title, intent: "draft" }));
+            assert.equal(prepared.ok, true);
+            if (!prepared.ok) return;
+            id = prepared.postId;
+          } else {
+            const category = await prisma.category.create({ data: { name: type, slug: randomUUID(), postType: type } });
+            categoryId = category.id;
+            adminSlugSuffix = randomUUID();
+            await assert.rejects(adminActions.createPost(state, makeForm({ title, content: "draft body", categoryId: String(categoryId), intent: "draft" })), /redirect/);
+            id = (await prisma.post.findFirstOrThrow({ where: { title } })).id;
+          }
+          const original = await prisma.post.findUniqueOrThrow({ where: { id } });
+          assert.equal(original.summary, null);
+          const file = withFile ? await createAttachment(id, { uploaded: true, committed: type !== enums.PostType.RESEARCH }) : null;
+          assert.equal(await publicPosts.getPublishedPostBySlug(type, original.slug, false), null);
+          assert.ok(!(await publicPosts.getPublishedPostPage(type, 1)).posts.some((post) => post.id === id));
+          await prisma.post.update({ where: { id }, data: { summary: "old summary" } });
+          if (type === enums.PostType.RESEARCH) {
+            assert.equal((await researcherActions.saveResearchPost(saveForm(id, file ? [file.id] : [], { intent: "draft" }))).ok, true);
+            assert.equal((await researcherActions.saveResearchPost(saveForm(id, file ? [file.id] : []))).ok, true);
+          } else {
+            const update = (intent: string) => makeForm({ id: String(id), title: "edited title", content: "edited body", categoryId: String(categoryId), intent });
+            await assert.rejects(adminActions.updatePost(state, update("draft")), /redirect/);
+            await assert.rejects(adminActions.updatePost(state, update("publish")), /redirect/);
+          }
+          const visible = await publicPosts.getPublishedPostBySlug(type, encodeURIComponent(original.slug), false);
+          assert.equal(visible?.id, id);
+          assert.equal(visible?.summary, "old summary");
+          assert.equal(visible?.attachmentCount, withFile ? 1 : 0);
+          assert.ok((await publicPosts.getPublishedPostPage(type, 1)).posts.some((post) => post.id === id));
+          await assert.rejects(adminActions.archivePost(makeForm({ id: String(id) })), /redirect/);
+          assert.equal(await publicPosts.getPublishedPostBySlug(type, original.slug, false), null);
+          assert.ok(!(await publicPosts.getPublishedPostPage(type, 1)).posts.some((post) => post.id === id));
+          await assert.rejects(adminActions.deletePost(state, makeForm({ id: String(id) })), /redirect/);
+          assert.equal(await publicPosts.getPublishedPostBySlug(type, original.slug, false), null);
+          assert.ok(!(await publicPosts.getPublishedPostPage(type, 1)).posts.some((post) => post.id === id));
+          const stored = await prisma.post.findUniqueOrThrow({ where: { id } });
+          assert.equal(stored.slug, original.slug);
+          assert.equal(stored.summary, "old summary");
+          assert.ok(stored.deletedAt);
+        }
+      }
+    });
+
     await t.test("READY-54 admin generates URLs and preserves legacy summary, URL and attachments", async () => {
       signInAdmin();
       const initial = { status: "idle" as const, message: "" };

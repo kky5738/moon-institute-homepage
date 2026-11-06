@@ -1,3 +1,4 @@
+import { PostSurface } from "@/components/posts/PostSurface";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -34,83 +35,80 @@ export default async function AccountPostsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-5 py-14 lg:px-8">
-      <div className="flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Link
-            href="/account"
-            className="text-sm font-semibold text-primary hover:underline"
-          >
-            내 계정
-          </Link>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
-            내 글
-          </h1>
-          <p className="mt-4 text-sm leading-6 text-muted">
-            임시저장하거나 연구 게시판에 바로 공개한 글을 관리합니다.
-          </p>
-        </div>
-        <Link href="/account/posts/new" className={buttonVariants()}>
-          새 글 작성
-        </Link>
-      </div>
-
-      <section className="mt-8 divide-y divide-border border-y border-border bg-surface">
-        {posts.length > 0 ? (
-          posts.map((post) => (
-            <article
-              key={post.id}
-              className="grid gap-4 px-5 py-5 sm:grid-cols-[1fr_auto] sm:items-center"
+    <PostSurface>
+      <div className="mx-auto w-full max-w-5xl px-5 py-14 lg:px-8">
+        <div className="flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <Link
+              href="/account"
+              className="text-sm font-semibold text-primary hover:underline"
             >
-              <div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                  <span>
-                    {post.status === PostStatus.PUBLISHED
-                      ? "공개"
-                      : post.status === PostStatus.DRAFT
-                        ? "임시저장"
-                        : "관리자 보관"}
-                  </span>
-                  <span>{post.updatedAt.toISOString().slice(0, 10)} 수정</span>
+              내 계정
+            </Link>
+            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
+              내 글
+            </h1>
+            <p className="mt-4 text-sm leading-6 text-muted">
+              임시저장하거나 연구 게시판에 바로 공개한 글을 관리합니다.
+            </p>
+          </div>
+          <Link href="/account/posts/new" className={buttonVariants()}>
+            새 글 작성
+          </Link>
+        </div>
+
+        <section className="mt-8 divide-y divide-border border-y border-border bg-surface">
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <article
+                key={post.id}
+                className="grid gap-4 px-5 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+              >
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                    <span>
+                      {post.status === PostStatus.PUBLISHED
+                        ? "공개"
+                        : post.status === PostStatus.DRAFT
+                          ? "임시저장"
+                          : "관리자 보관"}
+                    </span>
+                    <span>{post.updatedAt.toISOString().slice(0, 10)} 수정</span>
+                  </div>
+                  <h2 className="mt-2 break-words text-lg font-semibold text-foreground">
+                    {post.title}
+                  </h2>
+                  {post.status === PostStatus.ARCHIVED ? (
+                    <p className="mt-2 text-sm text-muted">관리자가 보관한 글은 공개되지 않으며 수정할 수 없습니다. 삭제는 관리자에게 문의해 주세요.</p>
+                  ) : null}
                 </div>
-                <h2 className="mt-2 text-lg font-semibold text-foreground">
-                  {post.title}
-                </h2>
-                {post.status === PostStatus.ARCHIVED ? (
-                  <p className="mt-2 text-sm text-muted">관리자가 보관한 글은 공개되지 않으며 수정할 수 없습니다. 삭제는 관리자에게 문의해 주세요.</p>
-                ) : null}
-                {post.summary ? (
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    {post.summary}
-                  </p>
-                ) : null}
-              </div>
-              <div className="flex gap-2">
-                {post.status === PostStatus.PUBLISHED ? (
-                  <Link
-                    href={`/research/${post.slug}`}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
-                  >
-                    보기
-                  </Link>
-                ) : null}
-                {post.status !== PostStatus.ARCHIVED ? (
-                  <Link
-                    href={`/account/posts/${post.id}/edit`}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
-                  >
-                    수정
-                  </Link>
-                ) : null}
-              </div>
-            </article>
-          ))
-        ) : (
-          <Card className="rounded-none border-0 p-8 text-sm text-muted shadow-none">
-            작성한 글이 없습니다.
-          </Card>
-        )}
-      </section>
-    </div>
+                <div className="flex gap-2">
+                  {post.status === PostStatus.PUBLISHED ? (
+                    <Link
+                      href={`/research/${post.slug}`}
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                    >
+                      보기
+                    </Link>
+                  ) : null}
+                  {post.status !== PostStatus.ARCHIVED ? (
+                    <Link
+                      href={`/account/posts/${post.id}/edit`}
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                    >
+                      수정
+                    </Link>
+                  ) : null}
+                </div>
+              </article>
+            ))
+          ) : (
+            <Card className="rounded-none border-0 p-8 text-sm text-muted shadow-none">
+              작성한 글이 없습니다.
+            </Card>
+          )}
+        </section>
+      </div>
+    </PostSurface>
   );
 }

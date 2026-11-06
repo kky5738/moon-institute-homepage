@@ -40,12 +40,9 @@ export function RecommendedMaterialList({
                 <span>{post.publishedAt}</span>
                 <Badge variant="outline" className="px-2.5">{post.category}</Badge>
               </div>
-              <h3 className="mt-3 text-lg font-semibold leading-snug text-foreground [word-break:keep-all]">
+              <h3 className="mt-3 text-lg font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
                 {post.title}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {post.summary}
-              </p>
             </Link>
           ))}
         </div>

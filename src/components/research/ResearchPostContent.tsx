@@ -14,7 +14,7 @@ export function ResearchPostContent({
   );
 
   return (
-    <div className="space-y-8 text-[15px] leading-7 text-foreground sm:text-base sm:leading-8 lg:text-[17px] lg:leading-9">
+    <div className="space-y-8 text-base leading-[1.85] text-foreground lg:text-[17px]">
       {splitResearchContent(content).map((part, index) => {
         if (part.type === "text") {
           return part.value ? (

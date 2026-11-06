@@ -48,8 +48,18 @@ test("일반 홍보자료 공개·수정·비공개와 페이지 및 선별 연�
   });
   const jsx = await import("react/jsx-runtime");
   const link = { default: ({ href, children }: { href: string; children: React.ReactNode }) => React.createElement("a", { href }, children) };
+  const surface = load<typeof import("@/components/posts/PostSurface")>("src/components/posts/PostSurface.tsx", {
+    "react/jsx-runtime": jsx, "./post-surface.module.css": { default: {} },
+  });
+  const document = load<typeof import("@/components/posts/PostDocument")>("src/components/posts/PostDocument.tsx", {
+    "react/jsx-runtime": jsx, "next/link": link, "@/generated/prisma/enums": enums,
+    "@/lib/research-files": { formatResearchFileSize: () => "1KB" }, "./PostSurface": surface,
+    "./post-surface.module.css": { default: {} },
+  });
   const common = { "react/jsx-runtime": jsx, "next/link": link, "@/generated/prisma/enums": enums,
-    "@/lib/material-guides": guides, "@/lib/posts": posts };
+    "@/lib/material-guides": guides, "@/lib/posts": posts,
+    "@/components/posts/PostSurface": surface, "@/components/posts/PostDocument": document,
+    "@/components/posts/post-surface.module.css": { default: {} } };
   const card = load<typeof import("@/components/materials/MaterialArchiveCard")>("src/components/materials/MaterialArchiveCard.tsx", { ...common,
     "@/components/ui/badge": { Badge: ({ children }: { children: React.ReactNode }) => React.createElement("span", null, children) },
     "@/components/ui/button": { buttonVariants: () => "" },
@@ -71,6 +81,8 @@ test("일반 홍보자료 공개·수정·비공개와 페이지 및 선별 연�
   const listing = async (page = "1") => renderToStaticMarkup(await list.default({ searchParams: Promise.resolve({ page }) }));
   const view = async (slug: string) => renderToStaticMarkup(await detail.default({ params: Promise.resolve({ slug }) }));
   assert.match(await listing(), /new-material-1/);
+  assert.doesNotMatch(await listing(), /요약 1/);
+  assert.doesNotMatch(await view("new-material-1"), /요약 1/);
   assert.match(await listing(), /pages:2/);
   assert.match(await listing("2"), /new-material-10/);
   assert.match(await view("new-material-1"), /본문 1/);

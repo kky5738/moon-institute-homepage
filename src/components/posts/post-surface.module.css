@@ -1,0 +1,51 @@
+.surface {
+  --primary: #344d67;
+  --primary-dark: #263c52;
+  --accent: #344d67;
+  --accent-purple: #344d67;
+  --ring: #344d67;
+  --foreground: #242424;
+  --muted: #62676b;
+  --muted-foreground: #62676b;
+  --border: #dce0e2;
+  --background: #f6f7f7;
+  --surface: #fff;
+  --card: #fff;
+  --card-foreground: #242424;
+  --shadow-soft: none;
+  --shadow-elegant: none;
+  --secondary: #eef1f3;
+  --secondary-foreground: #263c52;
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  overflow-wrap: anywhere;
+}
+.surface :where(a, button):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; box-shadow: none; }
+.document { max-width: 896px; margin: 0 auto; padding: 28px 20px 56px; }
+.topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+.topbar a { color: var(--primary); font-size: 14px; }
+.paper { border: 1px solid var(--border); background: #fff; padding: 24px 20px; }
+.heading { border-bottom: 1px solid var(--border); padding-bottom: 28px; }
+.heading h1 { margin-top: 12px; font-size: 28px; line-height: 1.45; font-weight: 600; letter-spacing: -.025em; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 24px; color: var(--muted); font-size: 13px; }
+.body { padding: 32px 0; font-size: 16px; line-height: 1.85; }
+.attachments { border-top: 1px solid var(--border); padding: 24px 0; }
+.attachments h2 { font-size: 16px; font-weight: 600; }
+.attachments ul { margin-top: 12px; }
+.attachments li { border-bottom: 1px solid var(--border); }
+.file { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; min-height: 60px; padding: 14px 0; font-size: 14px; }
+.filename { min-width: 0; flex: 1 1 220px; overflow-wrap: anywhere; color: var(--foreground); }
+.format { color: var(--muted); font-size: 12px; }
+.download { color: var(--primary); font-weight: 600; }
+.supplement { border-top: 1px solid var(--border); padding: 32px 0; }
+.supplement h2 { font-size: 22px; font-weight: 600; }
+.supplement h3 { margin-top: 24px; font-size: 16px; font-weight: 600; }
+.supplement p, .supplement ul { margin-top: 12px; line-height: 1.85; }
+.footer { border-top: 1px solid var(--border); padding-top: 24px; }
+@media (min-width: 1024px) {
+  .document { padding: 32px 0 64px; }
+  .paper { padding: 36px; }
+  .heading h1 { font-size: 32px; }
+  .body { font-size: 17px; }
+}
