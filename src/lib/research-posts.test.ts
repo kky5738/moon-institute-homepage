@@ -98,7 +98,6 @@ function makeInput() {
     postId: 4,
     authorId: 12,
     title: "새 제목",
-    summary: null,
     content: "새 본문",
     status: PostStatus.PUBLISHED,
     publishedAt: new Date("2026-10-21T00:00:00.000Z"),
@@ -150,7 +149,7 @@ test("작성자 저장 후 관리자가 보관하면 글은 보관 상태를 유
     content: "새 본문",
     deletedAttachmentIds: ["removed-file"],
     committedAttachmentIds: [],
-    summary: null,
+    summary: "기존 요약",
     publishedAt: new Date("2026-10-21T00:00:00.000Z"),
   });
 });

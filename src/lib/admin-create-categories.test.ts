@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import * as postSlug from "@/lib/post-slug";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
@@ -40,6 +42,8 @@ function setup(available = categories) {
     post: { async findUnique() { return null; }, async create({ data }: { data: typeof writes[number] }) { writes.push(data); } },
   };
   const actions = load<typeof import("@/app/admin/posts/actions")>("src/app/admin/posts/actions.ts", {
+    "node:crypto": { randomUUID },
+    "@/lib/post-slug": postSlug,
     "next/cache": { revalidatePath() {}, updateTag() {} },
     "next/navigation": { unstable_rethrow() {}, redirect() { throw new Error("redirect"); } },
     "@/generated/prisma/enums": enums, "@/lib/admin-auth": { assertAdmin: async () => {}, AdminUnauthorizedError: class extends Error {} },

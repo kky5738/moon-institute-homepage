@@ -13,6 +13,7 @@ import { getPublicPostAttachmentWhere } from "../src/lib/public-post-attachments
 import * as researchFiles from "../src/lib/research-files";
 import * as researchPosts from "../src/lib/research-posts";
 import * as postSlug from "../src/lib/post-slug";
+import * as pagination from "../src/lib/pagination";
 import * as adminPosts from "../src/lib/admin-posts";
 
 function load<T>(path: string, dependencies: Record<string, unknown>): T {
@@ -105,7 +106,10 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
         },
       },
     });
+    let adminSlugSuffix = randomUUID();
     const adminActions = load<typeof import("../src/app/admin/posts/actions")>("src/app/admin/posts/actions.ts", {
+      "node:crypto": { randomUUID: () => adminSlugSuffix },
+      "@/lib/post-slug": postSlug,
       "next/cache": cache,
       "next/navigation": { unstable_rethrow() {}, redirect(path: string) { throw Object.assign(new Error("redirect"), { destination: path }); } },
       "@/generated/prisma/enums": enums, "@/lib/admin-auth": adminAuth,
@@ -113,6 +117,15 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
       "@/lib/posts": { getPublishedPostsCacheTag: () => "posts" },
       "@/lib/supabase-storage": { removeResearchObjects: async () => {} },
       "@/lib/server-log": serverLog,
+    });
+
+    const publicPosts = load<typeof import("../src/lib/posts")>("src/lib/posts.ts", {
+      "next/cache": { cacheLife() {}, cacheTag() {} },
+      "@/generated/prisma/enums": enums, "@/lib/prisma": { prisma },
+      "@/lib/post-slug": postSlug, "@/lib/pagination": pagination,
+      "@/lib/public-post-attachments": { getPublicPostAttachmentWhere },
+      "@/lib/server-log": { ...serverLog, isPrismaMissingTableError: () => false },
+      "@/lib/supabase-storage": { createResearchFileUrls: async () => [] },
     });
 
     async function createResearcher() {
@@ -173,6 +186,79 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
       await prisma.$executeRawUnsafe(`DROP TRIGGER IF EXISTS e1_attachment_gate ON "post_attachments"`);
       await prisma.$executeRawUnsafe(`DROP FUNCTION IF EXISTS e1_attachment_gate()`);
     }
+
+    await t.test("READY-54 admin generates URLs and preserves legacy summary, URL and attachments", async () => {
+      signInAdmin();
+      const initial = { status: "idle" as const, message: "" };
+      for (const type of [enums.PostType.NOTICE, enums.PostType.PROMOTION]) {
+        const category = await prisma.category.create({ data: {
+          name: type, slug: randomUUID(), postType: type,
+        } });
+        for (const title of ["한글 제목", "한글 제목", "!!!"]) {
+          adminSlugSuffix = randomUUID();
+          const slug = postSlug.createPostSlug(title, adminSlugSuffix.slice(0, 8));
+          const form = makeForm({ title, content: "body", categoryId: String(category.id), intent: "draft" });
+          await assert.rejects(adminActions.createPost(initial, form), /redirect/);
+          const post = await prisma.post.findUniqueOrThrow({ where: { slug } });
+          assert.equal(post.summary, null);
+          assert.equal(post.type, type);
+          assert.equal(post.status, enums.PostStatus.DRAFT);
+          // Force the same generated address to exercise the actual DB unique constraint.
+          const collision = await adminActions.createPost(initial, form);
+          assert.equal(collision.status, "validation");
+          assert.match(collision.message, /다시 저장/);
+          adminSlugSuffix = randomUUID();
+          form.set("summary", "ignored summary from old form");
+          form.set("slug", "ignored-address");
+          await assert.rejects(adminActions.createPost(initial, form), /redirect/);
+          const retried = await prisma.post.findUniqueOrThrow({ where: { slug: postSlug.createPostSlug(title, adminSlugSuffix.slice(0, 8)) } });
+          assert.equal(retried.summary, null);
+          await prisma.post.update({ where: { id: post.id }, data: { summary: "legacy summary" } });
+          const attachment = await createAttachment(post.id, { uploaded: true, committed: true });
+          const update = makeForm({ id: String(post.id), title: "changed title", content: "changed body", categoryId: String(category.id), intent: "publish" });
+          await assert.rejects(adminActions.updatePost(initial, update), /redirect/);
+          const stored = await prisma.post.findUniqueOrThrow({ where: { slug } });
+          assert.equal(stored.id, post.id);
+          assert.equal(stored.title, "changed title");
+          assert.equal(stored.summary, "legacy summary");
+          assert.equal(stored.status, enums.PostStatus.PUBLISHED);
+          const visible = await publicPosts.getPublishedPostBySlug(type, encodeURIComponent(slug), false);
+          assert.equal(visible?.id, post.id);
+          assert.equal(visible?.title, "changed title");
+          assert.deepEqual(await prisma.postAttachment.findUniqueOrThrow({ where: { id: attachment.id } }), attachment);
+          // Old forms can still submit these fields; they must never override stored data.
+          update.set("slug", "ignored-address");
+          update.set("summary", "ignored summary");
+          await assert.rejects(adminActions.updatePost(initial, update), /redirect/);
+          assert.equal((await prisma.post.findUniqueOrThrow({ where: { slug } })).summary, "legacy summary");
+        }
+      }
+    });
+
+    await t.test("READY-54 research preparation and final save ignore summary input", async () => {
+      const owner = await createResearcher(); signInResearcher(owner);
+      for (const intent of ["draft", "publish"]) {
+        const prepared = await researcherActions.prepareResearchPost(makeForm({ intent, title: "연구 제목", content: "body", summary: "x".repeat(501) }));
+        assert.equal(prepared.ok, true);
+        if (!prepared.ok) return;
+        const post = await prisma.post.findUniqueOrThrow({ where: { id: prepared.postId } });
+        assert.equal(post.summary, null);
+        await prisma.post.update({ where: { id: post.id }, data: { summary: "legacy summary" } });
+        const attachment = await createAttachment(post.id, { uploaded: true, committed: true });
+        for (const values of [{ intent }, { intent, summary: "x".repeat(501), slug: "ignored" }]) {
+          const saved = await researcherActions.saveResearchPost(saveForm(post.id, [attachment.id], values));
+          assert.equal(saved.ok, true);
+          const stored = await prisma.post.findUniqueOrThrow({ where: { slug: post.slug } });
+          assert.equal(stored.summary, "legacy summary");
+          assert.equal(stored.id, post.id);
+          assert.equal(stored.title, "Saved title");
+          assert.equal(stored.status, intent === "draft" ? enums.PostStatus.DRAFT : enums.PostStatus.PUBLISHED);
+          const visible = await publicPosts.getPublishedPostBySlug(enums.PostType.RESEARCH, encodeURIComponent(post.slug), false);
+          assert.equal(visible?.id ?? null, intent === "publish" ? post.id : null);
+          assert.deepEqual(await prisma.postAttachment.findUniqueOrThrow({ where: { id: attachment.id } }), attachment);
+        }
+      }
+    });
 
     await t.test("research actions enforce ownership and expose only confirmed, committed files", async () => {
       const owner = await createResearcher();

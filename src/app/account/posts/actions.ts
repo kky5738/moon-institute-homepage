@@ -49,7 +49,7 @@ export async function prepareResearchPost(
       data: {
         title,
         slug: createPostSlug(title, randomUUID().slice(0, 8)),
-        summary: getSummary(formData),
+        summary: null,
         content,
         type: PostType.RESEARCH,
         status: PostStatus.DRAFT,
@@ -205,7 +205,6 @@ export async function saveResearchPost(
       postId: post.id,
       authorId: user.id,
       title,
-      summary: getSummary(formData),
       content,
       status,
       publishedAt:
@@ -277,14 +276,6 @@ function getPostContent(formData: FormData, status: PostStatus) {
   }
   if (status === PostStatus.DRAFT) return "";
   throw new Error("본문을 입력해주세요.");
-}
-
-function getSummary(formData: FormData) {
-  const summary = getOptionalString(formData, "summary");
-  if (summary && summary.length > 500) {
-    throw new Error("요약은 500자 이하로 입력해주세요.");
-  }
-  return summary;
 }
 
 function parsePostId(value: string) {

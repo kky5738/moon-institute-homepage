@@ -1,3 +1,4 @@
+import * as postSlug from "../src/lib/post-slug";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -53,6 +54,8 @@ test("READY-35 관리자 삭제: 격리 PostgreSQL과 Storage 대역", { timeout
       "@/lib/server-log": { logServerError() {} },
     });
     const deps = {
+      "node:crypto": { randomUUID },
+      "@/lib/post-slug": postSlug,
       "next/cache": { revalidatePath() {}, updateTag() {} },
       "next/navigation": { unstable_rethrow() {}, redirect() { throw new Error("redirect"); } },
       "@/generated/prisma/enums": enums, "@/lib/admin-auth": auth, "@/lib/admin-posts": helpers,
@@ -120,7 +123,7 @@ test("READY-35 관리자 삭제: 격리 PostgreSQL과 Storage 대역", { timeout
     await t.test("연구 글 저장과 중복 삭제 경합은 글을 되살리지 않는다", async () => {
       const user = await prisma.user.create({ data: { name: "Researcher", email: `${randomUUID()}@example.test` } });
       const post = await makePost(enums.PostType.RESEARCH, enums.PostStatus.ARCHIVED, user.id);
-      const save = () => saveResearchPostAtomically(prisma, { postId: post.id, authorId: user.id, title: "changed", summary: null, content: "changed", status: enums.PostStatus.PUBLISHED, publishedAt: new Date(), imageIds: [], attachmentIds: [], removedIds: [] });
+      const save = () => saveResearchPostAtomically(prisma, { postId: post.id, authorId: user.id, title: "changed", content: "changed", status: enums.PostStatus.PUBLISHED, publishedAt: new Date(), imageIds: [], attachmentIds: [], removedIds: [] });
       const results = await Promise.allSettled([actions.deletePost(initial, form(post.id)), actions.deletePost(initial, form(post.id)), save()]);
       assert.equal(results[2].status, "rejected");
       const deleted = await prisma.post.findUniqueOrThrow({ where: { id: post.id } });

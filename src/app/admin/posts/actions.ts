@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { PostStatus, PostType } from "@/generated/prisma/enums";
@@ -8,6 +9,7 @@ import {
   getAdminEditableCategoryWhere,
   getAdminEditablePostWhere,
 } from "@/lib/admin-posts";
+import { createPostSlug } from "@/lib/post-slug";
 import { prisma } from "@/lib/prisma";
 import { getPublishedPostsCacheTag } from "@/lib/posts";
 import { logServerError } from "@/lib/server-log";
@@ -26,9 +28,8 @@ export async function createPost(_previous: PostFormState, formData: FormData): 
   try {
     await assertAdmin();
     const title = getRequiredString(formData, "title");
-    const slug = normalizeSlug(getRequiredString(formData, "slug"));
+    const slug = createPostSlug(title, randomUUID().slice(0, 8));
     const content = getRequiredString(formData, "content");
-    const summary = getOptionalString(formData, "summary");
     const categoryId = Number(getRequiredString(formData, "categoryId"));
     const status = parsePostIntent(formData);
 
@@ -44,25 +45,12 @@ export async function createPost(_previous: PostFormState, formData: FormData): 
       throw new PostValidationError("사용 가능한 카테고리를 선택해주세요.");
     }
 
-    const duplicatePost = await prisma.post.findUnique({
-      where: {
-        slug,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (duplicatePost) {
-      throw new PostValidationError("이미 사용 중인 슬러그입니다.");
-    }
-
     affectedType = category.postType;
     await prisma.post.create({
       data: {
         title,
         slug,
-        summary,
+        summary: null,
         content,
         categoryId: category.id,
         type: category.postType,
@@ -86,9 +74,7 @@ export async function updatePost(_previous: PostFormState, formData: FormData): 
     await assertAdmin();
     const id = Number(getRequiredString(formData, "id"));
     const title = getRequiredString(formData, "title");
-    const slug = normalizeSlug(getRequiredString(formData, "slug"));
     const content = getRequiredString(formData, "content");
-    const summary = getOptionalString(formData, "summary");
     const categoryId = Number(getRequiredString(formData, "categoryId"));
     const status = parsePostIntent(formData);
 
@@ -100,7 +86,7 @@ export async function updatePost(_previous: PostFormState, formData: FormData): 
       throw new PostValidationError("유효한 카테고리를 선택해주세요.");
     }
 
-    const [post, category, duplicatePost] = await Promise.all([
+    const [post, category] = await Promise.all([
       prisma.post.findFirst({
         where: getAdminEditablePostWhere(id),
         select: {
@@ -112,17 +98,6 @@ export async function updatePost(_previous: PostFormState, formData: FormData): 
       prisma.category.findFirst({
         where: getAdminEditableCategoryWhere(categoryId),
       }),
-      prisma.post.findFirst({
-        where: {
-          slug,
-          NOT: {
-            id,
-          },
-        },
-        select: {
-          id: true,
-        },
-      }),
     ]);
 
     if (!post) {
@@ -133,17 +108,11 @@ export async function updatePost(_previous: PostFormState, formData: FormData): 
       throw new PostValidationError("사용 가능한 카테고리를 선택해주세요.");
     }
 
-    if (duplicatePost) {
-      throw new PostValidationError("이미 사용 중인 슬러그입니다.");
-    }
-
     affectedTypes = [post.type, category.postType];
     const { count } = await prisma.post.updateMany({
       where: getAdminEditablePostWhere(id),
       data: {
         title,
-        slug,
-        summary,
         content,
         categoryId: category.id,
         type: category.postType,
@@ -258,32 +227,11 @@ function getRequiredString(formData: FormData, key: string) {
   const value = formData.get(key);
 
   if (typeof value !== "string" || value.trim().length === 0) {
-    const labels: Record<string, string> = { title: "제목", slug: "슬러그", content: "본문", categoryId: "카테고리", id: "게시글 ID" };
+    const labels: Record<string, string> = { title: "제목", content: "본문", categoryId: "카테고리", id: "게시글 ID" };
     throw new PostValidationError(`${labels[key] ?? key}을(를) 입력해주세요.`);
   }
 
   return value.trim();
-}
-
-function getOptionalString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function normalizeSlug(value: string) {
-  const slug = value.trim().toLowerCase();
-
-  if (!/^[a-z0-9-]+$/.test(slug)) {
-    throw new PostValidationError("슬러그는 영문자, 숫자, 하이픈만 사용할 수 있습니다.");
-  }
-
-  return slug;
 }
 
 function parsePostIntent(formData: FormData) {
@@ -309,7 +257,7 @@ function postSaveError(context: string, error: unknown): PostFormState {
     return { status: "validation", message: error.message };
   }
   if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
-    return { status: "validation", message: "이미 사용 중인 슬러그입니다." };
+    return { status: "validation", message: "글 주소가 충돌해 저장하지 못했습니다. 다시 저장해주세요." };
   }
   logServerError(context, error);
   return { status: "error", message: "저장하지 못했습니다. 잠시 후 다시 시도해주세요." };

@@ -14,7 +14,6 @@ type ResearchPostSaveInput = {
   postId: number;
   authorId: number;
   title: string;
-  summary: string | null;
   content: string;
   status: PostStatus;
   publishedAt: Date | null;
@@ -142,7 +141,6 @@ export async function saveResearchPostAtomically(
       },
       data: {
         title: input.title,
-        summary: input.summary,
         content: input.content,
         status: input.status,
         publishedAt: input.publishedAt,

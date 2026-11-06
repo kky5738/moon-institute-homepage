@@ -46,10 +46,8 @@ export function PostForm({ categories, post }: { categories: Category[]; post?: 
           <input
             id="slug"
             name="slug"
-            required
             value={values.slug}
             onChange={(event) => setValues({ ...values, slug: event.target.value })}
-            pattern={"[a-zA-Z0-9\\-]+"}
             placeholder="example-post-title"
             className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
           />

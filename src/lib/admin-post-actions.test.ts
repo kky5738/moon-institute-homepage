@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import * as postSlug from "@/lib/post-slug";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
@@ -10,7 +12,6 @@ const initial = { status: "idle" as const, message: "" };
 
 function setup() {
   let role = "ADMIN";
-  let duplicate = false;
   let failure: unknown = null;
   let writes = 0;
   let invalidations = 0;
@@ -26,6 +27,8 @@ function setup() {
   } });
   const exports = {};
   const dependencies: Record<string, unknown> = {
+    "node:crypto": { randomUUID },
+    "@/lib/post-slug": postSlug,
     "next/cache": { revalidatePath() { invalidations++; }, updateTag() { invalidations++; } },
     "next/navigation": { unstable_rethrow() {}, redirect() { throw new Error("redirect"); } },
     "@/generated/prisma/enums": enums,
@@ -37,8 +40,8 @@ function setup() {
     "@/lib/prisma": { prisma: {
       category: { async findFirst() { return { id: 1, postType: enums.PostType.NOTICE }; } },
       post: {
-        async findUnique() { return duplicate ? { id: 2 } : null; },
-        async findFirst({ where }: { where: { slug?: string } }) { return where.slug ? (duplicate ? { id: 2 } : null) : { id: 1, type: enums.PostType.NOTICE, publishedAt: null }; },
+        async findUnique() { return null; },
+        async findFirst() { return { id: 1, type: enums.PostType.NOTICE, publishedAt: null }; },
         async create() { if (failure) throw failure; writes++; },
         async updateMany() { if (failure) throw failure; writes++; return { count: 1 }; },
       },
@@ -51,7 +54,7 @@ function setup() {
     return dependencies[name];
   } });
   return { actions: exports as typeof import("@/app/admin/posts/actions"), logged,
-    setRole(value: string) { role = value; }, setDuplicate(value: boolean) { duplicate = value; },
+    setRole(value: string) { role = value; },
     setFailure(value: unknown) { failure = value; }, get writes() { return writes; }, get invalidations() { return invalidations; } };
 }
 
@@ -65,7 +68,7 @@ test("생성·수정 액션은 입력·권한·중복·저장 오류를 구분�
   for (const actionName of ["createPost", "updatePost"] as const) {
     const ctx = setup();
     const action = ctx.actions[actionName];
-    for (const key of ["title", "slug", "content", "categoryId"]) {
+    for (const key of ["title", "content", "categoryId"]) {
       const data = form(); data.set(key, "   ");
       assert.equal((await action(initial, data)).status, "validation");
     }
@@ -74,11 +77,8 @@ test("생성·수정 액션은 입력·권한·중복·저장 오류를 구분�
       assert.equal((await action(initial, form())).status, "auth");
     }
     ctx.setRole("ADMIN");
-    ctx.setDuplicate(true);
-    assert.match((await action(initial, form())).message, /이미 사용 중인 슬러그/);
-    ctx.setDuplicate(false);
     ctx.setFailure({ code: "P2002" });
-    assert.match((await action(initial, form())).message, /이미 사용 중인 슬러그/);
+    assert.match((await action(initial, form())).message, /글 주소가 충돌.*다시 저장/);
     ctx.setFailure(new Error("DB secret detail"));
     const result = await action(initial, form());
     assert.equal(result.status, "error");
