@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { PostEditorShell } from "@/components/posts/PostEditorShell";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { PendingButton } from "@/components/ui/pending-button";
@@ -62,22 +62,9 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-5 py-14 lg:px-8">
-      <Link href="/admin/posts" className="text-sm font-semibold text-primary hover:underline">
-        게시글 목록
-      </Link>
-      <div className="mt-6 border-b border-border pb-8">
-        <p className="text-sm font-semibold text-primary">관리자</p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
-          게시글 수정
-        </h1>
-        <p className="mt-4 text-sm leading-6 text-muted">
-          게시글 내용을 수정하거나 공개 상태를 보관으로 변경합니다.
-        </p>
-      </div>
-
+    <PostEditorShell title="게시글 수정" backHref="/admin/posts" backLabel="게시글 목록">
       <PostForm categories={categories} post={{
-        id: post.id, title: post.title, slug: post.slug, summary: post.summary,
+        id: post.id, title: post.title, status: post.status,
         content: post.content, categoryId: post.categoryId,
       }} />
 
@@ -94,6 +81,6 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           </PendingButton>
         </form>
       )}
-    </div>
+    </PostEditorShell>
   );
 }

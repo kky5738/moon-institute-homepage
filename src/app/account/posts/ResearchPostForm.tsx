@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
+import styles from "@/components/posts/post-editor.module.css";
 import { Button } from "@/components/ui/button";
 import { acquireLock } from "@/lib/interaction-lock";
 import {
@@ -45,7 +46,7 @@ type ResearchPostFormProps = {
   post?: {
     id: number;
     title: string;
-    summary: string | null;
+    status: string;
     content: string;
     attachments: ExistingFile[];
   };
@@ -342,7 +343,7 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
       router.refresh();
     } catch (cause) {
       setError(getErrorMessage(cause));
-      setStatus(postId ? "다시 저장할 수 있습니다." : "초안으로 보관했습니다.");
+      setStatus("다시 저장할 수 있습니다.");
       submitLockRef.current = false;
       setBusy(false);
     }
@@ -353,170 +354,182 @@ export function ResearchPostForm({ post }: ResearchPostFormProps) {
   const inlineImages = allFiles.filter((file) => file.kind === "INLINE_IMAGE");
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="mt-8 space-y-7">
+    <form ref={formRef} onSubmit={handleSubmit} className={styles.form} aria-busy={busy}>
       {postId ? <input type="hidden" name="id" value={postId} /> : null}
       {removedIds.map((id) => (
         <input key={id} type="hidden" name="removedAttachmentId" value={id} />
       ))}
 
-      <FormField label="제목" htmlFor="title">
-        <input
-          id="title"
-          name="title"
-          required
-          maxLength={200}
-          disabled={busy}
-          defaultValue={post?.title}
-          className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-        />
-      </FormField>
-
-      <FormField label="요약" htmlFor="summary">
-        <textarea
-          id="summary"
-          name="summary"
-          rows={3}
-          maxLength={500}
-          disabled={busy}
-          defaultValue={post?.summary ?? ""}
-          className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-        />
-      </FormField>
-
-      <FormField label="본문" htmlFor="content">
-        <textarea
-          ref={contentRef}
-          id="content"
-          name="content"
-          rows={18}
-          required
-          maxLength={100_000}
-          disabled={busy}
-          defaultValue={post?.content}
-          className="mt-2 w-full border border-border bg-surface px-3 py-3 text-sm leading-7 outline-none focus:border-primary"
-        />
-      </FormField>
-
-      <fieldset className="border border-border bg-background p-4 sm:p-5">
-        <legend className="px-2 text-sm font-semibold text-foreground">
-          본문 이미지
-        </legend>
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <FormField label="이미지" htmlFor="inline-image">
-            <input
-              ref={imageInputRef}
-              id="inline-image"
-              type="file"
-              disabled={busy}
-              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-              className="mt-2 block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:active:bg-secondary"
-            />
-          </FormField>
-          <FormField label="이미지 설명" htmlFor="inline-image-alt">
-            <input
-              id="inline-image-alt"
-              value={imageAlt}
-              disabled={busy}
-              onChange={(event) => setImageAlt(event.target.value)}
-              maxLength={300}
-              placeholder="이미지의 내용을 설명해주세요"
-              className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
-            />
-          </FormField>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleInsertInlineImage}
-            disabled={busy || imageInserting}
+      <div className={styles.toolbar}>
+        <p className={styles.state}>{post ? post.status === "PUBLISHED" ? "현재 공개 중" : "현재 임시저장" : "새 글"}</p>
+        <div className={styles.actions}>
+          <Link
+            href="/account/posts"
+            aria-disabled={busy}
+            onClick={(event) => { if (busy) event.preventDefault(); }}
           >
-            {imageInserting ? "이미지 준비 중" : "현재 위치에 삽입"}
+            취소
+          </Link>
+          <Button
+            type="submit"
+            name="intent"
+            value="draft"
+            variant="outline"
+            className={styles.secondaryButton}
+            formNoValidate
+            disabled={busy || imageInserting}
+            aria-busy={busy || imageInserting}
+          >
+            {busy ? "저장 중" : imageInserting ? "이미지 준비 중" : "임시저장"}
+          </Button>
+          <Button
+            type="submit"
+            name="intent"
+            value="publish"
+            className={styles.primaryButton}
+            disabled={busy || imageInserting}
+            aria-busy={busy || imageInserting}
+          >
+            {busy
+              ? "처리 중"
+              : imageInserting
+                ? "이미지 준비 중"
+                : post
+                  ? "저장 후 공개"
+                  : "공개하기"}
           </Button>
         </div>
-        <p className="mt-3 text-xs leading-5 text-muted">
-          JPEG, PNG, WebP · 파일당 최대 20MB. 미리보기 없이 본문의 현재 커서
-          위치에 이미지 표식을 넣습니다.
-        </p>
-        <FileList
-          files={inlineImages}
-          keptRecoveredIds={recoveredKeepIds}
-          onKeepRecovered={keepRecoveredFile}
-          onRemove={removeFile}
-          disabled={busy}
-        />
-      </fieldset>
+      </div>
+      <div className={styles.feedback}>
+        {error ? (
+          <p
+            role="alert"
+            aria-live="assertive"
+            className="border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
+          >
+            {error}
+          </p>
+        ) : status ? (
+          <p role="status" aria-live="polite" className="text-sm text-muted">
+            {status}
+          </p>
+        ) : null}
+      </div>
+      <div className={styles.grid}>
+        <div className={styles.manuscript}>
+          <FormField label="제목" htmlFor="title">
+            <textarea
+              rows={2}
+              placeholder="글 제목을 입력하세요"
+              id="title"
+              name="title"
+              required
+              maxLength={200}
+              disabled={busy}
+              defaultValue={post?.title}
+              className={styles.title}
+            />
+          </FormField>
 
-      <fieldset className="border border-border bg-background p-4 sm:p-5">
-        <legend className="px-2 text-sm font-semibold text-foreground">첨부파일</legend>
-        <input
-          type="file"
-          multiple
-          disabled={busy}
-          accept=".pdf,.hwp,.docx,application/pdf,application/x-hwp,application/haansofthwp,application/vnd.hancom.hwp,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          onChange={(event) => {
-            addAttachments(event.target.files);
-            event.currentTarget.value = "";
-          }}
-          className="block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:active:bg-secondary"
-        />
-        <p className="mt-3 text-xs leading-5 text-muted">
-          PDF, HWP, DOCX · 파일당 최대 20MB
-        </p>
-        <FileList
-          files={attachments}
-          keptRecoveredIds={recoveredKeepIds}
-          onKeepRecovered={keepRecoveredFile}
-          onRemove={removeFile}
-          disabled={busy}
-        />
-      </fieldset>
+          <div className={styles.bodyField}>
+            <FormField label="본문" htmlFor="content">
+              <textarea
+                ref={contentRef}
+                id="content"
+                name="content"
+                rows={18}
+                required
+                maxLength={100_000}
+                disabled={busy}
+                defaultValue={post?.content}
+                placeholder="본문을 작성하세요"
+                className={styles.content}
+              />
+            </FormField>
 
-      {error ? (
-        <p
-          role="alert"
-          aria-live="assertive"
-          className="border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
-        >
-          {error}
-        </p>
-      ) : status ? (
-        <p role="status" aria-live="polite" className="text-sm text-muted">
-          {status}
-        </p>
-      ) : null}
+          </div>
+        </div>
+        <aside className={styles.sidebar} aria-label="파일과 게시 정보">
+          <div className={styles.panel}>
+            <h2>게시 위치</h2>
+            <p className="mt-2 text-sm text-muted">연구 게시판</p>
+            <p className="mt-3 text-xs leading-5 text-muted">공개하기를 누르면 바로 표시됩니다. 임시저장한 글은 내 글 목록에서 이어 쓸 수 있습니다.</p>
+          </div>
+          <fieldset className={styles.panel}>
+            <legend className="px-2 text-sm font-semibold text-foreground">
+              본문 이미지
+            </legend>
+            <div className="grid min-w-0 gap-3">
+              <FormField label="이미지" htmlFor="inline-image">
+                <input
+                  ref={imageInputRef}
+                  id="inline-image"
+                  type="file"
+                  disabled={busy}
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                  className="mt-2 block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:active:bg-secondary"
+                />
+              </FormField>
+              <FormField label="이미지 설명" htmlFor="inline-image-alt">
+                <input
+                  id="inline-image-alt"
+                  value={imageAlt}
+                  disabled={busy}
+                  onChange={(event) => setImageAlt(event.target.value)}
+                  maxLength={300}
+                  placeholder="이미지의 내용을 설명해주세요"
+                  className="mt-2 w-full border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+              </FormField>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleInsertInlineImage}
+                disabled={busy || imageInserting}
+              >
+                {imageInserting ? "이미지 준비 중" : "현재 위치에 삽입"}
+              </Button>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-muted">
+              JPEG, PNG, WebP · 파일당 최대 20MB. 미리보기 없이 본문의 현재 커서
+              위치에 이미지 표식을 넣습니다.
+            </p>
+            <FileList
+              files={inlineImages}
+              keptRecoveredIds={recoveredKeepIds}
+              onKeepRecovered={keepRecoveredFile}
+              onRemove={removeFile}
+              disabled={busy}
+            />
+          </fieldset>
 
-      <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-6">
-        <Link
-          href="/account/posts"
-          className="inline-flex h-11 items-center border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:border-accent"
-        >
-          취소
-        </Link>
-          <Button
-          type="submit"
-          name="intent"
-          value="draft"
-          variant="outline"
-          formNoValidate
-          disabled={busy || imageInserting}
-          aria-busy={busy || imageInserting}
-        >
-          {busy ? "저장 중" : imageInserting ? "이미지 준비 중" : "임시저장"}
-        </Button>
-        <Button
-          type="submit"
-          name="intent"
-          value="publish"
-          disabled={busy || imageInserting}
-          aria-busy={busy || imageInserting}
-        >
-          {busy
-            ? "처리 중"
-            : imageInserting
-              ? "이미지 준비 중"
-              : post
-                ? "저장 후 공개"
-                : "공개하기"}
-        </Button>
+          <fieldset className={styles.panel}>
+            <legend className="px-2 text-sm font-semibold text-foreground">첨부파일</legend>
+            <label htmlFor="attachments" className="sr-only">첨부 문서 선택</label>
+            <input
+              id="attachments"
+              type="file"
+              multiple
+              disabled={busy}
+              accept=".pdf,.hwp,.docx,application/pdf,application/x-hwp,application/haansofthwp,application/vnd.hancom.hwp,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={(event) => {
+                addAttachments(event.target.files);
+                event.currentTarget.value = "";
+              }}
+              className="block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:active:bg-secondary"
+            />
+            <p className="mt-3 text-xs leading-5 text-muted">
+              PDF, HWP, DOCX · 파일당 최대 20MB
+            </p>
+            <FileList
+              files={attachments}
+              keptRecoveredIds={recoveredKeepIds}
+              onKeepRecovered={keepRecoveredFile}
+              onRemove={removeFile}
+              disabled={busy}
+            />
+          </fieldset>
+        </aside>
       </div>
     </form>
   );
@@ -558,9 +571,9 @@ function FileList({
   return (
     <ul className="mt-4 divide-y divide-border border-y border-border text-sm">
       {files.map((file) => (
-        <li key={file.id} className="flex items-center justify-between gap-3 py-3">
-          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-            <span className="truncate">
+        <li key={file.id} className="flex min-w-0 flex-wrap items-start justify-between gap-2 py-3">
+          <span className="flex min-w-0 w-full flex-wrap items-baseline gap-x-2">
+            <span className="break-all">
               {file.originalName} · {formatResearchFileSize(file.size)}
             </span>
             {file.committed === false ? (

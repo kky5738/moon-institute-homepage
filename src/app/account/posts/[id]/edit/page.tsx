@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { PostEditorShell } from "@/components/posts/PostEditorShell";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { PostStatus, PostType } from "@/generated/prisma/enums";
@@ -60,28 +60,12 @@ export default async function EditResearchPostPage({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-5 py-10 sm:px-6 lg:px-8 lg:py-14">
-      <Link
-        href="/account/posts"
-        className="text-sm font-semibold text-primary hover:underline"
-      >
-        내 글 목록
-      </Link>
-      <div className="mt-6 border-b border-border pb-8">
-        <p className="text-sm font-semibold text-primary">연구자 글쓰기</p>
-        <h1 className="mt-4 text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-          글 수정
-        </h1>
-        <p className="mt-4 text-sm leading-6 text-muted">
-          공개한 글도 임시저장으로 전환하면 게시판에서 즉시 내려갑니다.
-        </p>
-      </div>
-
+    <PostEditorShell title="연구 글 수정" backHref="/account/posts" backLabel="내 글 목록">
       <ResearchPostForm
         post={{
           id: post.id,
           title: post.title,
-          summary: post.summary,
+          status: post.status,
           content: post.content,
           attachments: post.attachments.map((file) => ({
             id: file.id,
@@ -93,6 +77,6 @@ export default async function EditResearchPostPage({
           })),
         }}
       />
-    </div>
+    </PostEditorShell>
   );
 }
