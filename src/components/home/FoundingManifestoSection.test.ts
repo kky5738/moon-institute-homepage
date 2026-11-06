@@ -48,7 +48,7 @@ test("선언문은 보존된 HTML 전문을 서버 텍스트로 렌더링하고 
   assert.doesNotMatch(rendered, /<main\b|<h1\b|<script\b|data:|Downloads|<iframe\b/);
 });
 
-test("내장 로고·400/700 글꼴은 원본 바이트 그대로 로컬 파일로 보존한다", () => {
+test("내장 로고·400/700 글꼴과 검증한 PDF는 원본 바이트를 유지한다", () => {
   const assets = [...reference.matchAll(/data:([^;]+);base64,([A-Za-z0-9+/=]+)/g)];
   const names = ["serif-regular.woff", "serif-bold.woff", "emblem.png", "wordmark.png"];
   assert.equal(assets.length, names.length);
@@ -57,6 +57,7 @@ test("내장 로고·400/700 글꼴은 원본 바이트 그대로 로컬 파일�
     assert.deepEqual(local, Buffer.from(asset[2], "base64"));
     assert.equal(local.subarray(0, 4).toString("latin1"), index < 2 ? "wOFF" : "\x89PNG");
   });
+  assert.equal(createHash("sha256").update(readFileSync("public/founding-manifesto.pdf")).digest("hex"), "a72c910bfd4925a1119a2061f35949a336c61b1d5b0b3c0cbb07b4c31af5caad");
   assert.match(css, /serif-regular\.woff.*?font-weight: 400/);
   assert.match(css, /serif-bold\.woff.*?font-weight: 700/);
   assert.match(css, /font-family: 'MSM Serif', 'Batang', serif/);

@@ -1,5 +1,5 @@
 .manifesto {
-  scroll-margin-top: 4rem;
+  scroll-margin-top: 0;
   padding: clamp(5rem, 16svh, 10rem) 20px 64px;
   background-color: #fcfaf4;
   background-image: linear-gradient(#000, #fcfaf4);
