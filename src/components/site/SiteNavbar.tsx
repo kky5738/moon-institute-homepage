@@ -51,7 +51,16 @@ export function SiteNavbar({
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    let observer: ResizeObserver | undefined;
+    if (isHome) {
+      observer = new ResizeObserver(onScroll);
+      for (const id of ["home-introduction", "founding-manifesto"]) {
+        const section = document.getElementById(id);
+        if (section) observer.observe(section);
+      }
+    }
     return () => {
+      observer?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };

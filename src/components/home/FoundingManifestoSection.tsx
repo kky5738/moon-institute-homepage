@@ -4,8 +4,8 @@ import styles from "./HomeSectionTransitions.module.css";
 
 export function FoundingManifestoSection() {
   return (
-    <section id="founding-manifesto" tabIndex={-1} aria-label="문선명 연구소 창립선언문" className={`${styles.manifesto} scroll-mt-16 bg-[#f6f4ed] px-5 pb-16 sm:pb-20`}>
-      <div className={`${styles.enter} mx-auto max-w-[720px]`}>
+    <section id="founding-manifesto" tabIndex={-1} aria-label="문선명 연구소 창립선언문" className={styles.manifesto}>
+      <div className={`${styles.enter} ${declarationStyles.wrapper}`}>
         <div className={declarationStyles.declaration}>
           <article className={declarationStyles.content}>
             <section className={declarationStyles.sheet} id="founding-purpose" aria-label="창립 취지">

@@ -1,14 +1,15 @@
 @font-face { font-family: 'MSM Serif'; src: url('/founding-declaration/serif-regular.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'MSM Serif'; src: url('/founding-declaration/serif-bold.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
-.declaration { --paper: #fcfaf4; --ink: #111e2d; --gold: #a88947; --faint-gold: #d7c69f; box-sizing: border-box; min-height: 100vh; padding: 36px 20px 56px; background: #edeae3; color: var(--ink); font-family: 'MSM Serif', 'Batang', serif; font-synthesis: none; -webkit-font-smoothing: antialiased; }
+.wrapper { width: min(100%, 900px); margin: 0 auto; }
+.declaration { --paper: #fcfaf4; --ink: #111e2d; --gold: #a88947; --faint-gold: #d7c69f; box-sizing: border-box; background: var(--paper); color: var(--ink); font-family: 'MSM Serif', 'Batang', serif; font-synthesis: none; -webkit-font-smoothing: antialiased; }
 .declaration *, .declaration *::before, .declaration *::after { box-sizing: border-box; }
 .declaration .content { width: min(100%, 900px); margin: 0 auto; }
-.declaration .sheet { position: relative; margin: 0 0 32px; padding: 62px 66px 54px; background: var(--paper); border: 1px solid var(--gold); outline: 1px solid var(--faint-gold); outline-offset: -6px; box-shadow: 0 12px 36px rgb(17 30 45 / 6%); scroll-margin-top: 24px; }
-.declaration .sheet:last-child { margin-bottom: 0; }
+.declaration .sheet { position: relative; margin: 0; padding: 62px 66px 54px; background: var(--paper); border: 1px solid var(--gold); outline: 1px solid var(--faint-gold); outline-offset: -6px; box-shadow: 0 12px 36px rgb(17 30 45 / 6%); scroll-margin-top: 24px; }
+.declaration .sheet + .sheet { border-top: 0; }
 .declaration .header { margin-bottom: 52px; text-align: center; }
-.declaration .brand { display: grid; grid-template-columns: 55px max-content 55px; justify-content: center; align-items: center; gap: 12px; margin: 0 0 6px; }
+.declaration .brand { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin: 0 0 6px; }
 .declaration .emblem { display: block; flex: 0 0 auto; width: 55px; height: auto; object-fit: contain; }
-.declaration .brandName { font-size: clamp(25px, 4.4vw, 44px); font-weight: 700; line-height: 1.3; letter-spacing: -.05em; white-space: nowrap; }
+.declaration .brandName { font-size: clamp(25px, 4.4vw, 44px); font-weight: 700; line-height: 1.3; letter-spacing: -.05em; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .declaration .title { margin: 0; font-size: clamp(34px, 6vw, 49px); font-weight: 700; line-height: 1.4; letter-spacing: -.045em; }
 .declaration .subtitle { margin: 25px 0 0; font-size: 17px; font-weight: 700; line-height: 1.8; }
 .declaration .opening { margin: 42px 0 0; font-size: 24px; font-weight: 700; line-height: 1.8; text-align: center; }
@@ -28,10 +29,9 @@
 .declaration .pageNumber { position: relative; display: flex; gap: 16px; align-items: center; margin-top: 48px; color: #475364; font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums; }
 .declaration .pageNumber::before, .declaration .pageNumber::after { content: ''; height: 1px; background: var(--faint-gold); flex: 1; }
 @media (max-width: 600px) {
-  .declaration { padding: 16px 10px 24px; }
-  .declaration .sheet { padding: 38px 23px 30px; margin-bottom: 18px; }
+  .declaration .sheet { padding: 38px 23px 30px; }
   .declaration .header { margin-bottom: 33px; }
-  .declaration .brand { grid-template-columns: 38px max-content 38px; gap: 8px; }
+  .declaration .brand { gap: 8px; }
   .declaration .emblem { width: 38px; height: auto; }
   .declaration .brandName { font-size: clamp(22px, 6.2vw, 32px); }
   .declaration .subtitle { font-size: 13px; margin-top: 21px; }

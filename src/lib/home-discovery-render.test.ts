@@ -7,11 +7,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import * as topics from "@/lib/topics";
 
-function load<T>(path: string, dependencies: Record<string, unknown>): T {
+function load<T>(path: string, dependencies: Record<string, unknown>, globals: Record<string, unknown> = {}): T {
   const exports = {};
   runInNewContext(ts.transpileModule(readFileSync(path, "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
-  }).outputText, { exports, require(name: string) {
+  }).outputText, { ...globals, exports, require(name: string) {
     if (!(name in dependencies)) throw new Error(`Unexpected dependency: ${name}`);
     return dependencies[name];
   } });
@@ -62,4 +62,47 @@ test("표시 값에 따라 메뉴와 주제 영상 링크가 함께 변경된다
     }
     assert.match(detailHtml, /말씀 해설 영상 안내/);
   }
+});
+
+
+test("도입부·선언문 높이 변화는 스크롤 없이 메뉴 경계를 다시 계산하고 관찰을 정리한다", async () => {
+  const effects: Array<() => () => void> = [];
+  const states: boolean[] = [];
+  const elements = { "home-introduction": {}, "founding-manifesto": { getBoundingClientRect: () => ({ top: -100 }) }, "home-content": { getBoundingClientRect: () => ({ top: homeTop }) } };
+  let homeTop = 100;
+  let stateIndex = 0;
+  let onResize: (() => void) | undefined;
+  let disconnected = false;
+  const observed: unknown[] = [];
+  const box = ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children);
+  const navbar = load<typeof import("@/components/site/SiteNavbar")>("src/components/site/SiteNavbar.tsx", {
+    "react/jsx-runtime": await import("react/jsx-runtime"),
+    react: { useEffect: (effect: () => () => void) => effects.push(effect), useRef: () => ({ current: { getBoundingClientRect: () => ({ bottom: 64 }) } }),
+      useState: (initial: boolean) => { const index = stateIndex++; states[index] = initial; return [initial, (value: boolean) => { states[index] = value; }]; } },
+    "next/navigation": { usePathname: () => "/" },
+    "next/link": { default: box }, "next/image": { default: () => null },
+    "@/components/ui/button": { Button: box, buttonVariants: () => "" },
+    "@/lib/home-navigation": await import("@/lib/home-navigation"),
+    "@/lib/home-discovery": { homeDiscoveryEnabled: false },
+    "@/lib/user-auth": { getAuthNavigation: () => ({ href: "/login", label: "로그인" }) },
+  }, {
+    window: { scrollY: 0, addEventListener() {}, removeEventListener() {} },
+    document: { getElementById: (id: keyof typeof elements) => elements[id] },
+    ResizeObserver: class { constructor(callback: () => void) { onResize = callback; } observe(element: unknown) { observed.push(element); } disconnect() { disconnected = true; } },
+  });
+  renderToStaticMarkup(React.createElement(navbar.SiteNavbar, { role: null }));
+  const cleanup = effects[0]();
+  assert.deepEqual(observed, [elements["home-introduction"], elements["founding-manifesto"]]);
+  assert.equal(states[2], true);
+  assert.equal(states[3], true);
+  homeTop = 64;
+  onResize?.();
+  assert.equal(states[2], false);
+  assert.equal(states[3], false);
+  homeTop = 200;
+  onResize?.();
+  assert.equal(states[2], true);
+  assert.equal(states[3], true);
+  cleanup();
+  assert.equal(disconnected, true);
 });
