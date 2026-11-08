@@ -3,7 +3,7 @@ import homeIntroductionImage from "@/assets/home-introduction.jpeg";
 export const homeIntroduction = {
   image: homeIntroductionImage,
   alt: "눈을 감고 생각에 잠긴 문선명 선생의 모습",
-  message: "천지인참부모님을 자랑하고 사랑하자",
+  message: "문선명 선생 그는...",
 };
 
 export const heroSlides = [
