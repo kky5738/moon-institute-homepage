@@ -5,7 +5,6 @@
 .declaration *, .declaration *::before, .declaration *::after { box-sizing: border-box; }
 .declaration .content { width: min(100%, 900px); margin: 0 auto; }
 .declaration .sheet { position: relative; margin: 0; padding: 62px 66px 54px; background: var(--paper); border: 1px solid var(--gold); outline: 1px solid var(--faint-gold); outline-offset: -6px; box-shadow: 0 12px 36px rgb(17 30 45 / 6%); scroll-margin-top: 24px; }
-.declaration .sheet + .sheet { border-top: 0; }
 .declaration .header { margin-bottom: 52px; text-align: center; }
 .declaration .brand { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin: 0 0 6px; }
 .declaration .emblem { display: block; flex: 0 0 auto; width: 55px; height: auto; object-fit: contain; }
@@ -16,18 +15,13 @@
 .declaration .prose { font-size: 18px; font-weight: 400; line-height: 1.95; letter-spacing: -.025em; word-break: normal; overflow-wrap: anywhere; }
 .declaration .prose p { margin: 0 0 23px; }
 .declaration .prose p:last-child { margin-bottom: 0; }
-.declaration .prose blockquote { margin: 27px 0; font-weight: 700; }
-.declaration .prose blockquote:first-child { margin-top: 0; }
-.declaration .runningTitle { padding-bottom: 16px; margin: -26px 0 38px; border-bottom: 1px solid var(--faint-gold); text-align: center; font-size: 14px; font-weight: 700; letter-spacing: .025em; }
-.declaration .lead { font-weight: 700; }
-.declaration .mission { margin: 34px 0; }
-.declaration .mission h3 { margin: 0 0 12px; font-size: inherit; font-weight: 700; line-height: 1.85; }
-.declaration .signature { margin-top: 100px; text-align: center; font-weight: 700; font-size: 18px; line-height: 1.9; }
+.declaration .prose blockquote { margin: 32px 0 18px; font-weight: 700; }
+.declaration .missions { margin: 36px 0; }
+.declaration .missions p { font-weight: 700; margin-bottom: 18px; }
+.declaration .signature { margin-top: 80px; text-align: center; font-weight: 700; font-size: 18px; line-height: 1.9; overflow-wrap: anywhere; }
 .declaration .signature p { margin: 0; }
-.declaration .signature .signers { margin-top: 60px; }
-.declaration .wordmark { display: block; width: 220px; max-width: 70%; height: auto; margin: 80px auto 15px; }
-.declaration .pageNumber { position: relative; display: flex; gap: 16px; align-items: center; margin-top: 48px; color: #475364; font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums; }
-.declaration .pageNumber::before, .declaration .pageNumber::after { content: ''; height: 1px; background: var(--faint-gold); flex: 1; }
+.declaration .signature .signers { margin-top: 48px; }
+.declaration .wordmark { display: block; width: 220px; max-width: 70%; height: auto; margin: 64px auto 0; }
 @media (max-width: 600px) {
   .declaration .sheet { padding: 38px 23px 30px; }
   .declaration .header { margin-bottom: 33px; }
@@ -38,10 +32,10 @@
   .declaration .opening { font-size: 19px; margin-top: 30px; }
   .declaration .prose { font-size: 16px; line-height: 1.95; letter-spacing: -.035em; }
   .declaration .prose p { margin-bottom: 22px; }
-  .declaration .runningTitle { margin-top: -8px; margin-bottom: 28px; font-size: 12px; }
-  .declaration .mission { margin: 29px 0; }
-  .declaration .signature { margin-top: 70px; font-size: 14px; }
-  .declaration .signature .signers { margin-top: 42px; }
-  .declaration .wordmark { width: 180px; margin-top: 60px; }
-  .declaration .pageNumber { margin-top: 32px; }
+  .declaration .prose blockquote { margin-top: 28px; }
+  .declaration .missions { margin: 30px 0; }
+  .declaration .missions p { margin-bottom: 18px; }
+  .declaration .signature { margin-top: 58px; font-size: 14px; }
+  .declaration .signature .signers { margin-top: 36px; }
+  .declaration .wordmark { width: 180px; margin-top: 48px; }
 }

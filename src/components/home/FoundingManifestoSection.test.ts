@@ -32,15 +32,18 @@ function articleText(html: string) {
     .replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, " ").trim();
 }
 
-test("선언문은 보존된 HTML 전문을 서버 텍스트로 렌더링하고 제목 계층·PDF 링크를 유지한다", () => {
+test("선언문은 확정된 축약 본문을 한 장으로 렌더링하고 제목·PDF 링크를 유지한다", () => {
   assert.equal(createHash("sha256").update(reference).digest("hex"), "d22f1127baf835c9b12295777127418d5905f70271f122823bbbbe372f58004b");
   const rendered = renderManifesto();
-  assert.equal(articleText(rendered), articleText(reference));
+  // 2026-11-09 사용자가 확인한 단일 페이지 본문(공백 정규화)의 기준 해시.
+  assert.equal(createHash("sha256").update(articleText(rendered)).digest("hex"), "3203a9ee05de2f959c7a30e36df724f495e7f9ac329ff931359818a14b23fb08");
   assert.match(rendered, /id="founding-manifesto" tabindex="-1"/);
   assert.equal((rendered.match(/<article\b/g) ?? []).length, 1);
   assert.equal((rendered.match(/<h2\b/g) ?? []).length, 1);
-  assert.equal((rendered.match(/<h3\b/g) ?? []).length, 4);
-  for (const id of ["founding-purpose", "mission-statement", "founding-resolution"]) assert.match(rendered, new RegExp(`id="${id}"`));
+  assert.equal((rendered.match(/class="manifesto-sheet"/g) ?? []).length, 1);
+  assert.equal((rendered.match(/<blockquote\b/g) ?? []).length, 2);
+  assert.equal((rendered.match(/<strong\b/g) ?? []).length, 7);
+  assert.doesNotMatch(rendered, /[123] \/ 3|mission-statement|founding-resolution|manifesto-pageNumber/);
   assert.match(rendered, /<time dateTime="2026-10-17"|<time datetime="2026-10-17"/);
   assert.match(rendered, /href="\/founding-manifesto.pdf" target="_blank" rel="noopener noreferrer"/);
   assert.match(rendered, /aria-label="창립선언문 원문 보기 \(PDF, 새 탭\)"/);
