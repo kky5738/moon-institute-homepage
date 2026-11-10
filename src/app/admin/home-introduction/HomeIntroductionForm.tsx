@@ -83,7 +83,6 @@ export function HomeIntroductionForm() {
       if (mounted.current) {
         setResult({ ok: true, message: "등록했습니다. 아래 목록에서 확인할 수 있습니다. 공개 첫 화면은 변경되지 않았습니다." });
         router.replace("/admin/home-introduction");
-        router.refresh();
       }
     } catch (error) {
       if (mounted.current) setResult({ ok: false, message: error instanceof Error && /[가-힣]/.test(error.message) ? error.message : "등록하지 못했습니다. 입력을 유지했으니 다시 시도해주세요." });

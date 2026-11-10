@@ -120,7 +120,7 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     const getPublicImage = (id: string) => publicImage.GET(new Request("http://test/image"), { params: Promise.resolve({ id }) });
     const actions = load<typeof import("../src/app/admin/home-introduction/actions")>("src/app/admin/home-introduction/actions.ts", {
       "@/lib/admin-auth": auth, "@/lib/home-introduction-uploads": service, "@/lib/server-log": { logServerError() {} },
-      "@/lib/home-introduction": domain, "next/cache": { updateTag() { if (failCache) throw new Error("cache failure"); }, revalidatePath() {} },
+      "@/lib/home-introduction": domain, "next/cache": { refresh() {}, updateTag() { if (failCache) throw new Error("cache failure"); }, revalidatePath() {} },
     });
     const bytes = await sharp({ create: { width: 40, height: 20, channels: 3, background: "white" } }).jpeg().withMetadata({ orientation: 6 }).toBuffer();
     const input = { contentType: "image/jpeg", size: bytes.length, message: "한 문장입니다.", altText: "테스트 이미지" };
@@ -166,6 +166,26 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     assert.equal((await actions.confirmHomeIntroductionUpload(failure.id)).ok, false);
     failSave = false;
     assert.ok(removed.includes(failure.path));
+    assert.equal(await prisma.homeIntroductionUpload.count(), 0);
+
+    const rejectedByDB = await request(); objects.set(rejectedByDB.path, bytes);
+    await prisma.$executeRawUnsafe(`CREATE FUNCTION ready64_reject_content() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test insert failure'; END $$`);
+    await prisma.$executeRawUnsafe(`CREATE TRIGGER ready64_reject_content BEFORE INSERT ON home_introduction_contents FOR EACH ROW EXECUTE FUNCTION ready64_reject_content()`);
+    try {
+      assert.equal((await actions.confirmHomeIntroductionUpload(rejectedByDB.id)).ok, false);
+      assert.equal(await prisma.homeIntroductionContent.count(), 1);
+      assert.equal(await prisma.homeIntroductionUpload.count(), 0);
+      assert.ok(!objects.has(rejectedByDB.path));
+    } finally {
+      await prisma.$executeRawUnsafe(`DROP TRIGGER ready64_reject_content ON home_introduction_contents`);
+      await prisma.$executeRawUnsafe(`DROP FUNCTION ready64_reject_content()`);
+    }
+    const partial = await request(); objects.set(partial.path, bytes.subarray(0, 12));
+    assert.equal((await actions.confirmHomeIntroductionUpload(partial.id)).ok, false);
+    assert.ok(!objects.has(partial.path));
+    for (const invalid of [{ size: 0 }, { size: 20971521 }, { contentType: "image/svg+xml" }, { altText: "" }, { message: "가".repeat(201) }]) {
+      assert.equal((await actions.requestHomeIntroductionUpload({ ...input, ...invalid })).ok, false);
+    }
     assert.equal(await prisma.homeIntroductionUpload.count(), 0);
 
     const cleanup = await request();
@@ -263,6 +283,14 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     assert.equal((await actions.refreshHomeIntroductionCache()).status, "success");
     assert.equal(await current(), second.id);
     assert.deepEqual(await applied(second.id), secondTime);
+
+    const reconnected = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
+    try {
+      const persisted = await reconnected.homeIntroductionSettings.findUniqueOrThrow({ where: { id: "home-introduction" }, include: { currentContent: true } });
+      assert.equal(persisted.currentContentId, second.id);
+      assert.equal(persisted.currentContent.message, input.message);
+      assert.deepEqual(persisted.currentContent.lastAppliedAt, secondTime);
+    } finally { await reconnected.$disconnect(); }
 
     const originals = await prisma.homeIntroductionContent.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
     await prisma.homeIntroductionContent.createMany({ data: Array.from({ length: 12 }, (_, index) => {

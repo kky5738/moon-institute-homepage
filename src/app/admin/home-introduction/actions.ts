@@ -1,7 +1,7 @@
 "use server";
 
 import { assertAdmin } from "@/lib/admin-auth";
-import { revalidatePath, updateTag } from "next/cache";
+import { refresh, revalidatePath, updateTag } from "next/cache";
 import { applyHomeIntroductionContent, HOME_INTRODUCTION_CACHE_TAG } from "@/lib/home-introduction";
 import type { HomeIntroductionInput } from "@/lib/home-introduction-validation";
 import { prepareHomeIntroductionUpload, completeHomeIntroductionUpload, discardHomeIntroductionUpload } from "@/lib/home-introduction-uploads";
@@ -17,7 +17,9 @@ export async function requestHomeIntroductionUpload(input: HomeIntroductionInput
 export async function confirmHomeIntroductionUpload(id: string) {
   const session = await assertAdmin();
   try {
-    return { ok: true as const, ...await completeHomeIntroductionUpload(session.user.id, id) };
+    const content = await completeHomeIntroductionUpload(session.user.id, id);
+    refresh();
+    return { ok: true as const, ...content };
   } catch (error) { return uploadError(error); }
 }
 

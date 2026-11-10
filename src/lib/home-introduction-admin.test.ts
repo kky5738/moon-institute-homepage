@@ -186,3 +186,51 @@ test("보관 이미지 경로는 관리자만 접근하고 private no-store로 �
   const failure = await route.GET(request, props);
   assert.equal(failure.status, 500); assert.equal(await failure.text(), "");
 });
+
+test("등록 확인은 저장 완료 뒤에만 관리자 router를 갱신하고 공개 캐시는 바꾸지 않는다", async () => {
+  const calls: string[] = [];
+  let fail = false;
+  const actions = load<typeof import("../app/admin/home-introduction/actions")>("src/app/admin/home-introduction/actions.ts", {
+    "@/lib/admin-auth": { async assertAdmin() { return { user: { id: "admin" } }; } },
+    "@/lib/home-introduction": {},
+    "@/lib/home-introduction-uploads": { async completeHomeIntroductionUpload() { calls.push("save"); if (fail) throw new Error("DB failed"); return { id: "saved-id" }; } },
+    "next/cache": { refresh() { calls.push("refresh"); }, revalidatePath() { assert.fail("registration must not invalidate publication paths"); }, updateTag() { assert.fail("registration must not invalidate public content"); } },
+    "@/lib/server-log": { logServerError() {} },
+  });
+  assert.equal((await actions.confirmHomeIntroductionUpload("id")).ok, true);
+  assert.deepEqual(calls, ["save", "refresh"]);
+  calls.length = 0; fail = true;
+  assert.equal((await actions.confirmHomeIntroductionUpload("id")).ok, false);
+  assert.deepEqual(calls, ["save"]);
+});
+
+test("적용 성공은 서버 재검증으로 갱신하고 캐시 오류 때만 현재 상태를 다시 조회한다", async () => {
+  let status = "success";
+  let refreshes = 0;
+  const { acquireLock } = await import("./interaction-lock");
+  const list = load<typeof import("../app/admin/home-introduction/HomeIntroductionList")>("src/app/admin/home-introduction/HomeIntroductionList.tsx", {
+    "react/jsx-runtime": jsx,
+    react: { useRef: () => ({ current: false }), useState: () => [null, () => {}] },
+    "next/navigation": { useRouter: () => ({ refresh() { refreshes++; } }) },
+    "next/image": { default: () => null },
+    "@/lib/site-content": { homeIntroduction: { image: "/default.jpg" } },
+    "@/lib/interaction-lock": { acquireLock },
+    "./actions": { async applyHomeIntroduction() { return { status, message: "result" }; } },
+  });
+  function buttons(node: React.ReactNode): React.ReactElement<{ onClick(): void }>[] {
+    if (Array.isArray(node)) return node.flatMap(buttons);
+    if (!React.isValidElement<{ children?: React.ReactNode }>(node)) return [];
+    if (node.type === "button") return [node as React.ReactElement<{ onClick(): void }>];
+    return buttons(node.props.children);
+  }
+  for (status of ["success", "save-error", "cache-error"]) {
+    refreshes = 0;
+    const tree = list.HomeIntroductionList({ currentContentId: "other", contents: [{
+      id: "test", localAsset: null, message: "문구", altText: "설명", imageWidth: 1, imageHeight: 1,
+      createdAt: "2026-11-11", lastAppliedAt: null, createdAtLabel: "등록일", lastAppliedAtLabel: null,
+    }] });
+    buttons(tree)[0].props.onClick();
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(refreshes, status === "cache-error" ? 1 : 0);
+  }
+});

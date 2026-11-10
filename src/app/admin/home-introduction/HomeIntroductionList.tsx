@@ -26,7 +26,7 @@ export function HomeIntroductionList({ contents, currentContentId }: { contents:
     try {
       const next = await (id ? applyHomeIntroduction(id) : refreshHomeIntroductionCache());
       setResult(next);
-      if (next.status !== "save-error") router.refresh();
+      if (next.status === "cache-error") router.refresh();
     } catch {
       setResult({ status: "cache-error", message: "처리 결과를 확인하지 못했습니다. 화면 정보를 갱신해 현재 적용 상태를 확인해주세요." });
     } finally {
