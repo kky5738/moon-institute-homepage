@@ -96,8 +96,7 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     role = "ADMIN";
     const request = async () => {
       const result = await actions.requestHomeIntroductionUpload(input);
-      assert.equal(result.ok, true);
-      if (!result.ok) throw new Error(result.message);
+      if (!result.ok) assert.fail(result.message);
       assert.match(result.path, /^home-introduction\/[0-9a-f-]+\.jpg$/);
       return result;
     };

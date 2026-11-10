@@ -25,7 +25,7 @@ test("일반 홍보자료 공개·수정·비공개와 페이지 및 선별 연�
   const rows = Array.from({ length: 11 }, (_, i) => ({
     id: i + 1, slug: i === 0 ? "life-research-material-guide" : `new-material-${i}`,
     title: `자료 ${i}`, summary: `요약 ${i}`, content: `본문 ${i}`, type: enums.PostType.PROMOTION,
-    status: enums.PostStatus.PUBLISHED, deletedAt: null, isPinned: false,
+    status: enums.PostStatus.PUBLISHED as enums.PostStatus, deletedAt: null as Date | null, isPinned: false,
     publishedAt: new Date("2026-01-01"), createdAt: new Date("2026-01-01"),
     category: null, author: null, authorId: null, attachments: [], _count: { attachments: 0 },
   }));

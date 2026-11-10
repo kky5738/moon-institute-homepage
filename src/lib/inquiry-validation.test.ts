@@ -31,11 +31,12 @@ test("이메일 또는 전화번호와 전화번호 표기·길이를 검사한�
 
 test("기존 유형·이름·이메일·제목·본문 길이 검증을 유지한다", () => {
   for (const type of ["GENERAL", "PARTICIPATION", "DONATION_INTEREST"]) assert.equal(parseInquiryForm(form({ type })).ok, true);
-  for (const values of [
+  const invalidInputs: Record<string, string>[] = [
     { type: "INVALID" }, { name: "a" }, { name: "a".repeat(81) },
     { email: "a".repeat(117) + "@b.co" }, { subject: "a".repeat(121) },
     { message: "a".repeat(9) }, { message: "a".repeat(2001) },
-  ]) assert.equal(parseInquiryForm(form(values)).ok, false, JSON.stringify(values));
+  ];
+  for (const values of invalidInputs) assert.equal(parseInquiryForm(form(values)).ok, false, JSON.stringify(values));
   assert.equal(parseInquiryForm(form({ name: "a".repeat(80), email: "a".repeat(115) + "@b.co", subject: "a".repeat(120), message: "a".repeat(2000) })).ok, true);
   assert.equal(parseInquiryForm(form({ name: "ab", message: "a".repeat(10) })).ok, true);
 });

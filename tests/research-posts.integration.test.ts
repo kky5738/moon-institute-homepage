@@ -299,7 +299,8 @@ test("WAITING-17/E1 Server Actions against isolated PostgreSQL 17", { timeout: 1
         assert.equal(post.summary, null);
         await prisma.post.update({ where: { id: post.id }, data: { summary: "legacy summary" } });
         const attachment = await createAttachment(post.id, { uploaded: true, committed: true });
-        for (const values of [{ intent }, { intent, summary: "x".repeat(501), slug: "ignored" }]) {
+        const submissions: Record<string, string>[] = [{ intent }, { intent, summary: "x".repeat(501), slug: "ignored" }];
+        for (const values of submissions) {
           const saved = await researcherActions.saveResearchPost(saveForm(post.id, [attachment.id], values));
           assert.equal(saved.ok, true);
           const stored = await prisma.post.findUniqueOrThrow({ where: { slug: post.slug } });
