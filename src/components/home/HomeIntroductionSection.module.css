@@ -1,9 +1,32 @@
 .introduction {
+  height: 100svh;
+  min-height: min-content;
+}
+
+.content {
   display: grid;
   grid-template-rows: minmax(12rem, 1fr) auto;
   gap: 2rem;
-  height: 100svh;
+  height: 100%;
   min-height: min-content;
+  padding: 6rem 1.25rem 3rem;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  container-type: inline-size;
+}
+
+.message {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.625;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  white-space: pre-wrap;
+}
+
+@container (min-width: 600px) {
+  .message { font-size: 1.5rem; }
 }
 
 @supports (animation-timeline: view()) and (animation-range: exit 0% exit 100%) {
@@ -13,8 +36,8 @@
       view-timeline-axis: block;
     }
 
-    .imageSpace,
-    .introduction > p {
+    .introduction .imageSpace,
+    .introduction .message {
       animation: introduction-exit linear both;
       animation-timeline: --introduction;
       animation-range: exit 0% exit 100%;

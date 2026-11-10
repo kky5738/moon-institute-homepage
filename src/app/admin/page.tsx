@@ -25,6 +25,12 @@ export default async function AdminPage() {
 
       <section className="mt-8 grid gap-5 md:grid-cols-2">
         <Card className="rounded-none bg-surface p-0 transition-colors hover:border-accent">
+          <Link href="/admin/home-introduction" className="block p-6">
+            <h2 className="text-xl font-semibold text-foreground">첫 화면 관리</h2>
+            <p className="mt-3 text-sm leading-6 text-muted">이미지와 문구를 등록하고 PC·모바일 배치를 미리 확인합니다.</p>
+          </Link>
+        </Card>
+        <Card className="rounded-none bg-surface p-0 transition-colors hover:border-accent">
           <Link href="/admin/posts" className="block p-6">
             <h2 className="text-xl font-semibold text-foreground">게시글 관리</h2>
             <p className="mt-3 text-sm leading-6 text-muted">

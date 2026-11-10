@@ -92,6 +92,19 @@ export async function removeResearchObjects(paths: string[]) {
   if (error) throw new Error("업로드 파일을 정리하지 못했습니다.", { cause: error });
 }
 
+export async function downloadHomeIntroductionImage(
+  path: string,
+  expected: { size: number; contentType: string },
+) {
+  await verifyResearchUpload(path, { ...expected, inlineImage: false });
+  const { data, error } = await getAdminClient().storage.from(getSettings().bucket).download(path);
+  if (error || !data) throw new Error("업로드된 이미지를 읽을 수 없습니다.", { cause: error });
+  if (data.size !== expected.size || data.size > MAX_RESEARCH_FILE_SIZE) {
+    throw new Error("업로드된 이미지 크기가 요청과 일치하지 않습니다.");
+  }
+  return new Uint8Array(await data.arrayBuffer());
+}
+
 export async function createResearchFileUrls(
   files: Array<{ objectPath: string; originalName: string; download: boolean }>,
 ) {

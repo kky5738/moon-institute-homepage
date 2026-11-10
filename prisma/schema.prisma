@@ -168,3 +168,43 @@ model User {
   @@index([status, createdAt])
   @@map("users")
 }
+
+// Only fully verified images are inserted here; pending tickets live separately.
+model HomeIntroductionContent {
+  id            String   @id @default(uuid()) @db.Uuid
+  objectPath    String?  @unique
+  localAsset    String?  @unique
+  contentType   String
+  size          Int
+  imageWidth    Int
+  imageHeight   Int
+  message       String
+  altText       String
+  createdAt     DateTime @default(now())
+  lastAppliedAt DateTime?
+  settings      HomeIntroductionSettings[]
+
+  @@index([createdAt, id])
+  @@map("home_introduction_contents")
+}
+
+model HomeIntroductionSettings {
+  id               String @id @default("home-introduction")
+  currentContentId String @db.Uuid
+  currentContent   HomeIntroductionContent @relation(fields: [currentContentId], references: [id], onDelete: Restrict)
+
+  @@map("home_introduction_settings")
+}
+
+model HomeIntroductionUpload {
+  id          String   @id @db.Uuid
+  adminId     String
+  objectPath  String   @unique
+  contentType String
+  size        Int
+  message     String
+  altText     String
+  createdAt   DateTime @default(now())
+
+  @@map("home_introduction_uploads")
+}
