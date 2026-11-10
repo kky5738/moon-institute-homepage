@@ -9,6 +9,7 @@ import sharp from "sharp";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import * as validation from "../src/lib/home-introduction-validation";
+import * as pagination from "../src/lib/pagination";
 import { inspectHomeIntroductionImage } from "../src/lib/home-introduction-image";
 
 function load<T>(path: string, dependencies: Record<string, unknown>): T {
@@ -82,8 +83,31 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
         async removeResearchObjects(paths: string[]) { if (failRemove) throw new Error("remove failed"); for (const path of paths) { removed.push(path); objects.delete(path); } },
       },
     });
+    let failApply = false;
+    let failCache = false;
+    let holdId: string | null = null;
+    let held: () => void = () => {};
+    let release: () => void = () => {};
+    let hold = Promise.resolve();
+    const domain = load<typeof import("../src/lib/home-introduction")>("src/lib/home-introduction.ts", {
+      "server-only": {}, "@/lib/home-introduction-validation": validation, "@/lib/pagination": pagination,
+      "@/lib/prisma": { prisma: {
+        $transaction: (work: (tx: unknown) => unknown, options: object) => prisma.$transaction(async (tx) => work({
+          ...tx, homeIntroductionContent: {
+            ...tx.homeIntroductionContent,
+            async update(args: Parameters<typeof tx.homeIntroductionContent.update>[0]) {
+              if (failApply) throw new Error("DB apply failure");
+              const result = await tx.homeIntroductionContent.update(args);
+              if (args.where.id === holdId) { held(); await hold; }
+              return result;
+            },
+          },
+        }), options),
+      } },
+    });
     const actions = load<typeof import("../src/app/admin/home-introduction/actions")>("src/app/admin/home-introduction/actions.ts", {
       "@/lib/admin-auth": auth, "@/lib/home-introduction-uploads": service, "@/lib/server-log": { logServerError() {} },
+      "@/lib/home-introduction": domain, "next/cache": { updateTag() { if (failCache) throw new Error("cache failure"); }, revalidatePath() {} },
     });
     const bytes = await sharp({ create: { width: 40, height: 20, channels: 3, background: "white" } }).jpeg().withMetadata({ orientation: 6 }).toBuffer();
     const input = { contentType: "image/jpeg", size: bytes.length, message: "한 문장입니다.", altText: "테스트 이미지" };
@@ -92,6 +116,8 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
       await assert.rejects(actions.requestHomeIntroductionUpload(input), /Unauthorized/);
       await assert.rejects(actions.confirmHomeIntroductionUpload(randomUUID()), /Unauthorized/);
       await assert.rejects(actions.cancelHomeIntroductionUpload(randomUUID()), /Unauthorized/);
+      await assert.rejects(actions.applyHomeIntroduction(randomUUID()), /Unauthorized/);
+      await assert.rejects(actions.refreshHomeIntroductionCache(), /Unauthorized/);
     }
     role = "ADMIN";
     const request = async () => {
@@ -154,6 +180,79 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     await Promise.all([actions.confirmHomeIntroductionUpload(race.id), actions.cancelHomeIntroductionUpload(race.id)]);
     const kept = await prisma.homeIntroductionContent.findUnique({ where: { id: race.id } });
     assert.equal(objects.has(race.path), !!kept);
+    assert.equal(await prisma.homeIntroductionUpload.count(), 0);
+
+    const current = async () => (await prisma.homeIntroductionSettings.findUniqueOrThrow({ where: { id: "home-introduction" } })).currentContentId;
+    const applied = async (id: string) => (await prisma.homeIntroductionContent.findUniqueOrThrow({ where: { id } })).lastAppliedAt;
+    assert.equal((await actions.applyHomeIntroduction(retry.id)).status, "success");
+    assert.equal(await current(), retry.id);
+    const firstTime = await applied(retry.id);
+    assert.ok(firstTime);
+    assert.equal((await actions.applyHomeIntroduction(retry.id)).status, "success");
+    assert.deepEqual(await applied(retry.id), firstTime);
+    for (const invalid of [randomUUID(), "invalid", "../../research/1"]) {
+      assert.equal((await actions.applyHomeIntroduction(invalid)).status, "save-error");
+      assert.equal(await current(), retry.id);
+    }
+    const pending = await request();
+    assert.equal((await actions.applyHomeIntroduction(pending.id)).status, "save-error");
+    await actions.cancelHomeIntroductionUpload(pending.id);
+    const second = await request(); objects.set(second.path, bytes);
+    assert.equal((await actions.confirmHomeIntroductionUpload(second.id)).ok, true);
+    failApply = true;
+    assert.equal((await actions.applyHomeIntroduction(second.id)).status, "save-error");
+    assert.equal(await current(), retry.id);
+    assert.equal(await applied(second.id), null);
+    failApply = false;
+    assert.equal((await actions.applyHomeIntroduction(second.id)).status, "success");
+    assert.equal(await current(), second.id);
+    assert.ok(objects.has(retry.path)); assert.ok(objects.has(second.path));
+    const preserved = await prisma.homeIntroductionContent.findUniqueOrThrow({ where: { id: retry.id } });
+    assert.deepEqual({ ...preserved, lastAppliedAt: null }, saved);
+    assert.equal((await actions.applyHomeIntroduction(initial.id)).status, "success");
+    assert.equal(await current(), initial.id);
+
+    holdId = retry.id;
+    hold = new Promise<void>((resolve) => { release = resolve; });
+    const entered = new Promise<void>((resolve) => { held = resolve; });
+    const firstApply = actions.applyHomeIntroduction(retry.id);
+    await entered;
+    let secondFinished = false;
+    const secondApply = actions.applyHomeIntroduction(second.id).then((result) => { secondFinished = true; return result; });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    try {
+      assert.equal(secondFinished, false);
+      assert.equal(await current(), initial.id);
+    } finally { release(); }
+    const concurrent = await Promise.all([firstApply, secondApply]);
+    assert.ok(concurrent.every((result) => result.status === "success"));
+    assert.equal(await current(), second.id);
+    holdId = null;
+    failCache = true;
+    assert.equal((await actions.applyHomeIntroduction(initial.id)).status, "cache-error");
+    assert.equal(await current(), initial.id);
+    failCache = false;
+    await actions.applyHomeIntroduction(second.id);
+    const secondTime = await applied(second.id);
+    assert.equal((await actions.refreshHomeIntroductionCache()).status, "success");
+    assert.equal(await current(), second.id);
+    assert.deepEqual(await applied(second.id), secondTime);
+
+    const originals = await prisma.homeIntroductionContent.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
+    await prisma.homeIntroductionContent.createMany({ data: Array.from({ length: 12 }, (_, index) => {
+      const id = randomUUID();
+      return { id, objectPath: `home-introduction/${id}.jpg`, ...input, imageWidth: 20, imageHeight: 40, createdAt: new Date(Date.now() + index * 1000) };
+    }) });
+    const firstPage = await domain.getHomeIntroductionPage(1);
+    const lastPage = await domain.getHomeIntroductionPage(999);
+    assert.equal(firstPage.contents.length, 10);
+    assert.equal(lastPage.page, lastPage.totalPages);
+    assert.equal(firstPage.totalItems, originals.length + 12);
+    assert.equal(firstPage.currentContentId, second.id);
+    const ids = [...firstPage.contents, ...lastPage.contents].map((row) => row.id);
+    assert.equal(new Set(ids).size, firstPage.totalItems);
+    assert.ok(firstPage.contents.every((row) => !("objectPath" in row)));
+    assert.equal((await domain.getHomeIntroductionPage(0)).page, 1);
     assert.equal(await prisma.homeIntroductionUpload.count(), 0);
 
     const rls = await prisma.$queryRaw<Array<{ relrowsecurity: boolean }>>`SELECT relrowsecurity FROM pg_class WHERE relname IN ('home_introduction_contents', 'home_introduction_settings', 'home_introduction_uploads')`;

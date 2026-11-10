@@ -84,3 +84,14 @@ test("Storage 검증은 서버의 MIME·크기와 다운로드 바이트 수를 
   fail = true;
   await assert.rejects(storage.downloadHomeIntroductionImage("path", expected));
 });
+
+test("저장된 콘텐츠는 완료된 이미지 경로·치수와 기본 콘텐츠 식별자를 확인한다", async () => {
+  const { validateStoredHomeIntroduction, DEFAULT_HOME_INTRODUCTION_ID } = await import("./home-introduction-validation");
+  const id = "11111111-1111-4111-8111-111111111111";
+  const content = { ...valid, id, objectPath: `home-introduction/${id}.jpg`, localAsset: null, imageWidth: 100, imageHeight: 200 };
+  assert.doesNotThrow(() => validateStoredHomeIntroduction(content));
+  assert.doesNotThrow(() => validateStoredHomeIntroduction({ ...content, id: DEFAULT_HOME_INTRODUCTION_ID, objectPath: null, localAsset: "home-introduction.jpeg" }));
+  for (const invalid of [{ objectPath: null }, { objectPath: "research/1/private.jpg" }, { localAsset: "home-introduction.jpeg" }, { imageWidth: 0 }, { imageHeight: 20001 }, { imageWidth: 10000, imageHeight: 10000 }]) {
+    assert.throws(() => validateStoredHomeIntroduction({ ...content, ...invalid }));
+  }
+});

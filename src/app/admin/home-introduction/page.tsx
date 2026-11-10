@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin-auth";
-import { prisma } from "@/lib/prisma";
+import { getHomeIntroductionPage } from "@/lib/home-introduction";
+import { parsePageParam } from "@/lib/pagination";
+import { Pagination } from "@/components/site/Pagination";
 import { HomeIntroductionForm } from "./HomeIntroductionForm";
+import { HomeIntroductionList } from "./HomeIntroductionList";
 
 export const metadata: Metadata = { title: "첫 화면 관리" };
+// Node and browser ICU data can produce different labels for the same locale.
+const dateFormatter = new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" });
 
-export default async function HomeIntroductionAdminPage() {
+export default async function HomeIntroductionAdminPage({ searchParams }: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
   await requireAdmin();
-  const contents = await prisma.homeIntroductionContent.findMany({
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: 10,
-    select: { id: true, message: true, altText: true, imageWidth: true, imageHeight: true, createdAt: true },
-  });
+  const { contents, currentContentId, page, totalPages, totalItems } = await getHomeIntroductionPage(parsePageParam((await searchParams).page));
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-14 lg:px-8">
@@ -22,18 +25,15 @@ export default async function HomeIntroductionAdminPage() {
       </div>
       <HomeIntroductionForm />
       <section aria-labelledby="saved-content-title" className="mt-12 border-t border-border pt-8">
-        <h2 id="saved-content-title" className="text-xl font-semibold">최근 등록 콘텐츠</h2>
-        <p className="mt-2 text-sm text-muted">최근 10개를 표시합니다. 등록된 이미지와 문구는 한 묶음으로 보관됩니다.</p>
-        <ul className="mt-5 divide-y divide-border border-y border-border">
-          {contents.map((content) => (
-            <li key={content.id} className="py-5">
-              <p className="whitespace-pre-wrap font-semibold [overflow-wrap:anywhere]">{content.message}</p>
-              <p className="mt-2 text-sm text-muted [overflow-wrap:anywhere]">이미지 설명: {content.altText}</p>
-              <p className="mt-2 text-xs text-muted">{content.imageWidth} × {content.imageHeight}px · 등록일 {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" }).format(content.createdAt)}</p>
-            </li>
-          ))}
-        </ul>
-        {!contents.length ? <p className="py-6 text-sm text-muted">등록된 콘텐츠가 없습니다.</p> : null}
+        <h2 id="saved-content-title" className="text-xl font-semibold">보관 콘텐츠 <span className="text-sm font-normal text-muted">총 {totalItems}개</span></h2>
+        <HomeIntroductionList
+          currentContentId={currentContentId}
+          contents={contents.map((content) => ({
+            ...content, createdAt: content.createdAt.toISOString(), lastAppliedAt: content.lastAppliedAt?.toISOString() ?? null,
+            createdAtLabel: dateFormatter.format(content.createdAt), lastAppliedAtLabel: content.lastAppliedAt ? dateFormatter.format(content.lastAppliedAt) : null,
+          }))}
+        />
+        <Pagination basePath="/admin/home-introduction" page={page} totalPages={totalPages} />
       </section>
     </div>
   );

@@ -30,3 +30,17 @@ export function validateHomeIntroductionId(id: string) {
   }
   return id.toLowerCase();
 }
+
+export function validateStoredHomeIntroduction(content: HomeIntroductionInput & {
+  id: string; objectPath: string | null; localAsset: string | null;
+  imageWidth: number; imageHeight: number;
+}) {
+  const id = validateHomeIntroductionId(content.id);
+  const { extension } = validateHomeIntroductionInput(content);
+  const validSource = content.objectPath === `home-introduction/${id}.${extension}` && content.localAsset === null
+    || content.id === DEFAULT_HOME_INTRODUCTION_ID && content.localAsset === "home-introduction.jpeg" && content.objectPath === null;
+  if (!validSource || ![content.imageWidth, content.imageHeight].every((value) => Number.isInteger(value) && value > 0 && value <= 20_000)
+    || content.imageWidth * content.imageHeight > 40_000_000) {
+    throw new Error("검증이 완료된 이미지 콘텐츠만 사용할 수 있습니다.");
+  }
+}

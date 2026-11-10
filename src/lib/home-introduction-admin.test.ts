@@ -7,11 +7,11 @@ import * as jsx from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 
-function load<T>(path: string, dependencies: Record<string, unknown>): T {
+function load<T>(path: string, dependencies: Record<string, unknown>, globals: Record<string, unknown> = {}): T {
   const exports = {};
   runInNewContext(ts.transpileModule(readFileSync(path, "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
-  }).outputText, { exports, require(name: string) {
+  }).outputText, { ...globals, exports, require(name: string) {
     if (!(name in dependencies)) throw new Error(`Unexpected dependency: ${name}`);
     return dependencies[name];
   } });
@@ -66,23 +66,123 @@ test("공통 렌더러는 실제 비율·문구·대체 텍스트와 두 이미�
   }
 });
 
-test("관리 페이지는 인증 후에만 완료 묶음을 조회하고 일반 텍스트 목록을 표시한다", async () => {
+test("관리 페이지는 인증 후에만 보관 목록을 조회하고 현재·이전·미적용 상태를 표시한다", async () => {
   let allowed = true;
   let reads = 0;
+  const initialDate = new Date("2026-11-10T00:00:00Z");
+  const contents = [
+    { id: "1", localAsset: "home-introduction.jpeg", message: "<b>기본 문구</b>", altText: "설명", imageWidth: 300, imageHeight: 400, createdAt: initialDate, lastAppliedAt: initialDate },
+    { id: "2", localAsset: null, message: "보관 문구", altText: "보관 설명", imageWidth: 300, imageHeight: 400, createdAt: initialDate, lastAppliedAt: initialDate },
+    { id: "3", localAsset: null, message: "미적용 문구", altText: "등록 설명", imageWidth: 300, imageHeight: 400, createdAt: initialDate, lastAppliedAt: null },
+  ];
+  const list = load<typeof import("../app/admin/home-introduction/HomeIntroductionList")>("src/app/admin/home-introduction/HomeIntroductionList.tsx", {
+    "react/jsx-runtime": jsx, react: React, "next/navigation": { useRouter: () => ({}) },
+    "next/image": { default: ({ unoptimized, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & { unoptimized: boolean }) => { assert.equal(unoptimized, true); return React.createElement("img", props); } },
+    "@/lib/site-content": { homeIntroduction: { image: "/default.jpg" } },
+    "@/lib/interaction-lock": {}, "./actions": {},
+  }, { Intl: { DateTimeFormat: class { constructor() { throw new Error("날짜 문구는 서버에서 전달해야 합니다."); } } } });
+  const pagination = await import("./pagination");
   const page = load<typeof import("../app/admin/home-introduction/page")>("src/app/admin/home-introduction/page.tsx", {
     "react/jsx-runtime": jsx,
     "@/lib/admin-auth": { async requireAdmin() { if (!allowed) throw new Error("redirect"); } },
-    "@/lib/prisma": { prisma: { homeIntroductionContent: { async findMany(query: { take: number; orderBy: unknown[] }) {
-      reads++; assert.equal(query.take, 10); assert.equal(query.orderBy.length, 2);
-      return [{ id: "1", message: "<b>보관 문구</b>", altText: "이미지 설명", imageWidth: 300, imageHeight: 400, createdAt: new Date("2026-11-10T00:00:00Z") }];
-    } } } },
+    "@/lib/home-introduction": { async getHomeIntroductionPage(requested: number) {
+      reads++; assert.equal(requested, 2);
+      return { contents, currentContentId: "1", page: 2, totalPages: 2, totalItems: 13 };
+    } },
+    "@/lib/pagination": pagination,
+    "@/components/site/Pagination": { Pagination: ({ page, totalPages }: { page: number; totalPages: number }) => React.createElement("span", null, `${page}/${totalPages}`) },
     "./HomeIntroductionForm": { HomeIntroductionForm: () => React.createElement("div", null, "등록 폼") },
+    "./HomeIntroductionList": list,
   });
-  const html = renderToStaticMarkup(await page.default());
-  assert.match(html, /&lt;b&gt;보관 문구&lt;\/b&gt;/);
-  assert.match(html, /300.*400px/);
+  const props = { searchParams: Promise.resolve({ page: "2" }) };
+  const html = renderToStaticMarkup(await page.default(props));
+  assert.match(html, /&lt;b&gt;기본 문구&lt;\/b&gt;/);
+  for (const label of ["현재 적용 중", "이전 적용본", "등록 · 미적용", "기본 콘텐츠", "아직 적용하지 않음", "2\/2"]) assert.ok(html.includes(label));
+  assert.equal((html.match(/<button/g) ?? []).length, 2);
+  assert.match(html, /src="\/admin\/home-introduction\/2\/image"/);
+  assert.match(html, /src="\/default.jpg"/);
+  assert.match(html, /<time dateTime="2026-11-10T00:00:00.000Z"|<time datetime="2026-11-10T00:00:00.000Z"/);
   assert.doesNotMatch(html, /objectPath|secret|token/);
   allowed = false;
-  await assert.rejects(page.default(), /redirect/);
+  await assert.rejects(page.default(props), /redirect/);
   assert.equal(reads, 1);
+});
+
+test("적용 액션은 저장 실패와 캐시 실패를 구분하고 캐시 재시도는 재적용하지 않는다", async () => {
+  let role = "ADMIN";
+  let saved = 0;
+  let invalidations = 0;
+  let failSave = false;
+  let failCache = false;
+  const auth = load<typeof import("./admin-auth")>("src/lib/admin-auth.ts", {
+    "../../auth": { auth: async () => role === "anonymous" ? null : { user: { role: role === "expired" ? "ADMIN" : role, adminSessionValid: role !== "expired" } } },
+    "next/navigation": { unstable_rethrow() {} }, "@/lib/server-log": { logServerError() {} },
+  }, { console: { error() {} } });
+  const actions = load<typeof import("../app/admin/home-introduction/actions")>("src/app/admin/home-introduction/actions.ts", {
+    "@/lib/admin-auth": auth,
+    "@/lib/home-introduction-uploads": {},
+    "@/lib/home-introduction": { HOME_INTRODUCTION_CACHE_TAG: "home-introduction", async applyHomeIntroductionContent() { if (failSave) throw new Error("secret DB detail"); saved++; } },
+    "next/cache": { updateTag(tag: string) { assert.equal(tag, "home-introduction"); if (failCache) throw new Error("cache detail"); invalidations++; }, revalidatePath(path: string) { assert.ok(["/", "/admin/home-introduction"].includes(path)); invalidations++; } },
+    "@/lib/server-log": { logServerError() {} },
+  });
+  for (const denied of ["RESEARCHER", "anonymous", "expired"]) {
+    role = denied;
+    await assert.rejects(actions.applyHomeIntroduction("id"), /Unauthorized/);
+    await assert.rejects(actions.refreshHomeIntroductionCache(), /Unauthorized/);
+  }
+  assert.equal(saved, 0); assert.equal(invalidations, 0);
+  role = "ADMIN"; failSave = true;
+  const failure = await actions.applyHomeIntroduction("id");
+  assert.equal(failure.status, "save-error"); assert.doesNotMatch(failure.message, /secret/);
+  assert.equal(invalidations, 0);
+  failSave = false; failCache = true;
+  assert.equal((await actions.applyHomeIntroduction("id")).status, "cache-error");
+  assert.equal(saved, 1);
+  failCache = false;
+  assert.equal((await actions.refreshHomeIntroductionCache()).status, "success");
+  assert.equal(saved, 1); assert.equal(invalidations, 3);
+  assert.equal((await actions.applyHomeIntroduction("id")).status, "success");
+  assert.equal(saved, 2); assert.equal(invalidations, 6);
+});
+
+test("보관 이미지 경로는 관리자만 접근하고 private no-store로 축소 이미지를 제공한다", async () => {
+  const validation = await import("./home-introduction-validation");
+  const id = "11111111-1111-4111-8111-111111111111";
+  const { default: sharp } = await import("sharp");
+  const bytes = await sharp({ create: { width: 1200, height: 600, channels: 3, background: "white" } }).jpeg().toBuffer();
+  let allowed = true;
+  let reads = 0;
+  let downloads = 0;
+  let missing = false;
+  let failDownload = false;
+  class AdminUnauthorizedError extends Error {}
+  const route = load<typeof import("../app/admin/home-introduction/[id]/image/route")>("src/app/admin/home-introduction/[id]/image/route.ts", {
+    "@/lib/admin-auth": { AdminUnauthorizedError, async assertAdmin() { if (!allowed) throw new AdminUnauthorizedError(); } },
+    "@/lib/prisma": { prisma: { homeIntroductionContent: { async findUnique() { reads++; return missing ? null : {
+      id, objectPath: `home-introduction/${id}.jpg`, localAsset: null, contentType: "image/jpeg", size: bytes.length, imageWidth: 1200, imageHeight: 600, message: "문구", altText: "설명",
+    }; } } } },
+    "@/lib/home-introduction-validation": validation,
+    "@/lib/supabase-storage": { async downloadHomeIntroductionImage() { downloads++; if (failDownload) throw new Error("private object path"); return bytes; } },
+    "@/lib/server-log": { logServerError() {} },
+    "sharp": { default: sharp },
+  }, { Response });
+  const request = new Request("http://test/image");
+  const props = { params: Promise.resolve({ id }) };
+  allowed = false;
+  assert.equal((await route.GET(request, props)).status, 401);
+  assert.equal(reads, 0);
+  allowed = true;
+  assert.equal((await route.GET(request, { params: Promise.resolve({ id: "invalid" }) })).status, 404);
+  missing = true;
+  assert.equal((await route.GET(request, props)).status, 404);
+  assert.equal(downloads, 0);
+  missing = false;
+  const image = await route.GET(request, props);
+  assert.equal(image.status, 200); assert.equal(image.headers.get("cache-control"), "private, no-store");
+  assert.equal(image.headers.get("content-type"), "image/webp");
+  const thumbnail = await sharp(Buffer.from(await image.arrayBuffer())).metadata();
+  assert.equal(thumbnail.width, 256); assert.equal(thumbnail.height, 128);
+  failDownload = true;
+  const failure = await route.GET(request, props);
+  assert.equal(failure.status, 500); assert.equal(await failure.text(), "");
 });
