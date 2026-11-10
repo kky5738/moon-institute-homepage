@@ -37,6 +37,7 @@ export function HomeIntroductionContent({ image, imageWidth, imageHeight, messag
             aria-hidden="true"
             sizes="100vw"
             loading="eager"
+            unoptimized={typeof image === "string"}
             className={`${styles.image} ${styles.blurredImage}`}
           />
           <Image
@@ -46,6 +47,7 @@ export function HomeIntroductionContent({ image, imageWidth, imageHeight, messag
             alt={altText}
             sizes="100vw"
             loading="eager"
+            unoptimized={typeof image === "string"}
             className={`${styles.image} ${styles.sharpImage}`}
             onError={() => setFailedImage(image)}
           />

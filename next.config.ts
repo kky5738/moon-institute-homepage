@@ -7,6 +7,13 @@ const supabaseStorageUrl = supabaseUrl ? new URL(supabaseUrl) : null;
 const nextConfig: NextConfig = {
   cacheComponents: true,
   images: {
+    // Keep current-content and admin access checks outside the shared optimizer cache.
+    localPatterns: [
+      { pathname: "/_next/static/media/**" },
+      { pathname: "/images/**" },
+      { pathname: "/founding-declaration/**" },
+      { pathname: "/*.{jpg,jpeg,png,webp,avif,gif,svg,ico}" },
+    ],
     maximumRedirects: 0,
     maximumResponseBody: 20 * 1024 * 1024,
     remotePatterns: supabaseStorageUrl

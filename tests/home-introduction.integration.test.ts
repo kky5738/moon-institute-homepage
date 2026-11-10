@@ -16,7 +16,7 @@ function load<T>(path: string, dependencies: Record<string, unknown>): T {
   const exports = {};
   runInNewContext(ts.transpileModule(readFileSync(path, "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText, { exports, console: { error() {} }, require(name: string) {
+  }).outputText, { exports, Response, console: { error() {} }, require(name: string) {
     if (!(name in dependencies)) throw new Error(`Unexpected dependency: ${name}`);
     return dependencies[name];
   } });
@@ -105,6 +105,19 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
         }), options),
       } },
     });
+    const publicContent = load<typeof import("../src/lib/home-introduction-public")>("src/lib/home-introduction-public.ts", {
+      "server-only": {}, "next/cache": { cacheLife() {}, cacheTag() {} }, "next/navigation": { unstable_rethrow() {} },
+      "@/lib/prisma": { prisma }, "@/lib/home-introduction": domain,
+      "@/lib/home-introduction-validation": validation,
+      "@/lib/site-content": { homeIntroduction: { image: { src: "/default.jpeg", width: initial.imageWidth, height: initial.imageHeight }, message: initial.message, alt: initial.altText } },
+      "@/lib/server-log": { logServerError() {} },
+    });
+    const publicImage = load<typeof import("../src/app/home-introduction/[id]/image/route")>("src/app/home-introduction/[id]/image/route.ts", {
+      "@/lib/home-introduction-public": publicContent, "@/lib/home-introduction-validation": validation,
+      "@/lib/supabase-storage": { async downloadHomeIntroductionImage(path: string) { const bytes = objects.get(path); if (!bytes) throw new Error("missing"); return bytes; } },
+      "@/lib/server-log": { logServerError() {} },
+    });
+    const getPublicImage = (id: string) => publicImage.GET(new Request("http://test/image"), { params: Promise.resolve({ id }) });
     const actions = load<typeof import("../src/app/admin/home-introduction/actions")>("src/app/admin/home-introduction/actions.ts", {
       "@/lib/admin-auth": auth, "@/lib/home-introduction-uploads": service, "@/lib/server-log": { logServerError() {} },
       "@/lib/home-introduction": domain, "next/cache": { updateTag() { if (failCache) throw new Error("cache failure"); }, revalidatePath() {} },
@@ -182,10 +195,19 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     assert.equal(objects.has(race.path), !!kept);
     assert.equal(await prisma.homeIntroductionUpload.count(), 0);
 
+    assert.equal((await publicContent.getPublicHomeIntroduction()).id, initial.id);
+    assert.equal((await getPublicImage(retry.id)).status, 404);
     const current = async () => (await prisma.homeIntroductionSettings.findUniqueOrThrow({ where: { id: "home-introduction" } })).currentContentId;
     const applied = async (id: string) => (await prisma.homeIntroductionContent.findUniqueOrThrow({ where: { id } })).lastAppliedAt;
     assert.equal((await actions.applyHomeIntroduction(retry.id)).status, "success");
     assert.equal(await current(), retry.id);
+    const shown = await publicContent.getPublicHomeIntroduction();
+    assert.equal(shown.id, retry.id); assert.equal(shown.message, input.message);
+    assert.equal(shown.imageWidth, 20); assert.equal(shown.imageHeight, 40);
+    const visibleImage = await getPublicImage(retry.id);
+    assert.equal(visibleImage.status, 200);
+    assert.equal(visibleImage.headers.get("cache-control"), "private, no-store");
+    assert.deepEqual(Buffer.from(await visibleImage.arrayBuffer()), bytes);
     const firstTime = await applied(retry.id);
     assert.ok(firstTime);
     assert.equal((await actions.applyHomeIntroduction(retry.id)).status, "success");
@@ -206,12 +228,16 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     failApply = false;
     assert.equal((await actions.applyHomeIntroduction(second.id)).status, "success");
     assert.equal(await current(), second.id);
+    assert.equal((await getPublicImage(retry.id)).status, 404);
+    assert.equal((await getPublicImage(second.id)).status, 200);
     assert.ok(objects.has(retry.path)); assert.ok(objects.has(second.path));
     const preserved = await prisma.homeIntroductionContent.findUniqueOrThrow({ where: { id: retry.id } });
     assert.deepEqual({ ...preserved, lastAppliedAt: null }, saved);
     assert.equal((await actions.applyHomeIntroduction(initial.id)).status, "success");
     assert.equal(await current(), initial.id);
 
+    assert.equal((await publicContent.getPublicHomeIntroduction()).id, initial.id);
+    assert.equal((await getPublicImage(second.id)).status, 404);
     holdId = retry.id;
     hold = new Promise<void>((resolve) => { release = resolve; });
     const entered = new Promise<void>((resolve) => { held = resolve; });

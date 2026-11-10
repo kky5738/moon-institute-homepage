@@ -50,7 +50,7 @@ test("업로드는 발급→전송→완료 순서이며 실패한 시도만 취
 test("공통 렌더러는 실제 비율·문구·대체 텍스트와 두 이미지의 사각형 블러 구조를 공유한다", () => {
   const content = load<typeof import("../components/home/HomeIntroductionContent")>("src/components/home/HomeIntroductionContent.tsx", {
     "react/jsx-runtime": jsx, react: React,
-    "next/image": { default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => React.createElement("img", props) },
+    "next/image": { default: ({ unoptimized, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & { unoptimized?: boolean }) => { assert.equal(unoptimized, true); return React.createElement("img", props); } },
     "./HomeIntroductionSection.module.css": { default: new Proxy({}, { get: (_target, key) => String(key) }) },
   });
   for (const [imageWidth, imageHeight] of [[1200, 600], [600, 1200], [600, 600]]) {
