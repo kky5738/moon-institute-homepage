@@ -132,7 +132,12 @@ test("공개 section은 유지하고 콘텐츠 ID가 바뀌면 렌더러의 이�
   });
   const outer = section.HomeIntroductionSection();
   assert.equal(outer.props.id, "home-introduction");
-  const suspense = outer.props.children as React.ReactElement<{ children: React.ReactElement }>;
+  const suspense = outer.props.children as React.ReactElement<{ children: React.ReactElement; fallback: React.ReactElement<{ "aria-hidden": string; className: string; role?: string; children?: React.ReactNode }> }>;
+  assert.equal(suspense.props.fallback.type, "div");
+  assert.equal(suspense.props.fallback.props["aria-hidden"], "true");
+  assert.equal(suspense.props.fallback.props.role, undefined);
+  assert.equal(suspense.props.fallback.props.children, undefined);
+  assert.match(suspense.props.fallback.props.className, /h-full bg-black/);
   const render = suspense.props.children.type as () => Promise<React.ReactElement>;
   const first = await render();
   currentId = "22222222-2222-4222-8222-222222222222";
