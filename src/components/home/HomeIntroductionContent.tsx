@@ -14,6 +14,8 @@ export type HomeIntroductionVisual = {
 
 export function HomeIntroductionContent({ image, imageWidth, imageHeight, message, altText }: HomeIntroductionVisual) {
   const [failedImage, setFailedImage] = useState<StaticImageData | string | null>(null);
+  const sizes = typeof image === "string" ? "100vw"
+    : `min(calc(100vw - 2.5rem), calc(max(12rem, 100svh) * ${imageWidth} / ${imageHeight}))`;
 
   return (
     <div className={styles.content}>
@@ -33,23 +35,24 @@ export function HomeIntroductionContent({ image, imageWidth, imageHeight, messag
             src={image}
             width={imageWidth}
             height={imageHeight}
-            alt=""
-            aria-hidden="true"
-            sizes="100vw"
+            alt={altText}
+            sizes={sizes}
             loading="eager"
+            fetchPriority="high"
             unoptimized={typeof image === "string"}
-            className={`${styles.image} ${styles.blurredImage}`}
+            className={`${styles.image} ${styles.sharpImage}`}
+            onError={() => setFailedImage(image)}
           />
           <Image
             src={image}
             width={imageWidth}
             height={imageHeight}
-            alt={altText}
-            sizes="100vw"
+            alt=""
+            aria-hidden="true"
+            sizes={sizes}
             loading="eager"
             unoptimized={typeof image === "string"}
-            className={`${styles.image} ${styles.sharpImage}`}
-            onError={() => setFailedImage(image)}
+            className={`${styles.image} ${styles.blurredImage}`}
           />
         </div>}
       </div>

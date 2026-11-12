@@ -1,4 +1,4 @@
-# 첫 화면 콘텐츠 저장·업로드 (READY-60~66)
+# 첫 화면 콘텐츠 저장·업로드 (READY-60~67)
 
 공개 이미지 `/home-introduction/{콘텐츠 ID}/image`는 매 요청에서 현재 포인터를 확인하고 해당 업로드의 표시용 WebP(없는 기존 콘텐츠는 원본)를 `private, no-store`로 제공한다. 적용 전·이전 적용본은 404이며 관리용 썸네일은 관리자 인증을 유지한다. 공개 페이지에 signed URL·Storage object path를 넣지 않는다. 업로드는 `unoptimized`, 기본 정적 import는 기존 최적화를 사용한다. `next.config.ts`의 localPatterns는 기존 정적 에셋 경로만 허용해 공개/관리 이미지의 최적화 캐시 우회를 막는다. 새 정적 이미지 디렉터리를 추가할 때는 이 허용 경로도 확인한다. 이미 방문자에게 전달된 사본의 회수는 보장하지 않는다.
 
@@ -7,7 +7,7 @@
 3. **등록 순서:** `readHomeIntroductionFile(file)`로 파일 검사·표시 방향 기준 치수·미리보기 URL을 얻는다. URL은 선택 교체·화면 이탈 시 호출자가 `URL.revokeObjectURL`로 해제한다. `requestHomeIntroductionUpload({contentType, size, message, altText})` → 기존 Supabase 클라이언트의 `uploadToSignedUrl(path, token, file, {contentType})` → `confirmHomeIntroductionUpload(id)` 순으로 호출한다. 입력 안내는 `HOME_INTRODUCTION_GUIDANCE`를 사용한다. 문구·대체 텍스트는 일반 텍스트로 보존하며 출력 시 HTML로 해석하지 않는다. 서버는 관리자 세션과 발급 소유자를 확인하고 Storage 메타데이터·실제 바이트 수·시그니처·전체 디코딩·실제 치수를 검사한 뒤 EXIF 방향을 반영한 표시용 WebP를 한 번 생성·저장한다. 등록 성공은 ID와 표시 치수를 반환하며 등록 폼은 실제 저장 파일의 인증된 전체 미리보기로 전환한다. 클라이언트의 치수는 저장하지 않는다. EXIF 1~8을 반영하며 단일 정지 이미지, 각 변 20,000px·총 4천만 화소를 상한으로 한다. 이미 설치되고 브랜드 에셋 스크립트에서도 쓰는 Next.js 의존성 `sharp` 0.34.5를 사용했으며 새 패키지는 추가하지 않았다.
 4. **실패·후속 연결:** 발급 대기는 `home_introduction_uploads`에, 검증 완료 묶음만 `home_introduction_contents`에 저장한다. 설정은 완료 묶음에만 FK로 연결되므로 대기 이미지는 적용 불가능하다. 완료·취소는 같은 업로드 행을 잠가 직렬 처리한다. 등록 실패 시 같은 시도의 미연결 원본·표시용 object를 함께 제거하고 완료 재요청은 같은 ID로 성공한다. 실패 후 다시 등록할 때는 새 발급을 요청한다. 취소에는 `cancelHomeIntroductionUpload(id)`를 사용한다. Storage 정리 실패 시 대기 행을 남겨 같은 취소를 재시도하고, 로그에는 기존 비밀값 비노출 로거를 사용한다. 브라우저 강제 종료 등으로 완료/취소가 호출되지 않은 대기 업로드는 자동 청소하지 않는다. 운영 청소가 필요하면 대기 행과 완료 콘텐츠 미연결 여부를 확인한 별도 절차가 필요하다. READY-61에서 `/admin/home-introduction`의 관리자 등록·PC/모바일 미리보기와 최근 등록 목록을 연결했다. READY-62에서 적용·보관 목록 페이지 나누기와 관리자 전용 썸네일을 연결했다. READY-63에서 현재 콘텐츠 조회와 공개 이미지 제공을 연결했다. 이번 단계의 등록만으로 홈페이지 포인터는 바뀌지 않는다.
 
-검증은 `npm run test:home-introduction`으로 실행한다. 22개 테스트에 관리자 등록 후 갱신, 적용·캐시 재시도, 공개·관리 이미지 접근, 실제 디코딩, 임시 Docker PostgreSQL의 migration·저장·잠금·동시 적용·부분 업로드·실제 INSERT 실패 롤백·재연결 후 유지가 포함된다. 이 자동 테스트의 Storage는 메모리 대역이다. 기존 첨부 권한 회귀는 `npm run test:posts`와 `npm run test:posts:integration`으로 확인한다.
+검증은 `npm run test:home-introduction`으로 실행한다. 25개 테스트에 관리자 등록 후 갱신, 적용·캐시 재시도, 공개·관리 이미지 접근, 실제 디코딩, 임시 Docker PostgreSQL의 migration·저장·잠금·동시 적용·부분 업로드·실제 INSERT 실패 롤백·재연결 후 유지가 포함된다. 이 자동 테스트의 Storage는 메모리 대역이다. 기존 첨부 권한 회귀는 `npm run test:posts`와 `npm run test:posts:integration`으로 확인한다.
 
 READY-64에서는 별도로 Chromium·로컬 production 서버·임시 PostgreSQL과 기존 `.env.staging`의 실제 private Storage를 연결했다. 운영과 다른 프로젝트임을 확인하고 이번 테스트에서 생성한 UUID object만 업로드·삭제했다. staging DB와 운영 DB에는 migration을 적용하지 않았다. staging bucket의 `public=false`, 파일 크기·MIME 제한 설정은 각각 `null`임을 확인했으며 정책은 변경하지 않았다. 애플리케이션의 20MiB·JPEG/PNG/WebP 검사는 유지한다. 실제 signed upload와 서버 다운로드, 적용·복원·재시작 유지, anonymous 직접 다운로드 차단을 확인했다.
 
@@ -20,7 +20,7 @@ READY-62 적용·복원은 보관 목록의 `현재 화면에 적용`을 사용�
 
 1. 운영 백업과 대상 연결·private bucket 설정을 확인한다. 아래 실행은 별도 운영 승인 후 배포 창에서 진행한다.
 2. 승인된 운영 `DATABASE_URL`·`DIRECT_URL`로 `npx prisma migrate deploy`를 먼저 실행한다. 일반 `db:setup`·`db:seed`는 사용하지 않는다.
-3. migration 성공 후 READY-60~66 코드가 포함된 main을 배포한다. 현재 단계에서 운영 DB만 미리 변경할 필요는 없다.
+3. migration 성공 후 READY-60~67 코드가 포함된 main을 배포한다. 현재 단계에서 운영 DB만 미리 변경할 필요는 없다.
 4. 관리자 등록(미공개) → 적용 → 비로그인 홈페이지 → 이전/기본 콘텐츠 복원과 보관본 접근 차단을 점검한다.
 5. 코드 롤백이 필요하면 추가된 테이블·보관 파일을 삭제하지 않는다. 관리자에서 기본 콘텐츠로 복원한 뒤 이전 코드를 배포하며, 기존 첨부 정책과 데이터는 보존한다.
 
@@ -36,7 +36,7 @@ READY-62 적용·복원은 보관 목록의 `현재 화면에 적용`을 사용�
 
 `20261112000000_add_home_introduction_display`는 콘텐츠에 nullable `displayObjectPath`·`displayContentType`·`displaySize`·`displayWidth`·`displayHeight`를 추가한다. DB CHECK는 다섯 값이 모두 없거나 지정된 UUID 경로·WebP 형식·크기·치수를 갖춘 묶음만 허용한다. 기존 원본 메타데이터·문구·현재 포인터·기본 정적 이미지는 변경하지 않는다. 표시용 파일이 없는 보관본은 계속 원본을 제공한다.
 
-`createHomeIntroductionDisplay()`는 기존 원본 검증 후 자동 회전·긴 변 최대 1920px·fit inside·확대 금지·WebP quality 80을 적용한다. 크롭·투명도 제거·별도 블러 파일은 없으며 공개 요청과 관리자 전체 미리보기에서 재인코딩하지 않는다. 기존 목록 썸네일의 최대 256×192 축소는 유지한다. 공개 route는 현재 포인터·no-store 검사를 유지하고 아직 Storage info 조회를 수행한다(생략은 READY-67).
+`createHomeIntroductionDisplay()`는 기존 원본 검증 후 자동 회전·긴 변 최대 1920px·fit inside·확대 금지·WebP quality 80을 적용한다. 크롭·투명도 제거·별도 블러 파일은 없으며 공개 요청과 관리자 전체 미리보기에서 재인코딩하지 않는다. 기존 목록 썸네일의 최대 256×192 축소는 유지한다. 공개 route는 현재 포인터·no-store 검사를 유지한다. READY-66에서는 info도 조회했으며 READY-67부터 공개 표시용 전용 경로에서만 생략한다.
 
 | 비교 사진 | 바이트 | 원본 대비 감소 | PSNR |
 | --- | --- | --- | --- |
@@ -65,3 +65,14 @@ READY-62 적용·복원은 보관 목록의 `현재 화면에 적용`을 사용�
 
 4. 같은 명령에 `--apply`를 붙여 실행한다. `.env`와 같은 Storage origin 또는 DB 호스트·사용자·DB 이름 조합은 거부한다. 단일 콘텐츠 행을 잠그고 원본 재검증→미연결 잔여 표시용 파일 정리→표시용 저장→메타데이터 연결을 수행한다. 원본·문구·포인터·최종 적용 시각은 보존한다. 완료한 묶음은 재실행 시 건너뛰고 실패 시 미연결 표시용만 정리한다. 정리 실패도 같은 명령으로 재시도한다. CLI 전용 tsconfig는 설치된 Next.js의 `server-only/empty.js`를 사용하며 앱의 서버 보호 표시·루트 tsconfig는 유지한다. 새 패키지는 없다.
 5. 앱 재시작으로 콘텐츠 메타데이터 캐시를 갱신한 뒤 현재 화면·관리자 전체 미리보기·이전본 재적용·원본 해시 보존을 확인한다. 실제 비운영 검증에서는 임시 로컬 DB와 기존 staging Storage의 이번 UUID 파일만 사용했다. 운영 migration·원본 변환·배포는 별도 승인 범위이며 이 도구는 운영 대상 실행을 차단한다.
+
+
+## 공개 표시용 읽기·요청 우선순위 (READY-67)
+
+공개 route는 `readCurrentHomeIntroduction()`으로 현재 포인터와 완료 묶음을 매번 확인한 뒤, 표시용 파일이 있는 경우에만 `downloadHomeIntroductionDisplay()`를 호출한다. 이 전용 경로는 이미 검증·저장되고 덮어쓰지 않는 표시용 object에 한정하며 Storage info 없이 한 번 다운로드한다. 저장 MIME이 WebP인지와 1 byte~20MiB 정수 크기를 확인하고, 응답 Blob의 MIME·크기와 실제 바이트 수·WebP 시그니처를 다시 검사한다. 오류는 빈 503과 비밀값 없는 로그로 처리한다. 표시용 없는 원본·등록 완료 검증·기존 콘텐츠 변환·연구 첨부·관리자 이미지의 기존 info 검사는 유지한다.
+
+주 이미지가 공유 요청을 먼저 시작하도록 선명 이미지를 DOM에서 먼저 선언하고 `fetchPriority="high"`를 지정한다. `sharpImage`의 z-index 1로 기존 블러 위 합성을 유지하며 블러에는 별도 high를 주지 않는다. 두 이미지의 URL·sizes·eager 설정은 같고 별도 preload 설정은 추가하지 않았다. 실제 초기 요청은 High·1회였다.
+
+정적 기본 이미지의 sizes는 수평 padding·뷰포트 높이·비율을 이용한 보수적 상한으로 바꿨다. 실제 레이아웃과 문구 높이 계산은 그대로이며 unoptimized 업로드 이미지에는 전송량 최적화 효과를 주장하지 않는다. 기본 이미지의 1280×720/DPR 1 전송량은 726,058→119,272 bytes(83.6%), 390×720/DPR 1은 119,272→32,604 bytes(72.7%)였다. 현재 적용본 확인·private no-store·관리자 인증·최적화 우회 차단과 `connection()`·캐시 구조는 유지한다.
+
+같은 표시용 파일로 전후 24회, 기본 정적 이미지로 전후 12회를 측정했다. Storage 왕복은 info 1+download 1→info 0+download 1이었다. 요청 시작의 일관된 단축은 입증하지 못했으며 초기 High 지정과 왕복 감소를 구분한다. 측정 조건·중앙값/범위·표본 전체는 [성능 기록](./home-introduction-performance.md#ready-67-표시용-읽기우선순위-비교-2026-11-13)에 보존한다. 초기/반복 방문을 포함한 원본 기준선 대비 최종 비교는 READY-68에서 진행한다.

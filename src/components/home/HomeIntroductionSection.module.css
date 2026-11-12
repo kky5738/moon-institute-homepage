@@ -81,6 +81,7 @@
 }
 
 .sharpImage {
+  z-index: 1;
   mask-image:
     linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
     linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);

@@ -84,7 +84,13 @@ test("공개 이미지 응답은 현재 적용본만 허용하고 매 요청마�
   const route = load<typeof import("../app/home-introduction/[id]/image/route")>("src/app/home-introduction/[id]/image/route.ts", {
     "@/lib/home-introduction-public": { async readCurrentHomeIntroduction() { if (fails) throw new Error("private:secret"); return current; } },
     "@/lib/home-introduction-validation": validation,
-    "@/lib/supabase-storage": { async downloadHomeIntroductionImage(path: string) { assert.equal(path, uploaded.objectPath); downloads++; return new Uint8Array([255, 216, 255]); } },
+    "@/lib/supabase-storage": {
+      async downloadHomeIntroductionImage(path: string) { assert.equal(path, uploaded.objectPath); downloads++; return new Uint8Array([255, 216, 255]); },
+      async downloadHomeIntroductionDisplay(path: string, expected: { contentType: string; size: number }) {
+        assert.equal(path, validation.homeIntroductionDisplayPath(id)); assert.equal(expected.contentType, "image/webp"); assert.equal(expected.size, 2);
+        downloads++; return new Uint8Array([1, 2]);
+      },
+    },
     "@/lib/server-log": { logServerError(_context: string, error: Error) { logged.push(error); } },
   }, { Response });
   const request = new Request("http://test/image");
@@ -93,16 +99,45 @@ test("공개 이미지 응답은 현재 적용본만 허용하고 매 요청마�
   assert.equal(image.status, 200); assert.equal((await image.arrayBuffer()).byteLength, 3);
   assert.equal(image.headers.get("cache-control"), "private, no-store");
   assert.equal(image.headers.get("content-type"), "image/jpeg");
+  current = { ...uploaded, displayObjectPath: validation.homeIntroductionDisplayPath(id), displayContentType: "image/webp", displaySize: 2, displayWidth: 200, displayHeight: 100 };
+  const display = await get();
+  assert.equal(display.status, 200); assert.equal(display.headers.get("content-type"), "image/webp");
+  assert.deepEqual(Buffer.from(await display.arrayBuffer()), Buffer.from([1, 2]));
   current = null;
   assert.equal((await get()).status, 404);
   current = { ...uploaded, id: "22222222-2222-4222-8222-222222222222" };
   assert.equal((await get()).status, 404);
   assert.equal((await get("invalid")).status, 404);
-  assert.equal(downloads, 1);
+  assert.equal(downloads, 2);
   fails = true;
   const failure = await get();
   assert.equal(failure.status, 503); assert.equal(await failure.text(), "");
   assert.doesNotMatch(logged[0].message, /private|secret/);
+});
+
+test("포인터 확인 뒤 진행 중인 응답은 완료하고 교체 뒤 같은 ID의 새 요청은 차단한다", async () => {
+  let current = { ...uploaded, displayObjectPath: validation.homeIntroductionDisplayPath(id), displayContentType: "image/webp", displaySize: 2, displayWidth: 200, displayHeight: 100 };
+  let release = () => {};
+  let started = () => {};
+  const hold = new Promise<void>((resolve) => { release = resolve; });
+  const downloading = new Promise<void>((resolve) => { started = resolve; });
+  let downloads = 0;
+  const route = load<typeof import("../app/home-introduction/[id]/image/route")>("src/app/home-introduction/[id]/image/route.ts", {
+    "@/lib/home-introduction-public": { async readCurrentHomeIntroduction() { return current; } },
+    "@/lib/home-introduction-validation": validation,
+    "@/lib/supabase-storage": {
+      async downloadHomeIntroductionDisplay(path: string) { assert.equal(path, validation.homeIntroductionDisplayPath(id)); downloads++; started(); await hold; return new Uint8Array([1, 2]); },
+      downloadHomeIntroductionImage() { assert.fail("display request must use the dedicated reader"); },
+    },
+    "@/lib/server-log": { logServerError() {} },
+  }, { Response });
+  const get = () => route.GET(new Request("http://test/image"), { params: Promise.resolve({ id }) });
+  const pending = get(); await downloading;
+  current = { ...current, id: "22222222-2222-4222-8222-222222222222" };
+  assert.equal((await get()).status, 404); assert.equal(downloads, 1);
+  release(); const old = await pending;
+  assert.equal(old.status, 200); assert.equal(old.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(Buffer.from(await old.arrayBuffer()), Buffer.from([1, 2]));
 });
 
 test("공개·관리 이미지의 최적화 우회를 막고 기존 정적 이미지 최적화는 유지한다", () => {
@@ -127,6 +162,24 @@ test("공통 렌더러는 업로드 이미지를 최적화하지 않고 정적 �
   renderToStaticMarkup(React.createElement(content.HomeIntroductionContent, { ...props, image: `/home-introduction/${id}/image` }));
   renderToStaticMarkup(React.createElement(content.HomeIntroductionContent, { ...props, image: original.image }));
   assert.deepEqual(optimized, [false, false, true, true]);
+});
+
+test("주 이미지만 high 우선순위이며 블러와 같은 파일·sizes로 중복 preload 없이 요청한다", () => {
+  const images: Array<Record<string, unknown>> = [];
+  const content = load<typeof import("../components/home/HomeIntroductionContent")>("src/components/home/HomeIntroductionContent.tsx", {
+    react: React, "react/jsx-runtime": jsx,
+    "next/image": { default: (props: Record<string, unknown>) => { images.push(props); return null; } },
+    "./HomeIntroductionSection.module.css": { default: {} },
+  });
+  for (const image of ["/home-introduction/id/image", original.image]) {
+    images.length = 0;
+    renderToStaticMarkup(React.createElement(content.HomeIntroductionContent, { image, imageWidth: 1507, imageHeight: 1848, message: "문구", altText: "설명" }));
+    assert.equal(images.length, 2); assert.equal(images[0].src, images[1].src); assert.equal(images[0].sizes, images[1].sizes);
+    assert.equal(images[0].alt, "설명"); assert.equal(images[0].fetchPriority, "high"); assert.equal(images[1].fetchPriority, undefined);
+    assert.ok(images.every((p) => p.loading === "eager" && !p.preload && !p.priority));
+    if (typeof image === "string") assert.equal(images[0].sizes, "100vw");
+    else assert.match(String(images[0].sizes), /100svh/);
+  }
 });
 
 test("공개 section은 유지하고 콘텐츠 ID가 바뀌면 렌더러의 이미지 오류 상태를 새로 시작한다", async () => {

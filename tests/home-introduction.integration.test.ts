@@ -118,7 +118,10 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     });
     const publicImage = load<typeof import("../src/app/home-introduction/[id]/image/route")>("src/app/home-introduction/[id]/image/route.ts", {
       "@/lib/home-introduction-public": publicContent, "@/lib/home-introduction-validation": validation,
-      "@/lib/supabase-storage": { async downloadHomeIntroductionImage(path: string) { const bytes = objects.get(path); if (!bytes) throw new Error("missing"); return bytes; } },
+      "@/lib/supabase-storage": {
+        async downloadHomeIntroductionImage(path: string) { const bytes = objects.get(path); if (!bytes) throw new Error("missing"); return bytes; },
+        async downloadHomeIntroductionDisplay(path: string) { const bytes = objects.get(path); if (!bytes) throw new Error("missing display"); return bytes; },
+      },
       "@/lib/server-log": { logServerError() {} },
     });
     const getPublicImage = (id: string) => publicImage.GET(new Request("http://test/image"), { params: Promise.resolve({ id }) });

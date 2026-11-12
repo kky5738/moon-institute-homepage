@@ -111,6 +111,22 @@ export async function uploadHomeIntroductionDisplay(path: string, bytes: Uint8Ar
   if (error) throw new Error("표시용 이미지를 저장하지 못했습니다.");
 }
 
+// Only for immutable display objects selected from a validated, completed content row.
+export async function downloadHomeIntroductionDisplay(path: string, expected: { size: number; contentType: string }) {
+  if (expected.contentType !== "image/webp" || !Number.isInteger(expected.size) || expected.size < 1 || expected.size > MAX_RESEARCH_FILE_SIZE) {
+    throw new Error("표시용 이미지 정보를 확인할 수 없습니다.");
+  }
+  const { data, error } = await getAdminClient().storage.from(getSettings().bucket).download(path);
+  if (error || !data || data.type !== expected.contentType || data.size !== expected.size) {
+    throw new Error("표시용 이미지를 읽을 수 없습니다.");
+  }
+  const bytes = new Uint8Array(await data.arrayBuffer());
+  if (bytes.byteLength !== expected.size || !hasValidImageSignature(expected.contentType, bytes)) {
+    throw new Error("표시용 이미지의 실제 형식 또는 크기가 올바르지 않습니다.");
+  }
+  return bytes;
+}
+
 export async function createResearchFileUrls(
   files: Array<{ objectPath: string; originalName: string; download: boolean }>,
 ) {
