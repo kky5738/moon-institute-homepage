@@ -27,7 +27,7 @@ test("업로드는 발급→전송→완료 순서이며 실패한 시도만 취
         calls.push("request");
         return failure === "request" ? { ok: false, message: "발급 실패" } : { ok: true, id: "new-id", path: "new-path", token: "test", supabaseUrl: "test", publishableKey: "test", bucket: "test" };
       },
-      async confirmHomeIntroductionUpload(id: string) { calls.push(`confirm:${id}`); return failure === "confirm" ? { ok: false, message: "검증 실패" } : { ok: true, id }; },
+      async confirmHomeIntroductionUpload(id: string) { calls.push(`confirm:${id}`); return failure === "confirm" ? { ok: false, message: "검증 실패" } : { ok: true, id, imageWidth: 20, imageHeight: 40 }; },
       async cancelHomeIntroductionUpload(id: string) { calls.push(`cancel:${id}`); return { ok: failure !== "cleanup" }; },
     },
     "@supabase/supabase-js": { createClient: () => ({ storage: { from: () => ({ async uploadToSignedUrl(path: string) {
@@ -37,7 +37,7 @@ test("업로드는 발급→전송→완료 순서이며 실패한 시도만 취
   });
   const file = new File(["test"], "test.jpg", { type: "image/jpeg" });
   const input = { contentType: file.type, size: file.size, message: "원문", altText: "설명" };
-  assert.equal(await client.uploadHomeIntroductionFile(file, input), "new-id");
+  assert.deepEqual({ ...await client.uploadHomeIntroductionFile(file, input) }, { id: "new-id", imageWidth: 20, imageHeight: 40 });
   assert.deepEqual(calls, ["request", "upload:new-path", "confirm:new-id"]);
   for (const step of ["request", "upload", "confirm", "cleanup"]) {
     failure = step; calls.length = 0;
@@ -150,6 +150,8 @@ test("보관 이미지 경로는 관리자만 접근하고 private no-store로 �
   const id = "11111111-1111-4111-8111-111111111111";
   const { default: sharp } = await import("sharp");
   const bytes = await sharp({ create: { width: 1200, height: 600, channels: 3, background: "white" } }).jpeg().toBuffer();
+  const displayBytes = await sharp(bytes).webp({ quality: 80 }).toBuffer();
+  let useDisplay = false;
   let allowed = true;
   let reads = 0;
   let downloads = 0;
@@ -160,12 +162,13 @@ test("보관 이미지 경로는 관리자만 접근하고 private no-store로 �
     "@/lib/admin-auth": { AdminUnauthorizedError, async assertAdmin() { if (!allowed) throw new AdminUnauthorizedError(); } },
     "@/lib/prisma": { prisma: { homeIntroductionContent: { async findUnique() { reads++; return missing ? null : {
       id, objectPath: `home-introduction/${id}.jpg`, localAsset: null, contentType: "image/jpeg", size: bytes.length, imageWidth: 1200, imageHeight: 600, message: "문구", altText: "설명",
+      ...(useDisplay ? { displayObjectPath: validation.homeIntroductionDisplayPath(id), displayContentType: "image/webp", displaySize: displayBytes.length, displayWidth: 1200, displayHeight: 600 } : {}),
     }; } } } },
     "@/lib/home-introduction-validation": validation,
-    "@/lib/supabase-storage": { async downloadHomeIntroductionImage() { downloads++; if (failDownload) throw new Error("private object path"); return bytes; } },
+    "@/lib/supabase-storage": { async downloadHomeIntroductionImage() { downloads++; if (failDownload) throw new Error("private object path"); return useDisplay ? displayBytes : bytes; } },
     "@/lib/server-log": { logServerError() {} },
     "sharp": { default: sharp },
-  }, { Response });
+  }, { Response, URL });
   const request = new Request("http://test/image");
   const props = { params: Promise.resolve({ id }) };
   allowed = false;
@@ -182,6 +185,14 @@ test("보관 이미지 경로는 관리자만 접근하고 private no-store로 �
   assert.equal(image.headers.get("content-type"), "image/webp");
   const thumbnail = await sharp(Buffer.from(await image.arrayBuffer())).metadata();
   assert.equal(thumbnail.width, 256); assert.equal(thumbnail.height, 128);
+  useDisplay = true;
+  const previewRequest = new Request("http://test/image?preview=1");
+  const preview = await route.GET(previewRequest, props);
+  assert.equal(preview.status, 200); assert.equal(preview.headers.get("content-type"), "image/webp");
+  assert.deepEqual(Buffer.from(await preview.arrayBuffer()), displayBytes);
+  allowed = false;
+  assert.equal((await route.GET(previewRequest, props)).status, 401);
+  allowed = true;
   failDownload = true;
   const failure = await route.GET(request, props);
   assert.equal(failure.status, 500); assert.equal(await failure.text(), "");

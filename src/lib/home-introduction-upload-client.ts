@@ -13,7 +13,7 @@ export async function uploadHomeIntroductionFile(file: File, input: HomeIntroduc
     if (error) throw new Error("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
     const confirmed = await confirmHomeIntroductionUpload(ticket.id);
     if (!confirmed.ok) throw new Error(confirmed.message);
-    return confirmed.id;
+    return { id: confirmed.id, imageWidth: confirmed.imageWidth, imageHeight: confirmed.imageHeight };
   } catch (error) {
     try {
       const cleanup = await cancelHomeIntroductionUpload(ticket.id);

@@ -105,6 +105,12 @@ export async function downloadHomeIntroductionImage(
   return new Uint8Array(await data.arrayBuffer());
 }
 
+export async function uploadHomeIntroductionDisplay(path: string, bytes: Uint8Array) {
+  const { error } = await getAdminClient().storage.from(getSettings().bucket)
+    .upload(path, bytes, { contentType: "image/webp", upsert: false });
+  if (error) throw new Error("표시용 이미지를 저장하지 못했습니다.");
+}
+
 export async function createResearchFileUrls(
   files: Array<{ objectPath: string; originalName: string; download: boolean }>,
 ) {

@@ -3,9 +3,9 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { inspectHomeIntroductionImage } from "@/lib/home-introduction-image";
-import { validateHomeIntroductionId, validateHomeIntroductionInput, type HomeIntroductionInput } from "@/lib/home-introduction-validation";
-import { createResearchUploadTicket, downloadHomeIntroductionImage, removeResearchObjects } from "@/lib/supabase-storage";
+import { createHomeIntroductionDisplay } from "@/lib/home-introduction-image";
+import { getHomeIntroductionImage, homeIntroductionDisplayPath, validateHomeIntroductionId, validateHomeIntroductionInput, type HomeIntroductionInput } from "@/lib/home-introduction-validation";
+import { createResearchUploadTicket, downloadHomeIntroductionImage, removeResearchObjects, uploadHomeIntroductionDisplay } from "@/lib/supabase-storage";
 import { logServerError } from "@/lib/server-log";
 
 async function lockUpload(tx: Prisma.TransactionClient, id: string) {
@@ -32,17 +32,20 @@ export async function completeHomeIntroductionUpload(adminId: string, rawId: str
     return await prisma.$transaction(async (tx) => {
       await lockUpload(tx, id);
       // A repeated completion must never remove a successfully registered image.
-      if (await tx.homeIntroductionContent.findUnique({ where: { id } })) return { id };
+      const existing = await tx.homeIntroductionContent.findUnique({ where: { id } });
+      if (existing) { const image = getHomeIntroductionImage(existing); return { id, imageWidth: image.imageWidth, imageHeight: image.imageHeight }; }
       const upload = await tx.homeIntroductionUpload.findUnique({ where: { id } });
       if (!upload || upload.adminId !== adminId) throw new Error("확인할 업로드를 찾을 수 없습니다.");
       const { contentType, size, message, altText } = validateHomeIntroductionInput(upload);
       const bytes = await downloadHomeIntroductionImage(upload.objectPath, { contentType, size });
-      const dimensions = await inspectHomeIntroductionImage(bytes, contentType);
+      const { bytes: displayBytes, ...dimensions } = await createHomeIntroductionDisplay(bytes, contentType);
+      const displayObjectPath = homeIntroductionDisplayPath(id);
+      await uploadHomeIntroductionDisplay(displayObjectPath, displayBytes);
       await tx.homeIntroductionContent.create({ data: {
-        id, objectPath: upload.objectPath, contentType, size, message, altText, ...dimensions,
+        id, objectPath: upload.objectPath, contentType, size, message, altText, ...dimensions, displayObjectPath,
       } });
       await tx.homeIntroductionUpload.delete({ where: { id } });
-      return { id };
+      return { id, imageWidth: dimensions.displayWidth, imageHeight: dimensions.displayHeight };
     }, { timeout: 60_000 });
   } catch (error) {
     try { await discardHomeIntroductionUpload(adminId, id); }
@@ -59,7 +62,7 @@ export async function discardHomeIntroductionUpload(adminId: string, rawId: stri
     const upload = await tx.homeIntroductionUpload.findUnique({ where: { id } });
     if (!upload || upload.adminId !== adminId) return;
     // Keep the ticket if removal fails, so a later discard can retry this exact object.
-    await removeResearchObjects([upload.objectPath]);
+    await removeResearchObjects([upload.objectPath, homeIntroductionDisplayPath(id)]);
     await tx.homeIntroductionUpload.delete({ where: { id } });
   }, { timeout: 60_000 });
 }

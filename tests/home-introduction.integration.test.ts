@@ -10,7 +10,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import * as validation from "../src/lib/home-introduction-validation";
 import * as pagination from "../src/lib/pagination";
-import { inspectHomeIntroductionImage } from "../src/lib/home-introduction-image";
+import { createHomeIntroductionDisplay } from "../src/lib/home-introduction-image";
 
 function load<T>(path: string, dependencies: Record<string, unknown>): T {
   const exports = {};
@@ -59,9 +59,21 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     });
     const objects = new Map<string, Uint8Array>();
     const removed: string[] = [];
+    let failDisplay = false;
+    let displayUploads = 0;
     let failTicket = false;
     let failRemove = false;
     let failSave = false;
+    const storage = {
+        async createResearchUploadTicket(path: string) { if (failTicket) throw new Error("ticket failure"); return { bucket: "test", path, token: "test", supabaseUrl: "test", publishableKey: "test" }; },
+        async downloadHomeIntroductionImage(path: string, expected: { size: number }) {
+          const bytes = objects.get(path);
+          if (!bytes || bytes.length !== expected.size) throw new Error("upload missing or wrong size");
+          return bytes;
+        },
+        async uploadHomeIntroductionDisplay(path: string, data: Uint8Array) { displayUploads++; objects.set(path, data); if (failDisplay) throw new Error("display upload failure"); },
+        async removeResearchObjects(paths: string[]) { if (failRemove) throw new Error("remove failed"); for (const path of paths) { removed.push(path); objects.delete(path); } },
+      };
     const service = load<typeof import("../src/lib/home-introduction-uploads")>("src/lib/home-introduction-uploads.ts", {
       "server-only": {}, "node:crypto": { randomUUID },
       "@/lib/prisma": { prisma: { homeIntroductionUpload: prisma.homeIntroductionUpload,
@@ -71,17 +83,9 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
         }, options),
       } },
       "@/lib/home-introduction-validation": validation,
-      "@/lib/home-introduction-image": { inspectHomeIntroductionImage },
+      "@/lib/home-introduction-image": { createHomeIntroductionDisplay },
       "@/lib/server-log": { logServerError() {} },
-      "@/lib/supabase-storage": {
-        async createResearchUploadTicket(path: string) { if (failTicket) throw new Error("ticket failure"); return { bucket: "test", path, token: "test", supabaseUrl: "test", publishableKey: "test" }; },
-        async downloadHomeIntroductionImage(path: string, expected: { size: number }) {
-          const bytes = objects.get(path);
-          if (!bytes || bytes.length !== expected.size) throw new Error("upload missing or wrong size");
-          return bytes;
-        },
-        async removeResearchObjects(paths: string[]) { if (failRemove) throw new Error("remove failed"); for (const path of paths) { removed.push(path); objects.delete(path); } },
-      },
+      "@/lib/supabase-storage": storage,
     });
     let failApply = false;
     let failCache = false;
@@ -188,6 +192,14 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     }
     assert.equal(await prisma.homeIntroductionUpload.count(), 0);
 
+    const displayFailure = await request(); objects.set(displayFailure.path, bytes);
+    failDisplay = true;
+    assert.equal((await actions.confirmHomeIntroductionUpload(displayFailure.id)).ok, false);
+    failDisplay = false;
+    assert.ok(!objects.has(displayFailure.path));
+    assert.ok(!objects.has(validation.homeIntroductionDisplayPath(displayFailure.id)));
+    assert.equal(await prisma.homeIntroductionUpload.count(), 0);
+
     const cleanup = await request();
     failRemove = true;
     assert.equal((await actions.confirmHomeIntroductionUpload(cleanup.id)).ok, false);
@@ -196,11 +208,18 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     assert.equal((await actions.cancelHomeIntroductionUpload(cleanup.id)).ok, true);
 
     const retry = await request(); objects.set(retry.path, bytes);
+    const beforeDisplay = displayUploads;
     const results = await Promise.all([actions.confirmHomeIntroductionUpload(retry.id), actions.confirmHomeIntroductionUpload(retry.id)]);
     assert.ok(results.every((result) => result.ok));
+    assert.equal(displayUploads, beforeDisplay + 1);
     const saved = await prisma.homeIntroductionContent.findUniqueOrThrow({ where: { id: retry.id } });
     assert.equal(saved.imageWidth, 20); assert.equal(saved.imageHeight, 40);
     assert.equal(saved.message, input.message);
+    assert.equal(saved.displayObjectPath, validation.homeIntroductionDisplayPath(saved.id));
+    const displayMeta = await sharp(objects.get(saved.displayObjectPath!)!).metadata();
+    assert.equal(displayMeta.format, "webp"); assert.equal(displayMeta.orientation, undefined);
+    assert.equal(displayMeta.width, saved.displayWidth); assert.equal(displayMeta.height, saved.displayHeight);
+    assert.deepEqual(Buffer.from(objects.get(retry.path)!), bytes);
     assert.equal(saved.lastAppliedAt, null);
     assert.equal(await prisma.homeIntroductionContent.count(), 2);
     assert.equal(await prisma.homeIntroductionUpload.count(), 0);
@@ -227,7 +246,8 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     const visibleImage = await getPublicImage(retry.id);
     assert.equal(visibleImage.status, 200);
     assert.equal(visibleImage.headers.get("cache-control"), "private, no-store");
-    assert.deepEqual(Buffer.from(await visibleImage.arrayBuffer()), bytes);
+    assert.equal(visibleImage.headers.get("content-type"), "image/webp");
+    assert.deepEqual(Buffer.from(await visibleImage.arrayBuffer()), Buffer.from(objects.get(saved.displayObjectPath!)!));
     const firstTime = await applied(retry.id);
     assert.ok(firstTime);
     assert.equal((await actions.applyHomeIntroduction(retry.id)).status, "success");
@@ -308,6 +328,61 @@ test("첫 화면 업로드의 인증·실제 디코딩·실패 정리·재시도
     assert.ok(firstPage.contents.every((row) => !("objectPath" in row)));
     assert.equal((await domain.getHomeIntroductionPage(0)).page, 1);
     assert.equal(await prisma.homeIntroductionUpload.count(), 0);
+
+    let uncertainCommit = false;
+    const backfill = load<typeof import("../src/lib/home-introduction-backfill")>("src/lib/home-introduction-backfill.ts", {
+      "server-only": {}, "@/lib/prisma": { prisma: { async $transaction(work: Parameters<typeof prisma.$transaction>[0], options: object) {
+        const result = await prisma.$transaction(work as (tx: unknown) => Promise<unknown>, options);
+        if (uncertainCommit) { uncertainCommit = false; throw new Error("commit acknowledgement lost"); }
+        return result;
+      } } }, "@/lib/home-introduction-validation": validation,
+      "@/lib/home-introduction-image": { createHomeIntroductionDisplay }, "@/lib/supabase-storage": storage,
+      "@/lib/server-log": { logServerError() {} },
+    });
+    const legacyId = randomUUID(), legacyPath = `home-introduction/${legacyId}.jpg`;
+    const legacy = await prisma.homeIntroductionContent.create({ data: { id: legacyId, objectPath: legacyPath, ...input, imageWidth: 20, imageHeight: 40 } });
+    objects.set(legacyPath, bytes);
+    const dry = execFileSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "--tsconfig", "scripts/tsconfig.server.json", "scripts/backfill-home-introduction.ts", `--id=${legacyId}`], {
+      env: { ...process.env, DATABASE_URL: url }, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+    });
+    assert.deepEqual(JSON.parse(dry.trim()), { mode: "dry-run", pending: 1 });
+    const operating = (await import("dotenv")).parse(readFileSync(".env"));
+    if (operating.SUPABASE_URL) assert.throws(() => execFileSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "--tsconfig", "scripts/tsconfig.server.json", "scripts/backfill-home-introduction.ts", "--apply", `--id=${legacyId}`], {
+      env: { ...process.env, DATABASE_URL: url, SUPABASE_URL: operating.SUPABASE_URL.replace(/\/$/, "") + "/" }, stdio: "pipe",
+    }));
+    await assert.rejects(prisma.homeIntroductionContent.update({ where: { id: legacyId }, data: { displaySize: 100 } }));
+    await actions.applyHomeIntroduction(legacyId);
+    assert.deepEqual(Buffer.from(await (await getPublicImage(legacyId)).arrayBuffer()), bytes);
+    const legacyApplied = await applied(legacyId);
+    const displayPath = validation.homeIntroductionDisplayPath(legacyId);
+    failDisplay = true;
+    await assert.rejects(backfill.backfillHomeIntroductionDisplay(legacyId));
+    failDisplay = false;
+    assert.ok(objects.has(legacyPath)); assert.ok(!objects.has(displayPath));
+    assert.equal((await prisma.homeIntroductionContent.findUniqueOrThrow({ where: { id: legacyId } })).displayObjectPath, null);
+    await prisma.$executeRawUnsafe(`CREATE FUNCTION ready66_fail_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.id = '${legacyId}'::uuid AND NEW."displayObjectPath" IS NOT NULL THEN RAISE EXCEPTION 'test update failure'; END IF; RETURN NEW; END $$`);
+    await prisma.$executeRawUnsafe(`CREATE TRIGGER ready66_fail_update BEFORE UPDATE ON home_introduction_contents FOR EACH ROW EXECUTE FUNCTION ready66_fail_update()`);
+    try { await assert.rejects(backfill.backfillHomeIntroductionDisplay(legacyId)); assert.ok(!objects.has(displayPath)); }
+    finally { await prisma.$executeRawUnsafe(`DROP TRIGGER ready66_fail_update ON home_introduction_contents`); await prisma.$executeRawUnsafe(`DROP FUNCTION ready66_fail_update()`); }
+    objects.set(displayPath, new Uint8Array([1])); failRemove = true;
+    await assert.rejects(backfill.backfillHomeIntroductionDisplay(legacyId));
+    failRemove = false;
+    assert.ok(objects.has(legacyPath));
+    const countBefore = displayUploads;
+    const converted = await Promise.all([backfill.backfillHomeIntroductionDisplay(legacyId), backfill.backfillHomeIntroductionDisplay(legacyId)]);
+    assert.equal(converted.filter((r) => r.converted).length, 1); assert.equal(displayUploads, countBefore + 1);
+    assert.equal((await backfill.backfillHomeIntroductionDisplay(legacyId)).converted, false);
+    assert.equal((await backfill.backfillHomeIntroductionDisplay(initial.id)).converted, false);
+    uncertainCommit = true;
+    await assert.rejects(backfill.backfillHomeIntroductionDisplay(legacyId));
+    assert.ok(objects.has(displayPath));
+    const changed = await prisma.homeIntroductionContent.findUniqueOrThrow({ where: { id: legacyId } });
+    assert.equal(changed.objectPath, legacy.objectPath); assert.equal(changed.message, legacy.message); assert.equal(changed.createdAt.getTime(), legacy.createdAt.getTime());
+    assert.deepEqual(changed.lastAppliedAt, legacyApplied); assert.equal(await current(), legacyId);
+    assert.deepEqual(Buffer.from(objects.get(legacyPath)!), bytes);
+    assert.deepEqual(Buffer.from(await (await getPublicImage(legacyId)).arrayBuffer()), Buffer.from(objects.get(displayPath)!));
+    await actions.applyHomeIntroduction(initial.id); await actions.applyHomeIntroduction(legacyId);
+    assert.equal(await current(), legacyId); assert.ok(objects.has(legacyPath)); assert.ok(objects.has(displayPath));
 
     const rls = await prisma.$queryRaw<Array<{ relrowsecurity: boolean }>>`SELECT relrowsecurity FROM pg_class WHERE relname IN ('home_introduction_contents', 'home_introduction_settings', 'home_introduction_uploads')`;
     assert.equal(rls.length, 3); assert.ok(rls.every((row) => row.relrowsecurity));

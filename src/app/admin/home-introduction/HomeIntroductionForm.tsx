@@ -79,8 +79,9 @@ export function HomeIntroductionForm() {
     }
     setPending(true);
     try {
-      await uploadHomeIntroductionFile(file, { contentType: file.type, size: file.size, message, altText });
+      const saved = await uploadHomeIntroductionFile(file, { contentType: file.type, size: file.size, message, altText });
       if (mounted.current) {
+        setPreview({ previewUrl: `/admin/home-introduction/${saved.id}/image?preview=1`, imageWidth: saved.imageWidth, imageHeight: saved.imageHeight });
         setResult({ ok: true, message: "등록했습니다. 아래 목록에서 확인할 수 있습니다. 공개 첫 화면은 변경되지 않았습니다." });
         router.replace("/admin/home-introduction");
       }

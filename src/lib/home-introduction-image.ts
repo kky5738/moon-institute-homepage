@@ -21,3 +21,12 @@ export async function inspectHomeIntroductionImage(bytes: Uint8Array, contentTyp
     throw new Error("디코딩 가능한 단일 이미지가 필요합니다. 크기는 각 변 20,000px·총 4천만 화소 이하여야 합니다.");
   }
 }
+
+export async function createHomeIntroductionDisplay(bytes: Uint8Array, contentType: string) {
+  const original = await inspectHomeIntroductionImage(bytes, contentType);
+  const { data, info } = await sharp(bytes, { failOn: "warning", limitInputPixels: 40_000_000 }).rotate()
+    .resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true })
+    .webp({ quality: 80 }).toBuffer({ resolveWithObject: true });
+  if (!data.length || data.length > MAX_RESEARCH_FILE_SIZE) throw new Error("표시용 이미지 크기를 확인해주세요.");
+  return { bytes: data, ...original, displayContentType: "image/webp", displaySize: data.length, displayWidth: info.width, displayHeight: info.height };
+}

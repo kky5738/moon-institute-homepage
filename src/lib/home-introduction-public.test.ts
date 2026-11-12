@@ -25,7 +25,7 @@ const original = { image: { src: "/default.jpeg", width: 1507, height: 1848 }, m
 const uploaded = { id, localAsset: null, objectPath: `home-introduction/${id}.jpg`, contentType: "image/jpeg", size: 3, imageWidth: 200, imageHeight: 100, message: "적용 문구", altText: "적용 설명" };
 
 function setup() {
-  let content: typeof uploaded | null = uploaded;
+  let content: (typeof uploaded & validation.HomeIntroductionDisplay) | null = uploaded;
   let fails = false;
   const logged: Error[] = [];
   const tags: string[] = [];
@@ -39,7 +39,7 @@ function setup() {
     "@/lib/home-introduction-validation": validation,
     "@/lib/server-log": { logServerError(_context: string, error: Error) { logged.push(error); } },
   });
-  return { service, logged, tags, setContent(value: typeof uploaded | null) { content = value; }, fail() { fails = true; } };
+  return { service, logged, tags, setContent(value: (typeof uploaded & validation.HomeIntroductionDisplay) | null) { content = value; }, fail() { fails = true; } };
 }
 
 test("공개 조회는 ID·이미지·문구·치수를 함께 반환하고 비밀 경로·signed URL을 전달하지 않는다", async () => {
@@ -50,6 +50,15 @@ test("공개 조회는 ID·이미지·문구·치수를 함께 반환하고 비�
   assert.equal(result.imageWidth, 200); assert.equal(result.imageHeight, 100);
   assert.deepEqual(ctx.tags, ["home-introduction"]);
   assert.doesNotMatch(JSON.stringify(result), /objectPath|token|secret|home-introduction\/.+\.jpg/);
+});
+
+test("표시용 콘텐츠는 실제 표시 치수를 공개하고 저장 경로는 공개하지 않는다", async () => {
+  const ctx = setup();
+  ctx.setContent({ ...uploaded, displayObjectPath: validation.homeIntroductionDisplayPath(id), displayContentType: "image/webp", displaySize: 2, displayWidth: 100, displayHeight: 50 });
+  const dto = await ctx.service.getPublicHomeIntroduction();
+  assert.equal(dto.imageWidth, 100); assert.equal(dto.imageHeight, 50);
+  assert.equal(dto.image, `/home-introduction/${id}/image`);
+  assert.doesNotMatch(JSON.stringify(dto), /ObjectPath|displaySize|display\.webp/);
 });
 
 test("미설정·조회 오류·저장 검증 실패는 기본 이미지와 문구로 함께 복구하며 로그는 비밀값을 숨긴다", async () => {
@@ -68,7 +77,7 @@ test("미설정·조회 오류·저장 검증 실패는 기본 이미지와 문�
 });
 
 test("공개 이미지 응답은 현재 적용본만 허용하고 매 요청마다 포인터를 재확인한다", async () => {
-  let current: typeof uploaded | null = uploaded;
+  let current: (typeof uploaded & validation.HomeIntroductionDisplay) | null = uploaded;
   let downloads = 0;
   let fails = false;
   const logged: Error[] = [];

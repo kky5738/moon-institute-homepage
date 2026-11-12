@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import sharp from "sharp";
 import { inspectHomeIntroductionImage } from "./home-introduction-image";
-import { validateHomeIntroductionInput } from "./home-introduction-validation";
+import { validateHomeIntroductionInput, validateStoredHomeIntroduction } from "./home-introduction-validation";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
@@ -93,5 +93,40 @@ test("저장된 콘텐츠는 완료된 이미지 경로·치수와 기본 콘텐
   assert.doesNotThrow(() => validateStoredHomeIntroduction({ ...content, id: DEFAULT_HOME_INTRODUCTION_ID, objectPath: null, localAsset: "home-introduction.jpeg" }));
   for (const invalid of [{ objectPath: null }, { objectPath: "research/1/private.jpg" }, { localAsset: "home-introduction.jpeg" }, { imageWidth: 0 }, { imageHeight: 20001 }, { imageWidth: 10000, imageHeight: 10000 }]) {
     assert.throws(() => validateStoredHomeIntroduction({ ...content, ...invalid }));
+  }
+});
+
+test("표시용 WebP는 방향·전체 영역·투명도를 보존하고 1920px 이하로만 축소한다", async () => {
+  const { createHomeIntroductionDisplay } = await import("./home-introduction-image");
+  for (const [width, height] of [[4000, 2000], [2000, 4000], [2500, 2500], [31, 17]]) {
+    const original = await sharp({ create: { width, height, channels: 4, background: { r: 90, g: 120, b: 150, alpha: 0.5 } } }).png().toBuffer();
+    const display = await createHomeIntroductionDisplay(original, "image/png");
+    const meta = await sharp(display.bytes).metadata();
+    const scale = Math.min(1, 1920 / Math.max(width, height));
+    assert.equal(meta.format, "webp"); assert.equal(meta.width, Math.round(width * scale)); assert.equal(meta.height, Math.round(height * scale));
+    assert.equal(display.displaySize, display.bytes.length); assert.equal(meta.hasAlpha, true);
+    const decoded = await sharp(display.bytes).raw().toBuffer();
+    assert.ok(Math.abs(decoded[3] - 128) <= 1);
+    assert.ok(Math.abs(decoded[0] - 90) <= 5);
+    assert.deepEqual([display.imageWidth, display.imageHeight], [width, height]);
+  }
+  const pattern = await sharp({ create: { width: 120, height: 80, channels: 3, background: "red" } }).composite([
+    { input: await sharp({ create: { width: 60, height: 40, channels: 3, background: "blue" } }).png().toBuffer(), left: 60, top: 40 },
+  ]).jpeg().withMetadata({ orientation: 6 }).toBuffer();
+  const display = await createHomeIntroductionDisplay(pattern, "image/jpeg");
+  assert.deepEqual([display.displayWidth, display.displayHeight], [80, 120]);
+  assert.equal((await sharp(display.bytes).metadata()).orientation, undefined);
+  const pixel = await sharp(display.bytes).extract({ left: 5, top: 100, width: 1, height: 1 }).raw().toBuffer();
+  assert.ok(pixel[2] > 220 && pixel[0] < 30, "rotated lower-left corner must retain blue source corner");
+  await assert.rejects(createHomeIntroductionDisplay(new Uint8Array([255, 216, 255]), "image/jpeg"));
+});
+
+test("표시용 메타데이터는 전부 없거나 검증된 경로·형식·크기·치수 묶음이어야 한다", () => {
+  const content = { id: "11111111-1111-4111-8111-111111111111", objectPath: "home-introduction/11111111-1111-4111-8111-111111111111.jpg", localAsset: null,
+    contentType: "image/jpeg", size: 1000, imageWidth: 4000, imageHeight: 2000, message: "문구", altText: "설명" };
+  const display = { displayObjectPath: "home-introduction/11111111-1111-4111-8111-111111111111-display.webp", displayContentType: "image/webp", displaySize: 100, displayWidth: 1920, displayHeight: 960 };
+  assert.doesNotThrow(() => validateStoredHomeIntroduction({ ...content, ...display }));
+  for (const invalid of [{ displaySize: null }, { displayObjectPath: "other.webp" }, { displayContentType: "image/jpeg" }, { displayWidth: 1921 }, { displayHeight: 0 }]) {
+    assert.throws(() => validateStoredHomeIntroduction({ ...content, ...display, ...invalid }));
   }
 });

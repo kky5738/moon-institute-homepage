@@ -3,6 +3,24 @@ import { MAX_RESEARCH_FILE_SIZE } from "@/lib/research-files";
 export const HOME_INTRODUCTION_GUIDANCE = "문구는 1~2문장, 최대 200자로 입력해주세요.";
 export const DEFAULT_HOME_INTRODUCTION_ID = "00000000-0000-4000-8000-000000000060";
 
+export type HomeIntroductionDisplay = {
+  displayObjectPath?: string | null; displayContentType?: string | null; displaySize?: number | null;
+  displayWidth?: number | null; displayHeight?: number | null;
+};
+
+export function homeIntroductionDisplayPath(id: string) {
+  return `home-introduction/${validateHomeIntroductionId(id)}-display.webp`;
+}
+
+export function getHomeIntroductionImage(content: HomeIntroductionDisplay & {
+  objectPath: string | null; contentType: string; size: number; imageWidth: number; imageHeight: number;
+}) {
+  return content.displayObjectPath ? {
+    objectPath: content.displayObjectPath, contentType: content.displayContentType!, size: content.displaySize!,
+    imageWidth: content.displayWidth!, imageHeight: content.displayHeight!,
+  } : content;
+}
+
 export type HomeIntroductionInput = {
   contentType: string;
   size: number;
@@ -31,7 +49,7 @@ export function validateHomeIntroductionId(id: string) {
   return id.toLowerCase();
 }
 
-export function validateStoredHomeIntroduction(content: HomeIntroductionInput & {
+export function validateStoredHomeIntroduction(content: HomeIntroductionInput & HomeIntroductionDisplay & {
   id: string; objectPath: string | null; localAsset: string | null;
   imageWidth: number; imageHeight: number;
 }) {
@@ -43,4 +61,11 @@ export function validateStoredHomeIntroduction(content: HomeIntroductionInput & 
     || content.imageWidth * content.imageHeight > 40_000_000) {
     throw new Error("검증이 완료된 이미지 콘텐츠만 사용할 수 있습니다.");
   }
+  const display = [content.displayObjectPath, content.displayContentType, content.displaySize, content.displayWidth, content.displayHeight];
+  if (display.some((value) => value != null) && (
+    !content.objectPath || display.some((value) => value == null) || content.displayObjectPath !== homeIntroductionDisplayPath(id)
+    || content.displayContentType !== "image/webp" || !Number.isInteger(content.displaySize) || content.displaySize! < 1 || content.displaySize! > MAX_RESEARCH_FILE_SIZE
+    || ![content.displayWidth, content.displayHeight].every((value) => Number.isInteger(value) && value! > 0 && value! <= 1920)
+    || content.displayWidth! > content.imageWidth || content.displayHeight! > content.imageHeight
+  )) throw new Error("완료된 표시용 이미지 정보가 필요합니다.");
 }

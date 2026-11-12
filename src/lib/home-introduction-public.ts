@@ -5,7 +5,7 @@ import { unstable_rethrow } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { homeIntroduction } from "@/lib/site-content";
 import { HOME_INTRODUCTION_CACHE_TAG } from "@/lib/home-introduction";
-import { DEFAULT_HOME_INTRODUCTION_ID, validateStoredHomeIntroduction } from "@/lib/home-introduction-validation";
+import { DEFAULT_HOME_INTRODUCTION_ID, getHomeIntroductionImage, validateStoredHomeIntroduction } from "@/lib/home-introduction-validation";
 import { logServerError } from "@/lib/server-log";
 
 const defaultContent = {
@@ -33,11 +33,12 @@ async function getCachedHomeIntroduction() {
   cacheTag(HOME_INTRODUCTION_CACHE_TAG);
   const content = await readCurrentHomeIntroduction();
   if (!content) throw new Error("현재 콘텐츠가 없습니다.");
+  const image = getHomeIntroductionImage(content);
   return {
     id: content.id,
     image: content.objectPath ? `/home-introduction/${content.id}/image` : homeIntroduction.image,
-    imageWidth: content.imageWidth,
-    imageHeight: content.imageHeight,
+    imageWidth: image.imageWidth,
+    imageHeight: image.imageHeight,
     message: content.message,
     altText: content.altText,
   };

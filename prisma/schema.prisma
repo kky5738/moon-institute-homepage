@@ -178,6 +178,11 @@ model HomeIntroductionContent {
   size          Int
   imageWidth    Int
   imageHeight   Int
+  displayObjectPath  String? @unique
+  displayContentType String?
+  displaySize        Int?
+  displayWidth       Int?
+  displayHeight      Int?
   message       String
   altText       String
   createdAt     DateTime @default(now())
