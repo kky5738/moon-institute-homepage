@@ -113,3 +113,26 @@ test("미인증 요청은 저장과 사진 작업에 도달하지 못한다", as
   await assert.rejects(actions.cancelLifeImage(id), Unauthorized);
   assert.equal(calls, 0);
 });
+
+test("홈 준비 카드는 링크 없이 3개를 표시하고 실제 기록 1~2개는 충원하지 않는다", () => {
+  const section = load<typeof import("../components/home/LifeHighlightsSection")>("src/components/home/LifeHighlightsSection.tsx", {
+    "react/jsx-runtime": jsx,
+    "next/link": { default: ({ children, ...props }: React.ComponentProps<"a">) => React.createElement("a", props, children) },
+    "./LifeHighlightsFrame": { LifeHighlightsFrame: ({ children }: { children: React.ReactNode }) => React.createElement("ol", null, children) },
+    "@/components/life/LifeEventCard": { LifeEventCard: ({ record }: { record: { slug: string } }) => React.createElement("a", { href: `/life/${record.slug}` }, record.slug) },
+    "@/lib/life-records": {}, "@/components/life/life.module.css": { default: {} },
+  });
+  const empty = renderToStaticMarkup(React.createElement(section.LifeHighlightsSection, { records: [] }));
+  assert.equal((empty.match(/<li/g) ?? []).length, 3);
+  assert.equal((empty.match(/콘텐츠 준비 중/g) ?? []).length, 1);
+  assert.equal((empty.match(/<a /g) ?? []).length, 1);
+  assert.match(empty, /href="\/life"/);
+  assert.doesNotMatch(empty, /<button|tabindex/i);
+  for (const count of [1, 2]) {
+    const records = Array.from({ length: count }, (_, i) => ({ id: String(i), slug: `record-${i}` })) as Parameters<typeof section.LifeHighlightsSection>[0]["records"];
+    const html = renderToStaticMarkup(React.createElement(section.LifeHighlightsSection, { records }));
+    assert.equal((html.match(/<li/g) ?? []).length, count);
+    assert.doesNotMatch(html, /콘텐츠 준비 중/);
+    assert.match(html, /href="\/life\/record-0"/);
+  }
+});

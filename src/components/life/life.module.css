@@ -4,8 +4,17 @@
 .eyebrow{font-size:.875rem;letter-spacing:.12em;color:var(--primary);margin-bottom:.75rem}
 .sectionHeader h2{font-size:clamp(1.75rem,3vw,2.5rem);font-weight:600;letter-spacing:-.035em}
 .textLink{display:inline-flex;align-items:center;min-height:2.75rem;font-size:.9375rem;color:var(--primary);text-decoration:underline;text-underline-offset:.3em}
-.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem;list-style:none;padding:0}
-.cards>li{min-width:0}
+.cardViewport{overflow:hidden}
+.highlightCards{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:68%;gap:1.5rem;list-style:none;padding:0;margin:0}
+.highlightCards>li{min-width:0}
+.highlightCards>li:only-child{grid-column:1;width:100%}
+.preparing{margin-bottom:1.5rem;color:var(--muted-foreground);font-size:.9375rem}
+.placeholderCard{height:100%;background:#fffdf8;border:1px solid #ded5c5;border-radius:.5rem;overflow:hidden}
+.placeholderPhoto{aspect-ratio:4/3;background:#ebe5db}
+.placeholderYear,.placeholderTitle,.placeholderSummary{background:#ebe5db;border-radius:.125rem}
+.placeholderYear{width:5rem;height:1rem}
+.placeholderTitle{width:70%;height:1.75rem}
+.placeholderSummary{width:90%;height:3.5rem;background:linear-gradient(#eee9df 0 40%,transparent 40% 60%,#eee9df 60%)}
 .card{height:100%;background:#fffdf8;border:1px solid #ded5c5;border-radius:.5rem;overflow:hidden}
 .cardLink{display:flex;flex-direction:column;height:100%;text-decoration:none}
 .cardLink:focus-visible{outline-offset:-4px}
@@ -57,5 +66,5 @@
 .adminPhoto{width:100%;height:auto;max-height:20rem;object-fit:contain;background:var(--secondary)}
 .adminRow{display:flex;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;padding:1.5rem 0}
 .adminRow>div{min-width:0;overflow-wrap:anywhere}
-@media(max-width:700px){.cards{grid-template-columns:1fr}.photo{aspect-ratio:16/10}.formGrid{grid-template-columns:1fr}.listLink{grid-template-columns:1fr;gap:.5rem}.page{padding-top:2rem}}
+@media(max-width:700px){.highlightCards{grid-auto-columns:88%;gap:1rem}.photo,.placeholderPhoto{aspect-ratio:16/10}.formGrid{grid-template-columns:1fr}.listLink{grid-template-columns:1fr;gap:.5rem}.page{padding-top:2rem}}
 @media(prefers-reduced-motion:reduce){.cardImage{transition:none}.cardLink:hover .cardImage{transform:none}}
