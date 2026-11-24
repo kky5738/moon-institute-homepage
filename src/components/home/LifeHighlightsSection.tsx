@@ -13,18 +13,16 @@ export function LifeHighlightsSection({ records }: { records: LifeRecordCardData
           <Link href="/life" className={styles.textLink}>전체 기록 보기</Link>
         </header>
         {!records.length && <p className={styles.preparing}>콘텐츠 준비 중</p>}
-        <LifeHighlightsFrame>
-          {records.length ? records.map(record => <li key={record.id}><LifeEventCard record={record} /></li>)
-            : [0, 1, 2].map(slot => <li key={slot} aria-hidden="true">
-              <div className={styles.placeholderCard}>
+        <LifeHighlightsFrame preparing={!records.length}>
+          {records.length ? records.map(record => <LifeEventCard key={record.id} record={record} />)
+            : [0, 1, 2].map(slot => <div key={slot} className={styles.placeholderCard}>
                 <div className={styles.placeholderPhoto} />
                 <div className={styles.caption}>
                   <div className={styles.placeholderYear} />
                   <div className={styles.placeholderTitle} />
                   <div className={styles.placeholderSummary} />
                 </div>
-              </div>
-            </li>)}
+            </div>)}
         </LifeHighlightsFrame>
       </div>
     </section>

@@ -118,7 +118,7 @@ test("홈 준비 카드는 링크 없이 3개를 표시하고 실제 기록 1~2�
   const section = load<typeof import("../components/home/LifeHighlightsSection")>("src/components/home/LifeHighlightsSection.tsx", {
     "react/jsx-runtime": jsx,
     "next/link": { default: ({ children, ...props }: React.ComponentProps<"a">) => React.createElement("a", props, children) },
-    "./LifeHighlightsFrame": { LifeHighlightsFrame: ({ children }: { children: React.ReactNode }) => React.createElement("ol", null, children) },
+    "./LifeHighlightsFrame": { LifeHighlightsFrame: ({ children }: { children: React.ReactNode }) => React.createElement("ol", null, React.Children.map(children, child => React.createElement("li", null, child))) },
     "@/components/life/LifeEventCard": { LifeEventCard: ({ record }: { record: { slug: string } }) => React.createElement("a", { href: `/life/${record.slug}` }, record.slug) },
     "@/lib/life-records": {}, "@/components/life/life.module.css": { default: {} },
   });
@@ -135,4 +135,22 @@ test("홈 준비 카드는 링크 없이 3개를 표시하고 실제 기록 1~2�
     assert.doesNotMatch(html, /콘텐츠 준비 중/);
     assert.match(html, /href="\/life\/record-0"/);
   }
+});
+
+
+test("대표 카드 1·2·3·9건은 양방향 순환하며 세로 조작과 짧은 드래그는 제외한다", async () => {
+  const { nextHighlight, highlightSwipe } = await import("./life-highlight-navigation");
+  for (const count of [1, 2, 3, 9]) {
+    let index = 0;
+    assert.equal(nextHighlight(index, -1, count), count - 1);
+    for (let i = 0; i < count * 10; i++) index = nextHighlight(index, 1, count);
+    assert.equal(index, 0);
+    for (let i = 0; i < count * 10; i++) index = nextHighlight(index, -1, count);
+    assert.equal(index, 0);
+  }
+  assert.equal(nextHighlight(3, 1, 0), 0);
+  assert.equal(highlightSwipe(-80, 10), 1);
+  assert.equal(highlightSwipe(80, 10), -1);
+  assert.equal(highlightSwipe(25, 0), 0);
+  assert.equal(highlightSwipe(60, 80), 0);
 });
