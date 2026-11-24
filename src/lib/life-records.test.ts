@@ -69,6 +69,9 @@ test("홈·목록·상세는 공개 기록만 조회하고 1,000건도 페이지
   assert.equal(result.totalItems, 1000);
   assert.equal(result.page, 2);
   assert.ok(queries.every(q => (q.where as { status: string }).status === "PUBLISHED"));
+  assert.equal(validation.MAX_HOME_LIFE_RECORDS, 9);
+  assert.deepEqual(JSON.parse(JSON.stringify(queries[0].orderBy)), [{ sortOrder: "asc" }, { year: "asc" }, { id: "asc" }]);
+  assert.equal((queries[0].where as { featured: boolean }).featured, true);
   assert.equal(queries[0].take, validation.MAX_HOME_LIFE_RECORDS);
   assert.equal(queries[2].take, pagination.POSTS_PER_PAGE);
   assert.equal(queries[2].skip, 10);
