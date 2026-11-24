@@ -2,6 +2,12 @@
 
 이 문서는 작업 상태와 분리해 계속 적용되는 인증 정책과 사용자 결정을 보존한다. 현재 작업은 [Codex 작업 계획](./agent-work-plan.md), 완료 기록은 [2026년 작업 이력](./agent-work-history-2026.md)을 확인한다.
 
+## 생애 기록의 홈 소개와 관리자 편집 요청 (2026-11-23)
+
+- 기존 API 기반 연도표는 홈에서 내리고, 처음에는 탄생·결혼(성혼)·사망(성화)의 세 사건을 소개한다. 전체 기록은 장기적으로 수백~수천 건까지 늘어날 수 있다.
+- 홈에는 대표 사건의 사진·연도·제목·1~2줄 설명을 카드로 보여준다. 홈 카드와 전체 목록의 사건 선택은 같은 상세 내용으로 연결한다.
+- 관리자가 사건 추가·제거·내용 수정과 홈 노출을 편집할 수 있게 한다. 구체적인 공개·보관·사진 보존과 홈 개수 제한은 READY-69의 구현 기본값이며 사용자에게 별도 확정받은 운영 정책과 구분한다.
+
 ## 인증 입력 정책 (OWASP 기준)
 
 - 기준 문서: [OWASP Email Validation and Verification Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Email_Validation_and_Verification_Cheat_Sheet.html), [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html), [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)

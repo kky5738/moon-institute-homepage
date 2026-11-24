@@ -24,6 +24,9 @@ export default async function AdminLayout({
             <Link href="/admin/home-introduction" className="hover:underline">
               첫 화면 관리
             </Link>
+            <Link href="/admin/life-events" className="hover:underline">
+              생애 기록 관리
+            </Link>
             <Link href="/admin/inquiries" className="hover:underline">
               문의 관리
             </Link>

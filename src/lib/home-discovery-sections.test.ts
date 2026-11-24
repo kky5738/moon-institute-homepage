@@ -40,12 +40,11 @@ test("홈 탐색 영역 비활성화는 조회하지 않고 재활성화는 자�
       "@/components/home/MaterialReadingPathSection": material,
     });
     const landing = load<typeof import("@/components/home/HomeLandingSections")>("src/components/home/HomeLandingSections.tsx", {
-      "react/jsx-runtime": jsx, "node:fs": { readFileSync: () => "" },
-      "@/lib/home-discovery": { homeDiscoveryEnabled: enabled }, "@/lib/life-events": { parseLifeEventsCsv: () => [] },
+      "react/jsx-runtime": jsx,
+      "@/lib/home-discovery": { homeDiscoveryEnabled: enabled },
       "@/components/home/HomeDiscoverySections": discovery,
       "@/components/home/HomeHeroSection": { HomeHeroSection: () => React.createElement("div", { id: "hero" }) },
-      "@/components/home/LifeTimelineSection": { LifeTimelineSection: () => null },
-      "@/components/home/LifeTimelineEventList": { LifeTimelineEventList: () => null },
+      "@/components/home/LifeHighlightsSection": { HomeLifeHighlights: () => React.createElement("section", { id: "life-timeline" }) },
       "@/components/home/ParticipationCtaSection": { ParticipationCtaSection: () => React.createElement("div", { id: "contact" }) },
     });
     const stream = await renderToReadableStream(React.createElement(landing.HomeLandingSections));

@@ -13,6 +13,8 @@
     "test:manifesto": "node --import tsx --test src/components/home/FoundingManifestoSection.test.ts",
     "test:home-introduction": "node --import tsx --test src/lib/home-introduction*.test.ts tests/home-introduction.integration.test.ts",
     "test:timeline": "tsx --test src/lib/life-events.test.ts",
+    "test:life-records": "node --import tsx --test src/lib/life-records.test.ts",
+    "test:life-records:integration": "node --import tsx --test tests/life-records.integration.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
