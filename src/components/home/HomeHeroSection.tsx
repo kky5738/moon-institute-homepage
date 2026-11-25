@@ -48,14 +48,15 @@ export function HomeHeroSection() {
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
             <span className="h-px w-8 bg-gold" aria-hidden="true" />
-            Moon Institute
+            홈페이지 개설 안내
           </span>
           <h1 className="mt-5 text-3xl font-semibold leading-tight tracking-normal text-white [word-break:keep-all] sm:text-5xl lg:text-5xl">
-            생애, 말씀, 업적을 중심으로 연구합니다
+            문선명 연구소 홈페이지가 첫걸음을 내딛습니다
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-white/78 sm:text-lg sm:leading-8">
-            문선명 연구소의 연구 주제를 세 가지 흐름으로 정리하고,
-            공개 자료와 해설을 차례로 연결합니다.
+          <p className="mt-4 max-w-2xl text-base leading-7 text-white/78 [word-break:keep-all] sm:text-lg sm:leading-8">
+            이제 막 문을 연 홈페이지에는 아직 채워 나갈 부분이 많습니다.
+            자료와 소식을 차근차근 더하고, 더 편리하게 이용하실 수 있도록 다듬겠습니다.
+            앞으로 발전하고 변화해 갈 모습을 기대해 주세요.
           </p>
         </div>
 
